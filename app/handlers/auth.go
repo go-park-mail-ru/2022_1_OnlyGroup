@@ -103,4 +103,5 @@ func (handler *AuthHandler) LogupUserHandler(w http.ResponseWriter, r *http.Requ
 
 	response, _ := json.Marshal(realUser)
 	w.Write(response)
+
 }
