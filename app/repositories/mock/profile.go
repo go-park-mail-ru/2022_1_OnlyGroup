@@ -9,10 +9,6 @@ type ProfileMock struct {
 	profileRepo []models.Profile
 }
 
-func remove(slice []models.Profile, s int) {
-	slice = append(slice[:s], slice[s+1:]...)
-}
-
 func NewProfileMock() *ProfileMock {
 	return &ProfileMock{}
 }
@@ -28,17 +24,17 @@ func (tables *ProfileMock) GetUserProfile(profileId int) (profile models.Profile
 }
 
 func (tables *ProfileMock) ChangeProfile(profileId int, profile models.Profile) (err error) {
-	for _, item := range tables.profileRepo {
+	for id, item := range tables.profileRepo {
 		if item.UserId == profileId {
-			item.Interests = profile.Interests
-			item.FirstName = profile.FirstName
-			item.LastName = profile.LastName
-			item.Birthday = profile.Birthday
-			item.City = profile.City
-			item.AboutUser = profile.AboutUser
-			item.UserId = profile.UserId
-			item.Gender = profile.Gender
-			item.Gender = profile.Gender
+			tables.profileRepo[id].Interests = profile.Interests
+			tables.profileRepo[id].FirstName = profile.FirstName
+			tables.profileRepo[id].LastName = profile.LastName
+			tables.profileRepo[id].Birthday = profile.Birthday
+			tables.profileRepo[id].City = profile.City
+			tables.profileRepo[id].AboutUser = profile.AboutUser
+			tables.profileRepo[id].UserId = profile.UserId
+			tables.profileRepo[id].Gender = profile.Gender
+			tables.profileRepo[id].Gender = profile.Gender
 			return nil
 		}
 	}
@@ -48,7 +44,7 @@ func (tables *ProfileMock) ChangeProfile(profileId int, profile models.Profile) 
 func (tables *ProfileMock) DeleteProfile(profileId int) (err error) {
 	for count, item := range tables.profileRepo {
 		if item.UserId == profileId {
-			remove(tables.profileRepo, count)
+			tables.profileRepo = append(tables.profileRepo[:count], tables.profileRepo[count+1:]...)
 			return nil
 		}
 	}
