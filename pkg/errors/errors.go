@@ -11,6 +11,10 @@ var (
 	ErrAuthUserNotFound  = errors.New("user not registered")
 
 	ErrAuthSessionNotFound = errors.New("session not found")
+
+	ErrProfileNotFound = errors.New("profile not found")
+	ErrProfileNotFiled = errors.New("profile not filed")
+	ErrMockIsEmpty     = errors.New("profile not filed")
 )
 
 var errorsCodes = map[error]int{

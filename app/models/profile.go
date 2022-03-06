@@ -10,3 +10,9 @@ type Profile struct {
 	UserId    int      `json:"userId"`
 	Gender    string   `json:"gender"`
 }
+
+type ShortProfile struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	City      string `json:"city"`
+}
