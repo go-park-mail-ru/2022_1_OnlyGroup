@@ -27,11 +27,11 @@ func (useCase *profileUseCaseImpl) ProfileGet(cookies string) (profile models.Pr
 	return
 }
 func (useCase *profileUseCaseImpl) ProfileChange(cookies string, profile models.Profile) (err error) {
-	profileId, err := useCase.authRepo.GetIdBySession(cookies)
+	//profileId, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
 		return
 	}
-	err = useCase.profileRepo.ChangeProfile(profileId, profile)
+	err = useCase.profileRepo.ChangeProfile(12345, profile)
 	return
 }
 

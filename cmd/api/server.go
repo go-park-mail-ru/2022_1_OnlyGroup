@@ -36,9 +36,9 @@ func (serv *APIServer) Run() error {
 	//Candidate for user
 	multiplexor.HandleFunc("/profile", serv.profileHandler.GetCandidateHandler).Methods(http.MethodGet)
 	//User own profile
-	multiplexor.HandleFunc("/profile/my", serv.profileHandler.GetProfileHandler).Methods("GET")
+	multiplexor.HandleFunc("/profile/my", serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	//multiplexor.HandleFunc("/profile/my", serv.profileHandler.GetProfileHandler).Methods("POST")
-	multiplexor.HandleFunc("/profile/my", serv.profileHandler.ChangeProfileHandler).Methods("PUT")
+	multiplexor.HandleFunc("/profile/my", serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)
 	//multiplexor.HandleFunc("/profile/my", serv.profileHandler.DeleteProfileHandler).Methods("DELETE")
 
 	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
