@@ -33,7 +33,6 @@ func NewAuthMock() *AuthMock {
 	for i := 1; i < 6; i++ {
 		data = append(data, userData{email: faker.Email(), password: faker.Password()})
 	}
-
 	return &AuthMock{userTable: data, sessionTable: make(map[string]int)}
 }
 

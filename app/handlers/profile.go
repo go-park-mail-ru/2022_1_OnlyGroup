@@ -5,7 +5,9 @@ import (
 	"2022_1_OnlyGroup_back/app/usecases"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -27,7 +29,7 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	idFromUrl := mux.Vars(r)["idFromUrl"]
+	idFromUrl := mux.Vars(r)["id"]
 	id, err := strconv.Atoi(idFromUrl)
 	if errors.Is(err, strconv.ErrSyntax) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -85,18 +87,21 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
-	var model models.Profile
-	var msg []byte
-	_, err = r.Body.Read(msg)
+
+	msg, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
 	if err != nil {
 		return
 	}
+	model := &models.Profile{}
+
 	err = json.Unmarshal(msg, model)
+	fmt.Println(msg)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	err = handler.ProfileUseCase.Change(cook.Value, model)
+	err = handler.ProfileUseCase.Change(cook.Value, *model)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
 		return
