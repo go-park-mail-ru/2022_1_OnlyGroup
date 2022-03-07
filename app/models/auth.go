@@ -10,12 +10,6 @@ type UserAuthInfo struct {
 	CaptchaToken string `json:"captchaToken"`
 }
 
-type ErrorLogin struct {
-	ErrorCode    int    `json:"errorCode"`
-	ErrorMessage string `json:"errorMessage"`
-	CaptchaToken string `json:"captchaToken"`
-}
-
 type UserAuthProfile struct {
 	Email       string `json:"email"`
 	OldPassword string `json:"oldPassword"`
