@@ -28,7 +28,13 @@ func generateSecret(size int) string {
 }
 
 func NewAuthMock() *AuthMock {
-	return &AuthMock{sessionTable: make(map[string]int)}
+	data := []userData{{email: "petrenko", password: "0"},
+		{email: "Klimovsky", password: "1"},
+		{email: "Denisova", password: "2"},
+		{email: "Ivanov", password: "3"},
+		{email: "Sherbackov", password: "4"},
+		{email: "Timoshenko", password: "5"}}
+	return &AuthMock{userTable: data, sessionTable: make(map[string]int)}
 }
 
 func (tables *AuthMock) AddUser(email string, password string) (id int, err error) {

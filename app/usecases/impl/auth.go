@@ -37,8 +37,7 @@ func (useCase *authUseCaseImpl) UserRegister(userInfo models.UserAuthInfo) (id m
 	if err != nil {
 		return
 	}
-
-	//add user my mock
+	useCase.profileRepo.AddEmptyProfile(realId)
 	cookie, err = useCase.authRepo.AddSession(realId)
 	return
 }

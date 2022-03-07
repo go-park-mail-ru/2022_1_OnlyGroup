@@ -9,6 +9,7 @@ type ProfileRepository interface {
 	DeleteProfile(profileId int) (err error)
 	AddProfile(profile models.Profile) (err error)
 	CheckProfileFiled(profileId int) (err error)
+	AddEmptyProfile(profileId int) (err error)
 
-	FindCandidateProfile(profileId int) (candidateProfile models.Profile, err error)
+	FindCandidateProfile(profileId int) (candidateProfiles models.VectorCandidate, err error)
 }

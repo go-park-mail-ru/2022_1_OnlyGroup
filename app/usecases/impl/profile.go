@@ -14,30 +14,38 @@ func NewProfileUseCaseImpl(profileRepo repositories.ProfileRepository, authRepo 
 	return &profileUseCaseImpl{profileRepo: profileRepo, authRepo: authRepo}
 }
 
-func (useCase *profileUseCaseImpl) ProfileGet(cookies string) (profile models.Profile, err error) {
-	profileId, err := useCase.authRepo.GetIdBySession(cookies)
+func (useCase *profileUseCaseImpl) ProfileGet(cookies string, profileId int) (profile models.Profile, err error) {
+	profileIdCheck, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
+		return
+	}
+
+	if profileId == profileIdCheck {
+		profile, err = useCase.profileRepo.GetUserProfile(profileIdCheck)
 		return
 	}
 	profile, err = useCase.profileRepo.GetUserProfile(profileId)
 	if err != nil {
 		return
 	}
-
 	return
 }
+
 func (useCase *profileUseCaseImpl) ProfileChange(cookies string, profile models.Profile) (err error) {
-	//profileId, err := useCase.authRepo.GetIdBySession(cookies)
+	profileId, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
 		return
 	}
-	err = useCase.profileRepo.ChangeProfile(12345, profile)
+	err = useCase.profileRepo.ChangeProfile(profileId, profile)
 	return
 }
 
-func (useCase *profileUseCaseImpl) ShortProfileGet(cookies string) (profile models.ShortProfile, err error) {
-	profileId, err := useCase.authRepo.GetIdBySession(cookies)
+func (useCase *profileUseCaseImpl) ShortProfileGet(cookies string, profileId int) (profile models.ShortProfile, err error) {
+	checkProfileId, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
+		return
+	}
+	if checkProfileId != profileId {
 		return
 	}
 	profile, err = useCase.profileRepo.GetUserShortProfile(profileId)
@@ -52,11 +60,11 @@ func (useCase *profileUseCaseImpl) ProfileDelete(cookies string) (err error) {
 	return
 }
 
-func (useCase *profileUseCaseImpl) ProfileCandidateGet(cookies string) (candidateProfile models.Profile, err error) {
+func (useCase *profileUseCaseImpl) ProfilesCandidateGet(cookies string) (candidateProfiles models.VectorCandidate, err error) {
 	profileId, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
 		return
 	}
-	candidateProfile, err = useCase.profileRepo.FindCandidateProfile(profileId)
+	candidateProfiles, err = useCase.profileRepo.FindCandidateProfile(profileId)
 	return
 }

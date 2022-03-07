@@ -11,9 +11,13 @@ type ProfileMock struct {
 
 func NewProfileMock() *ProfileMock {
 	mock := ProfileMock{}
-	mock.AddProfile(models.Profile{FirstName: "Ilya", LastName: "Petrenko", Birthday: "16.11.2001", City: "Friazeno", Interests: []string{"server", "Music"}, AboutUser: "i like technopark", UserId: 12345, Gender: "male"})
-	mock.AddProfile(models.Profile{FirstName: "Denis", LastName: "Klimovsky", Birthday: "30.04.2001", City: "Vologda", Interests: []string{"basketball", "games"}, AboutUser: "i like technopark", UserId: 23456, Gender: "male"})
-	mock.AddProfile(models.Profile{FirstName: "Nasty", LastName: "Denisova", Birthday: "13.04.2001", City: "Moscow", Interests: []string{"studing", "draw", "Tennis"}, AboutUser: "i like technopark", UserId: 34567, Gender: "female"})
+	mock.AddProfile(models.Profile{FirstName: "Ilya", LastName: "Petrenko", Birthday: "16.11.2001", City: "Friazeno", Interests: []string{"server", "Music"}, AboutUser: "i like technopark", UserId: 0, Gender: "male"})
+	mock.AddProfile(models.Profile{FirstName: "Denis", LastName: "Klimovsky", Birthday: "30.04.2001", City: "Vologda", Interests: []string{"basketball", "games"}, AboutUser: "i like technopark", UserId: 1, Gender: "male"})
+	mock.AddProfile(models.Profile{FirstName: "Nasty", LastName: "Denisova", Birthday: "13.04.2001", City: "Moscow", Interests: []string{"studing", "draw", "Tennis"}, AboutUser: "i like technopark", UserId: 2, Gender: "female"})
+	mock.AddProfile(models.Profile{FirstName: "Dima", LastName: "Ivanov", Birthday: "13.01.2011", City: "Moscow", Interests: []string{"studing", "draw", "Tennis"}, AboutUser: "i like technopark", UserId: 3, Gender: "female"})
+	mock.AddProfile(models.Profile{FirstName: "Sergei", LastName: "Sherbackov", Birthday: "25.08.2201", City: "Archangelsk", Interests: []string{"studing", "draw", "Tenis"}, AboutUser: "i like technopark", UserId: 4, Gender: "female"})
+	mock.AddProfile(models.Profile{FirstName: "Marie", LastName: "Timoshenko", Birthday: "19.08.2018", City: "Vologda", Interests: []string{"studing", "draw", "Tennis"}, AboutUser: "i like technopark", UserId: 6, Gender: "female"})
+
 	return &mock
 }
 
@@ -75,20 +79,26 @@ func (tables *ProfileMock) DeleteProfile(profileId int) (err error) {
 func (tables *ProfileMock) AddProfile(profile models.Profile) (err error) {
 	tables.profileRepo = append(tables.profileRepo, profile)
 	return nil
-
 }
 
-func (tables *ProfileMock) FindCandidateProfile(profileId int) (candidateProfile models.Profile, err error) {
-	if len(tables.profileRepo) == 0 {
-		return candidateProfile, errors.ErrProfileNotFound
-	}
-	if count == len(tables.profileRepo) {
-		count = 0
-	}
-	candidateProfile = tables.profileRepo[count]
+func (tables *ProfileMock) AddEmptyProfile(profileId int) (err error) {
+	profile := models.Profile{FirstName: "", LastName: "", Birthday: "", City: "", Interests: []string{}, AboutUser: "", UserId: profileId, Gender: ""}
+	tables.profileRepo = append(tables.profileRepo, profile)
+	return nil
+}
 
-	count += 1
-	return candidateProfile, nil
+func (tables *ProfileMock) FindCandidateProfile(profileId int) (candidateProfiles models.VectorCandidate, err error) {
+	if len(tables.profileRepo) == 0 {
+		return candidateProfiles, errors.ErrProfileNotFound
+	}
+	for i := 0; i < 3; i++ {
+		if count == len(tables.profileRepo) {
+			count = 0
+		}
+		candidateProfiles.Candidates = append(candidateProfiles.Candidates, tables.profileRepo[count].UserId)
+		count += 1
+	}
+	return candidateProfiles, nil
 }
 
 func (tables *ProfileMock) CheckProfileFiled(profileId int) (err error) {

@@ -16,3 +16,7 @@ type ShortProfile struct {
 	LastName  string `json:"lastName"`
 	City      string `json:"city"`
 }
+
+type VectorCandidate struct {
+	Candidates []int `json:"Candidates"`
+}
