@@ -31,8 +31,6 @@ func (serv *APIServer) Run() error {
 	multiplexor.HandleFunc("/user", serv.authHandler.LogupUserHandler).Methods(http.MethodPost)
 	multiplexor.HandleFunc("/user", serv.authHandler.LogoutUserHandler).Methods(http.MethodDelete)
 
-	multiplexor.HandleFunc("/auth", serv.authHandler.MainAuthHandler)
-	multiplexor.HandleFunc("/register", serv.authHandler.RegisterAuthHandler)
 	//Candidate for user
 	multiplexor.HandleFunc("/profile", serv.profileHandler.GetCandidateHandler).Methods(http.MethodGet)
 	//User own profile
