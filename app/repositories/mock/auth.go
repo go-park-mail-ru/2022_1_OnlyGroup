@@ -3,10 +3,11 @@ package mock
 import (
 	"2022_1_OnlyGroup_back/pkg/errors"
 	"math/rand"
-	"strconv"
 )
 
-const hashSize = 10
+const hashSize = 64
+
+const secretRunes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 
 type userData struct {
 	email    string
@@ -21,7 +22,7 @@ type AuthMock struct {
 func generateSecret(size int) string {
 	result := ""
 	for i := 0; i < size; i++ {
-		result += strconv.Itoa(rand.Intn(10))
+		result += string(secretRunes[rand.Intn(len(secretRunes))])
 	}
 	return result
 }
