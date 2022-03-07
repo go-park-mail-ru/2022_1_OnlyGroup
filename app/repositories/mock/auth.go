@@ -38,7 +38,8 @@ func (tables *AuthMock) AddUser(email string, password string) (id int, err erro
 		}
 	}
 	tables.userTable = append(tables.userTable, userData{email: email, password: password})
-	return len(tables.userTable), nil
+
+	return len(tables.userTable) - 1, nil
 }
 
 func (tables *AuthMock) Authorize(email string, password string) (id int, err error) {

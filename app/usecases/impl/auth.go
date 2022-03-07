@@ -7,11 +7,12 @@ import (
 )
 
 type authUseCaseImpl struct {
-	authRepo repositories.AuthRepository
+	authRepo    repositories.AuthRepository
+	profileRepo repositories.ProfileRepository
 }
 
-func NewAuthUseCaseImpl(authRepo repositories.AuthRepository) *authUseCaseImpl {
-	return &authUseCaseImpl{authRepo: authRepo}
+func NewAuthUseCaseImpl(authRepo repositories.AuthRepository, profileRepo repositories.ProfileRepository) *authUseCaseImpl {
+	return &authUseCaseImpl{authRepo: authRepo, profileRepo: profileRepo}
 }
 
 func (useCase *authUseCaseImpl) UserAuth(Cookie string) (id models.UserID, err error) {
@@ -36,6 +37,8 @@ func (useCase *authUseCaseImpl) UserRegister(userInfo models.UserAuthInfo) (id m
 	if err != nil {
 		return
 	}
+
+	//add user my mock
 	cookie, err = useCase.authRepo.AddSession(realId)
 	return
 }

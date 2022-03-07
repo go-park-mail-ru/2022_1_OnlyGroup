@@ -18,7 +18,7 @@ type APIServer struct {
 func NewServer(addr string) APIServer {
 	profileRepo := mock.NewProfileMock()
 	authRepo := mock.NewAuthMock()
-	return APIServer{address: addr, authHandler: handlers.CreateAuthHandler(impl.NewAuthUseCaseImpl(authRepo)),
+	return APIServer{address: addr, authHandler: handlers.CreateAuthHandler(impl.NewAuthUseCaseImpl(authRepo, profileRepo)),
 		profileHandler: handlers.CreateProfileHandler(impl.NewProfileUseCaseImpl(profileRepo, authRepo)),
 	}
 }
