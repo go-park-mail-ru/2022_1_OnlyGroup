@@ -21,6 +21,8 @@ func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 }
 
 func (handler *AuthHandler) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -38,6 +40,8 @@ func (handler *AuthHandler) AuthUserHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (handler *AuthHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -64,6 +68,8 @@ func (handler *AuthHandler) LoginUserHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (handler *AuthHandler) LogoutUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -80,6 +86,8 @@ func (handler *AuthHandler) LogoutUserHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (handler *AuthHandler) LogupUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {

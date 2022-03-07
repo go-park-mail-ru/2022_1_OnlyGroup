@@ -3,6 +3,7 @@ package mock
 import (
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/pkg/errors"
+	"github.com/bxcodec/faker/v3"
 )
 
 type ProfileMock struct {
@@ -11,13 +12,9 @@ type ProfileMock struct {
 
 func NewProfileMock() *ProfileMock {
 	mock := ProfileMock{}
-	mock.AddProfile(models.Profile{FirstName: "Ilya", LastName: "Petrenko", Birthday: "16.11.2001", City: "Friazeno", Interests: []string{"server", "Music"}, AboutUser: "i like technopark", UserId: 0, Gender: "male"})
-	mock.AddProfile(models.Profile{FirstName: "Denis", LastName: "Klimovsky", Birthday: "30.04.2001", City: "Vologda", Interests: []string{"basketball", "games"}, AboutUser: "i like technopark", UserId: 1, Gender: "male"})
-	mock.AddProfile(models.Profile{FirstName: "Nasty", LastName: "Denisova", Birthday: "13.04.2001", City: "Moscow", Interests: []string{"studing", "draw", "Tennis"}, AboutUser: "i like technopark", UserId: 2, Gender: "female"})
-	mock.AddProfile(models.Profile{FirstName: "Dima", LastName: "Ivanov", Birthday: "13.01.2011", City: "Moscow", Interests: []string{"studing", "draw", "Tennis"}, AboutUser: "i like technopark", UserId: 3, Gender: "female"})
-	mock.AddProfile(models.Profile{FirstName: "Sergei", LastName: "Sherbackov", Birthday: "25.08.2201", City: "Archangelsk", Interests: []string{"studing", "draw", "Tenis"}, AboutUser: "i like technopark", UserId: 4, Gender: "female"})
-	mock.AddProfile(models.Profile{FirstName: "Marie", LastName: "Timoshenko", Birthday: "19.08.2018", City: "Vologda", Interests: []string{"studing", "draw", "Tennis"}, AboutUser: "i like technopark", UserId: 6, Gender: "female"})
-
+	for i := 0; i < 6; i++ {
+		mock.AddProfile(models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: i, Gender: faker.Gender()})
+	}
 	return &mock
 }
 

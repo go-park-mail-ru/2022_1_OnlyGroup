@@ -2,6 +2,7 @@ package mock
 
 import (
 	"2022_1_OnlyGroup_back/pkg/errors"
+	"github.com/bxcodec/faker/v3"
 	"math/rand"
 )
 
@@ -28,12 +29,11 @@ func generateSecret(size int) string {
 }
 
 func NewAuthMock() *AuthMock {
-	data := []userData{{email: "petrenko", password: "0"},
-		{email: "Klimovsky", password: "1"},
-		{email: "Denisova", password: "2"},
-		{email: "Ivanov", password: "3"},
-		{email: "Sherbackov", password: "4"},
-		{email: "Timoshenko", password: "5"}}
+	data := []userData{{email: "petrenko", password: "0"}}
+	for i := 1; i < 6; i++ {
+		data = append(data, userData{email: faker.Email(), password: faker.Password()})
+	}
+
 	return &AuthMock{userTable: data, sessionTable: make(map[string]int)}
 }
 

@@ -14,7 +14,7 @@ func NewProfileUseCaseImpl(profileRepo repositories.ProfileRepository, authRepo 
 	return &profileUseCaseImpl{profileRepo: profileRepo, authRepo: authRepo}
 }
 
-func (useCase *profileUseCaseImpl) ProfileGet(cookies string, profileId int) (profile models.Profile, err error) {
+func (useCase *profileUseCaseImpl) Get(cookies string, profileId int) (profile models.Profile, err error) {
 	profileIdCheck, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
 		return
@@ -31,12 +31,21 @@ func (useCase *profileUseCaseImpl) ProfileGet(cookies string, profileId int) (pr
 	return
 }
 
-func (useCase *profileUseCaseImpl) ProfileChange(cookies string, profile models.Profile) (err error) {
+func (useCase *profileUseCaseImpl) Change(cookies string, profile models.Profile) (err error) {
 	profileId, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
 		return
 	}
 	err = useCase.profileRepo.ChangeProfile(profileId, profile)
+	return
+}
+
+func (useCase *profileUseCaseImpl) Delete(cookies string) (err error) {
+	profileId, err := useCase.authRepo.GetIdBySession(cookies)
+	if err != nil {
+		return
+	}
+	err = useCase.profileRepo.DeleteProfile(profileId)
 	return
 }
 
@@ -49,14 +58,6 @@ func (useCase *profileUseCaseImpl) ShortProfileGet(cookies string, profileId int
 		return
 	}
 	profile, err = useCase.profileRepo.GetUserShortProfile(profileId)
-	return
-}
-func (useCase *profileUseCaseImpl) ProfileDelete(cookies string) (err error) {
-	profileId, err := useCase.authRepo.GetIdBySession(cookies)
-	if err != nil {
-		return
-	}
-	err = useCase.profileRepo.DeleteProfile(profileId)
 	return
 }
 

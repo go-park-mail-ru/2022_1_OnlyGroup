@@ -1,22 +1,22 @@
 package models
 
 type Profile struct {
-	FirstName string   `json:"firstName"`
-	LastName  string   `json:"lastName"`
-	Birthday  string   `json:"birthday"`
-	City      string   `json:"city"`
-	Interests []string `json:"interests"`
-	AboutUser string   `json:"aboutUser"`
-	UserId    int      `json:"userId"`
-	Gender    string   `json:"gender"`
+	FirstName string
+	LastName  string
+	Birthday  string
+	City      string
+	Interests []string
+	AboutUser string
+	UserId    int
+	Gender    string
 }
 
 type ShortProfile struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	City      string `json:"city"`
+	FirstName string
+	LastName  string
+	City      string
 }
 
 type VectorCandidate struct {
-	Candidates []int `json:"Candidates"`
+	Candidates []int
 }
