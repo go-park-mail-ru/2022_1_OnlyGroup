@@ -5,12 +5,66 @@ import (
 	"2022_1_OnlyGroup_back/app/usecases"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 )
+
+const patternStr = "^[a-zA-Z]+$"
+const patternDate = "[0-9]+"
+
+func checkData(profile *models.Profile) bool {
+	var check bool
+	if len(profile.Birthday) > 0 {
+		check, _ = regexp.MatchString(patternDate, profile.Birthday)
+		if !check {
+			return false
+		}
+	}
+
+	if profile.FirstName != "" {
+		check, _ = regexp.MatchString(patternStr, profile.FirstName)
+		if !check {
+			return false
+		}
+	}
+
+	if profile.LastName != "" {
+		check, _ = regexp.MatchString(patternStr, profile.LastName)
+		if !check {
+			return false
+		}
+	}
+	if profile.Gender != "" {
+		check, _ = regexp.MatchString(patternStr, profile.Gender)
+		if !check {
+			return false
+		}
+	}
+	if profile.City != "" {
+		check, _ = regexp.MatchString(patternStr, profile.City)
+		if !check {
+			return false
+		}
+	}
+	if profile.AboutUser != "" {
+		check, _ = regexp.MatchString(patternStr, profile.AboutUser)
+		if !check {
+			return false
+		}
+	}
+	if len(profile.Interests) != 0 {
+		for _, value := range profile.Interests {
+			check, _ = regexp.MatchString(patternStr, value)
+			if !check {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 type ProfileHandler struct {
 	ProfileUseCase usecases.ProfileUseCases
@@ -24,12 +78,17 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
-	if err == http.ErrNoCookie {
+	if errors.Is(err, http.ErrNoCookie) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
 	idFromUrl := mux.Vars(r)["id"]
+	checkIdFromUrl, _ := regexp.MatchString("^[0-9]+$", idFromUrl)
+	if !checkIdFromUrl {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 	id, err := strconv.Atoi(idFromUrl)
 	if errors.Is(err, strconv.ErrSyntax) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -55,11 +114,16 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
-	if err == http.ErrNoCookie {
+	if errors.Is(err, http.ErrNoCookie) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 	idFromUrl := mux.Vars(r)["id"]
+	checkIdFromUrl, _ := regexp.MatchString("^[0-9]+$", idFromUrl)
+	if !checkIdFromUrl {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 	id, err := strconv.Atoi(idFromUrl)
 	if errors.Is(err, strconv.ErrSyntax) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -73,7 +137,7 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 	}
 	response, err := json.Marshal(profile)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	w.Write(response)
@@ -83,7 +147,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
-	if err == http.ErrNoCookie {
+	if errors.Is(err, http.ErrNoCookie) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
@@ -96,11 +160,11 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	model := &models.Profile{}
 
 	err = json.Unmarshal(msg, model)
-	fmt.Println(msg)
-	if err != nil {
+	if err != nil || !checkData(model) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+
 	err = handler.ProfileUseCase.Change(cook.Value, *model)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
@@ -112,7 +176,7 @@ func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *htt
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
-	if err == http.ErrNoCookie {
+	if errors.Is(err, http.ErrNoCookie) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}

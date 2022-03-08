@@ -5,19 +5,19 @@ type UserID struct {
 }
 
 type UserAuthInfo struct {
-	Email        string `json:"email"`
-	Password     string `json:"password"`
-	CaptchaToken string `json:"captchaToken"`
+	Email        string
+	Password     string
+	CaptchaToken string
 }
 
 type ErrorLogin struct {
-	ErrorCode    int    `json:"errorCode"`
-	ErrorMessage string `json:"errorMessage"`
-	CaptchaToken string `json:"captchaToken"`
+	ErrorCode    int
+	ErrorMessage string
+	CaptchaToken string
 }
 
 type UserAuthProfile struct {
-	Email       string `json:"email"`
-	OldPassword string `json:"oldPassword"`
-	NewPassword string `json:"newPassword"`
+	Email       string
+	OldPassword string
+	NewPassword string
 }

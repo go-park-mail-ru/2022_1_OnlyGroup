@@ -45,15 +45,27 @@ var count = 0
 func (tables *ProfileMock) ChangeProfile(profileId int, profile models.Profile) (err error) {
 	for id, item := range tables.profileRepo {
 		if item.UserId == profileId {
-			tables.profileRepo[id].Interests = profile.Interests
-			tables.profileRepo[id].FirstName = profile.FirstName
-			tables.profileRepo[id].LastName = profile.LastName
-			tables.profileRepo[id].Birthday = profile.Birthday
-			tables.profileRepo[id].City = profile.City
-			tables.profileRepo[id].AboutUser = profile.AboutUser
-			//tables.profileRepo[id].UserId = profile.UserId
-			tables.profileRepo[id].Gender = profile.Gender
-			tables.profileRepo[id].Gender = profile.Gender
+			if len(profile.Interests) != 0 {
+				tables.profileRepo[id].Interests = profile.Interests
+			}
+			if profile.FirstName != "" {
+				tables.profileRepo[id].FirstName = profile.FirstName
+			}
+			if profile.LastName != "" {
+				tables.profileRepo[id].LastName = profile.LastName
+			}
+			if profile.Birthday != "" {
+				tables.profileRepo[id].Birthday = profile.Birthday
+			}
+			if profile.City != "" {
+				tables.profileRepo[id].City = profile.City
+			}
+			if profile.AboutUser != "" {
+				tables.profileRepo[id].AboutUser = profile.AboutUser
+			}
+			if profile.Gender != "" {
+				tables.profileRepo[id].Gender = profile.Gender
+			}
 			return nil
 		}
 	}
