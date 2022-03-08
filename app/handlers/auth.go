@@ -29,7 +29,7 @@ func (handler *AuthHandler) AuthUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	userId, err := handler.AuthUseCase.UserAuth(cook.Value)
+	userId, err := handler.AuthUseCase.Auth(cook.Value)
 	if err != nil {
 		errCode := errors.ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
@@ -54,7 +54,7 @@ func (handler *AuthHandler) LoginUserHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	realUser, cook, err := handler.AuthUseCase.UserLogin(*user)
+	realUser, cook, err := handler.AuthUseCase.Login(*user)
 	if err != nil {
 		errCode := errors.ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
@@ -76,7 +76,7 @@ func (handler *AuthHandler) LogoutUserHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = handler.AuthUseCase.UserLogout(cook.Value)
+	err = handler.AuthUseCase.Logout(cook.Value)
 	if err != nil {
 		errCode := errors.ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
@@ -100,7 +100,7 @@ func (handler *AuthHandler) LogupUserHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	realUser, cook, err := handler.AuthUseCase.UserRegister(*user)
+	realUser, cook, err := handler.AuthUseCase.Register(*user)
 	if err != nil {
 		errCode := errors.ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)

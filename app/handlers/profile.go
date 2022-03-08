@@ -66,7 +66,7 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	profile, err := handler.ProfileUseCase.ShortProfileGet(cook.Value, id)
+	profile, err := handler.ProfileUseCase.GetShort(cook.Value, id)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
 		return
@@ -116,7 +116,7 @@ func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *htt
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
-	profile, err := handler.ProfileUseCase.ProfilesCandidateGet(cook.Value)
+	profile, err := handler.ProfileUseCase.GetCandidates(cook.Value)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
 		return

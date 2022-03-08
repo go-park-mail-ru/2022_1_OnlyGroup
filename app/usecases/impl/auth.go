@@ -15,7 +15,7 @@ func NewAuthUseCaseImpl(authRepo repositories.AuthRepository, profileRepo reposi
 	return &authUseCaseImpl{authRepo: authRepo, profileRepo: profileRepo}
 }
 
-func (useCase *authUseCaseImpl) UserAuth(Cookie string) (id models.UserID, err error) {
+func (useCase *authUseCaseImpl) Auth(Cookie string) (id models.UserID, err error) {
 	realId, err := useCase.authRepo.GetIdBySession(Cookie)
 	if err != nil {
 		return
@@ -23,7 +23,7 @@ func (useCase *authUseCaseImpl) UserAuth(Cookie string) (id models.UserID, err e
 	return models.UserID{ID: realId}, nil
 }
 
-func (useCase *authUseCaseImpl) UserLogin(userInfo models.UserAuthInfo) (id models.UserID, cookie string, err error) {
+func (useCase *authUseCaseImpl) Login(userInfo models.UserAuthInfo) (id models.UserID, cookie string, err error) {
 	realId, err := useCase.authRepo.Authorize(userInfo.Email, userInfo.Password)
 	if err != nil {
 		return
@@ -32,7 +32,7 @@ func (useCase *authUseCaseImpl) UserLogin(userInfo models.UserAuthInfo) (id mode
 	return
 }
 
-func (useCase *authUseCaseImpl) UserRegister(userInfo models.UserAuthInfo) (id models.UserID, cookie string, err error) {
+func (useCase *authUseCaseImpl) Register(userInfo models.UserAuthInfo) (id models.UserID, cookie string, err error) {
 	realId, err := useCase.authRepo.AddUser(userInfo.Email, userInfo.Password)
 	if err != nil {
 		return
@@ -42,11 +42,11 @@ func (useCase *authUseCaseImpl) UserRegister(userInfo models.UserAuthInfo) (id m
 	return
 }
 
-func (useCase *authUseCaseImpl) UserLogout(Cookie string) error {
+func (useCase *authUseCaseImpl) Logout(Cookie string) error {
 	return useCase.authRepo.RemoveSession(Cookie)
 }
 
-func (useCase *authUseCaseImpl) UserChangePassword(userProfile models.UserAuthProfile, Cookie string) (err error) {
+func (useCase *authUseCaseImpl) ChangePassword(userProfile models.UserAuthProfile, Cookie string) (err error) {
 	realIdSession, err := useCase.authRepo.GetIdBySession(Cookie)
 	if err != nil {
 		return

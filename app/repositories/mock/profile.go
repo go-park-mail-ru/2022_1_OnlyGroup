@@ -18,7 +18,7 @@ func NewProfileMock() *ProfileMock {
 	return &mock
 }
 
-func (tables *ProfileMock) GetUserProfile(profileId int) (profile models.Profile, err error) {
+func (tables *ProfileMock) GetProfile(profileId int) (profile models.Profile, err error) {
 	for _, item := range tables.profileRepo {
 		if item.UserId == profileId {
 			profile = item
@@ -28,7 +28,7 @@ func (tables *ProfileMock) GetUserProfile(profileId int) (profile models.Profile
 	return profile, errors.ErrProfileNotFound
 }
 
-func (tables *ProfileMock) GetUserShortProfile(profileId int) (shortProfile models.ShortProfile, err error) {
+func (tables *ProfileMock) GetShortProfile(profileId int) (shortProfile models.ShortProfile, err error) {
 	for _, item := range tables.profileRepo {
 		if item.UserId == profileId {
 			shortProfile.FirstName = item.FirstName

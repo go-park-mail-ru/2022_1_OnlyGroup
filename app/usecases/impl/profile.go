@@ -21,10 +21,10 @@ func (useCase *profileUseCaseImpl) Get(cookies string, profileId int) (profile m
 	}
 
 	if profileId == profileIdCheck {
-		profile, err = useCase.profileRepo.GetUserProfile(profileIdCheck)
+		profile, err = useCase.profileRepo.GetProfile(profileIdCheck)
 		return
 	}
-	profile, err = useCase.profileRepo.GetUserProfile(profileId)
+	profile, err = useCase.profileRepo.GetProfile(profileId)
 	if err != nil {
 		return
 	}
@@ -49,7 +49,7 @@ func (useCase *profileUseCaseImpl) Delete(cookies string) (err error) {
 	return
 }
 
-func (useCase *profileUseCaseImpl) ShortProfileGet(cookies string, profileId int) (profile models.ShortProfile, err error) {
+func (useCase *profileUseCaseImpl) GetShort(cookies string, profileId int) (profile models.ShortProfile, err error) {
 	checkProfileId, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
 		return
@@ -57,11 +57,11 @@ func (useCase *profileUseCaseImpl) ShortProfileGet(cookies string, profileId int
 	if checkProfileId != profileId {
 		return
 	}
-	profile, err = useCase.profileRepo.GetUserShortProfile(profileId)
+	profile, err = useCase.profileRepo.GetShortProfile(profileId)
 	return
 }
 
-func (useCase *profileUseCaseImpl) ProfilesCandidateGet(cookies string) (candidateProfiles models.VectorCandidate, err error) {
+func (useCase *profileUseCaseImpl) GetCandidates(cookies string) (candidateProfiles models.VectorCandidate, err error) {
 	profileId, err := useCase.authRepo.GetIdBySession(cookies)
 	if err != nil {
 		return
