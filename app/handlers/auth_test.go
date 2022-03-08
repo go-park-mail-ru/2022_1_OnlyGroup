@@ -1,7 +1,6 @@
-package tests
+package handlers
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
 	mock_usecases "2022_1_OnlyGroup_back/app/tests/mocks"
 	"2022_1_OnlyGroup_back/pkg/errors"
@@ -28,7 +27,7 @@ func TestAuthAuthOk(t *testing.T) {
 
 	useCaseMock.EXPECT().UserAuth(testSessionSecret).Return(testUserModel, nil)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := CreateAuthHandler(useCaseMock)
 	req := httptest.NewRequest("GET", url, nil)
 	req.Header.Add("Cookie", "session="+testSessionSecret)
 
@@ -54,7 +53,7 @@ func TestAuthAuthNoAuth(t *testing.T) {
 
 	useCaseMock.EXPECT().UserAuth(testSessionSecret).Return(testUserModel, errors.ErrAuthSessionNotFound)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("GET", url, nil)
 	req.Header.Add("Cookie", "session="+testSessionSecret)
 
@@ -73,7 +72,7 @@ func TestAuthAuthNoCookie(t *testing.T) {
 	var expectedCode = http.StatusUnauthorized
 	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("GET", url, nil)
 
 	w := httptest.NewRecorder()
@@ -99,7 +98,7 @@ func TestLoginLoginOk(t *testing.T) {
 
 	useCaseMock.EXPECT().UserLogin(testRequestModel).Return(testUserModel, testSessionSecret, nil)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(testRequestBody))
 
 	w := httptest.NewRecorder()
@@ -129,7 +128,7 @@ func TestLoginUserNotFound(t *testing.T) {
 
 	useCaseMock.EXPECT().UserLogin(testRequestModel).Return(testUserModel, "", errors.ErrAuthUserNotFound)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(testRequestBody))
 
 	w := httptest.NewRecorder()
@@ -149,7 +148,7 @@ func TestLoginBadRequest(t *testing.T) {
 	var expectedCode = http.StatusBadRequest
 	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("PUT", url, bytes.NewReader([]byte(testRequestBody)))
 
 	w := httptest.NewRecorder()
@@ -170,7 +169,7 @@ func TestLogoutLogoutOk(t *testing.T) {
 
 	useCaseMock.EXPECT().UserLogout(testSessionSecret).Return(nil)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("DELETE", url, nil)
 	req.Header.Add("Cookie", "session="+testSessionSecret)
 
@@ -192,7 +191,7 @@ func TestLogoutSessionNotFound(t *testing.T) {
 
 	useCaseMock.EXPECT().UserLogout(testSessionSecret).Return(errors.ErrAuthSessionNotFound)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("DELETE", url, nil)
 	req.Header.Add("Cookie", "session="+testSessionSecret)
 
@@ -211,7 +210,7 @@ func TestLogoutNoCookie(t *testing.T) {
 	var expectedCode = http.StatusUnauthorized
 	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("DELETE", url, nil)
 
 	w := httptest.NewRecorder()
@@ -237,7 +236,7 @@ func TestLogupLogupOk(t *testing.T) {
 
 	useCaseMock.EXPECT().UserRegister(testRequestModel).Return(testUserModel, testSessionSecret, nil)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("POST", url, bytes.NewReader(testRequestBody))
 
 	w := httptest.NewRecorder()
@@ -267,7 +266,7 @@ func TestLogupUserConflict(t *testing.T) {
 
 	useCaseMock.EXPECT().UserRegister(testRequestModel).Return(testUserModel, "", errors.ErrAuthEmailUsed)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("POST", url, bytes.NewReader(testRequestBody))
 
 	w := httptest.NewRecorder()
@@ -287,7 +286,7 @@ func TestLogupBadRequest(t *testing.T) {
 	var expectedCode = http.StatusBadRequest
 	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
 
-	testingHandler := handlers.AuthHandler{AuthUseCase: useCaseMock}
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("POST", url, bytes.NewReader([]byte(testRequestBody)))
 
 	w := httptest.NewRecorder()
