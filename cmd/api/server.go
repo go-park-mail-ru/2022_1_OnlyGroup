@@ -20,10 +20,10 @@ func NewServer(addr string) APIServer {
 
 func (serv *APIServer) Run() error {
 	multiplexor := mux.NewRouter()
-	multiplexor.HandleFunc("/user", serv.authHandler.GET).Methods(http.MethodGet)
-	multiplexor.HandleFunc("/user", serv.authHandler.PUT).Methods(http.MethodPut)
-	multiplexor.HandleFunc("/user", serv.authHandler.POST).Methods(http.MethodPost)
-	multiplexor.HandleFunc("/user", serv.authHandler.DELETE).Methods(http.MethodDelete)
+	multiplexor.HandleFunc("/users", serv.authHandler.GET).Methods(http.MethodGet)
+	multiplexor.HandleFunc("/users", serv.authHandler.PUT).Methods(http.MethodPut)
+	multiplexor.HandleFunc("/users", serv.authHandler.POST).Methods(http.MethodPost)
+	multiplexor.HandleFunc("/users", serv.authHandler.DELETE).Methods(http.MethodDelete)
 
 	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
 	return server.ListenAndServe()
