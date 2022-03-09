@@ -29,6 +29,7 @@ func (useCase *authUseCaseImpl) UserLogin(userInfo models.UserAuthInfo) (id mode
 		return
 	}
 	cookie, err = useCase.authRepo.AddSession(realId)
+	id.ID = realId
 	return
 }
 
@@ -42,6 +43,7 @@ func (useCase *authUseCaseImpl) UserRegister(userInfo models.UserAuthInfo) (id m
 		return
 	}
 	cookie, err = useCase.authRepo.AddSession(realId)
+	id.ID = realId
 	return
 }
 

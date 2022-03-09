@@ -1,7 +1,7 @@
 package models
 
 type UserID struct {
-	ID int `json:"id"`
+	ID int
 }
 
 type UserAuthInfo struct {
