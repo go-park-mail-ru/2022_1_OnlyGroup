@@ -1,18 +1,6 @@
 package tests
 
-//import (
-//	"2022_1_OnlyGroup_back/app/handlers"
-//	"2022_1_OnlyGroup_back/app/models"
-//	mock_usecases "2022_1_OnlyGroup_back/app/tests/mockProfile"
-//	"encoding/json"
-//	"github.com/bxcodec/faker/v3"
-//	"github.com/golang/mock/gomock"
-//	"net/http"
-//	"net/http/httptest"
-//	"testing"
-//)
-//
-//const url = "http://localhost:3000/profiles/567"
+//const url = "/profiles/"
 //
 //func TestGetProfileOk(t *testing.T) {
 //	mockController := gomock.NewController(t)
@@ -29,8 +17,8 @@ package tests
 //
 //	testingHandler := handlers.ProfileHandler{ProfileUseCase: useCaseMock}
 //	req := httptest.NewRequest("GET", url, nil)
-//	req.Header.Add("Cookie", "session="+testSessionSecret)
 //
+//	req.Header.Add("Cookie", "session="+testSessionSecret)
 //	w := httptest.NewRecorder()
 //
 //	testingHandler.GetProfileHandler(w, req)

@@ -76,6 +76,9 @@ func (tables *ProfileMock) DeleteProfile(profileId int) (err error) {
 	if len(tables.profileRepo) == 0 {
 		return errors.ErrMockIsEmpty
 	}
+	if len(tables.profileRepo) <= profileId {
+		return errors.ErrProfileNotFound
+	}
 	for count, item := range tables.profileRepo {
 		if item.UserId == profileId {
 			tables.profileRepo = append(tables.profileRepo[:count], tables.profileRepo[count+1:]...)

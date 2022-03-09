@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"regexp"
 	"time"
 )
 
@@ -23,20 +22,22 @@ func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 }
 
 func checkValidUserModel(user models.UserAuthInfo) bool {
-	match, err := regexp.Match(emailPattern, []byte(user.Email))
-	if err != nil || match {
-		return false
-	}
-
-	match, err = regexp.Match(passwordPattern, []byte(user.Password))
-	if err != nil || match || len(user.Password) < 6 {
-		return false
-	}
+	//match, err := regexp.Match(emailPattern, []byte(user.Email))
+	//if err != nil || match {
+	//	return false
+	//}
+	//
+	//match, err = regexp.Match(passwordPattern, []byte(user.Password))
+	//if err != nil || match || len(user.Password) < 6 {
+	//	return false
+	//}
 
 	return true
 }
 
 func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -54,6 +55,8 @@ func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -85,6 +88,8 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -101,6 +106,8 @@ func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
