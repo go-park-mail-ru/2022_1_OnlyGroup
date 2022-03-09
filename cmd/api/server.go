@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 const UrlUsers = "/users"
 const ProfileUrl = "/profiles/{id:[0-9]+}"
 const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"
@@ -41,7 +40,7 @@ func (serv *APIServer) Run() error {
 	//Candidate for user
 	multiplexor.HandleFunc(ProfileUrlCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//User own profile
-	multiplexor.HandleFunc(ProfileUrl, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
+	multiplexor.HandleFunc("/profiles/{id:[0-9]+}", serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexor.HandleFunc(ProfileUrlShort, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexor.HandleFunc(ProfileUrl, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)   //свой профиль
 

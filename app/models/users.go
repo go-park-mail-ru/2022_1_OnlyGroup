@@ -1,12 +1,19 @@
 package models
 
 type UserID struct {
-	ID int
+	ID int `json:"id"`
 }
 
 type UserAuthInfo struct {
-	Email    string
-	Password string
+	Email        string
+	Password     string
+	CaptchaToken string
+}
+
+type ErrorLogin struct {
+	ErrorCode    int
+	ErrorMessage string
+	CaptchaToken string
 }
 
 type UserAuthProfile struct {
