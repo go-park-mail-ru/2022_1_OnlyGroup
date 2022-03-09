@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+const UrlUsers = "/users"
+const ProfileUrl = "/profiles/{id:[0-9]+}"
+const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"
+const ProfileUrlCandidates = "/profiles/candidates"
+
 type APIServer struct {
 	address        string
 	authHandler    *handlers.AuthHandler
@@ -32,16 +37,16 @@ func Cors(w http.ResponseWriter, r *http.Request) {
 func (serv *APIServer) Run() error {
 	multiplexor := mux.NewRouter()
 
-	multiplexor.HandleFunc("/users", serv.authHandler.AuthUserHandler).Methods(http.MethodGet)
-	multiplexor.HandleFunc("/users", serv.authHandler.LoginUserHandler).Methods(http.MethodPut)
-	multiplexor.HandleFunc("/users", serv.authHandler.LogupUserHandler).Methods(http.MethodPost)
-	multiplexor.HandleFunc("/users", serv.authHandler.LogoutUserHandler).Methods(http.MethodDelete)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.AuthUserHandler).Methods(http.MethodGet)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.LoginUserHandler).Methods(http.MethodPut)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.LogupUserHandler).Methods(http.MethodPost)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.LogoutUserHandler).Methods(http.MethodDelete)
 	//Candidate for user
-	multiplexor.HandleFunc("/profiles/candidates", serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
+	multiplexor.HandleFunc(ProfileUrlCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//User own profile
-	multiplexor.HandleFunc("/profiles/{id:[0-9]+}", serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
-	multiplexor.HandleFunc("/profiles/{id:[0-9]+}/shorts", serv.profileHandler.GetProfileHandler).Methods(http.MethodGet) ///дописать
-	multiplexor.HandleFunc("/profiles/{id:[0-9]+}", serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)     //свой профиль
+	multiplexor.HandleFunc(ProfileUrl, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
+	multiplexor.HandleFunc(ProfileUrlShort, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet) ///дописать
+	multiplexor.HandleFunc(ProfileUrl, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)   //свой профиль
 
 	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
 
