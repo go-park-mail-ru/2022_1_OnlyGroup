@@ -8,3 +8,4 @@ require (
 	github.com/bxcodec/faker/v3 v3.7.0 // indirect
 	github.com/rs/cors v1.8.2 // indirect
 )
+

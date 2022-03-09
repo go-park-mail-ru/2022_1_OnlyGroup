@@ -9,9 +9,9 @@ Tinder
 
 ### Команда
 
-  * [Климовский Денис](github.com/kdv2001 "full stack")
-  * [Денисова Анастасия](github.com/antdenv "full stack")
-  * [Петренко Илья](github.com/petrenkilya "full stack")
+  * [Климовский Денис](https://github.com/kdv2001 "full stack")
+  * [Денисова Анастасия](https://github.com/antdenv "full stack")
+  * [Петренко Илья](https://github.com/petrenkilya "full stack")
 
 ### Менторы
 

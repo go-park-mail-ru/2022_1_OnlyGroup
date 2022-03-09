@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+
 const UrlUsers = "/users"
 const ProfileUrl = "/profiles/{id:[0-9]+}"
 const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"
@@ -37,10 +38,6 @@ func Cors(w http.ResponseWriter, r *http.Request) {
 func (serv *APIServer) Run() error {
 	multiplexor := mux.NewRouter()
 
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.AuthUserHandler).Methods(http.MethodGet)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.LoginUserHandler).Methods(http.MethodPut)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.LogupUserHandler).Methods(http.MethodPost)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.LogoutUserHandler).Methods(http.MethodDelete)
 	//Candidate for user
 	multiplexor.HandleFunc(ProfileUrlCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//User own profile
@@ -49,6 +46,11 @@ func (serv *APIServer) Run() error {
 	multiplexor.HandleFunc(ProfileUrl, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)   //свой профиль
 
 	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
+
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
 
 	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
 	return server.ListenAndServe()
