@@ -11,7 +11,6 @@ import (
 )
 
 const emailPattern = "/^(([^<>()[\\]\\\\.,;:\\s@\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$/"
-const passwordPattern = "/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/"
 const authCookie = "session"
 
 type AuthHandler struct {
@@ -27,12 +26,6 @@ func checkValidUserModel(user models.UserAuthInfo) bool {
 	if err != nil || match {
 		return false
 	}
-
-	match, err = regexp.Match(passwordPattern, []byte(user.Password))
-	if err != nil || match || len(user.Password) < 6 {
-		return false
-	}
-
 	return true
 }
 
@@ -96,7 +89,7 @@ func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 		errCode := ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
 	}
-	cookie := http.Cookie{Name: authCookie, Value: "", Expires: time.Now().Add(time.Hour * (-1))}
+	cookie := http.Cookie{Name: authCookie, Value: cook.Value, Expires: time.Now().Add(time.Hour * (-1))}
 	http.SetCookie(w, &cookie)
 }
 

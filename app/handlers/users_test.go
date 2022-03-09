@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"2022_1_OnlyGroup_back/app/models"
-	mock_usecases "2022_1_OnlyGroup_back/app/tests/mocks"
+	mockUseCases "2022_1_OnlyGroup_back/app/tests/mocks"
 	"bytes"
 	"encoding/json"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,7 +23,7 @@ func TestAuthAuthOk(t *testing.T) {
 	var testUserModel = models.UserID{ID: 3}
 	var expectedResponse, _ = json.Marshal(testUserModel)
 	var expectedCode = http.StatusOK
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserAuth(testSessionSecret).Return(testUserModel, nil)
 
@@ -33,12 +34,9 @@ func TestAuthAuthOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.GET(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
-	if w.Body.String() != string(expectedResponse) {
-		t.Fatalf("body mismatched, expected '%s', got '%s'", string(expectedResponse), w.Body.String())
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, w.Body.String(), string(expectedResponse), "body mismatched, expected '%s', got '%s'",
+		string(expectedResponse), w.Body.String())
 }
 
 func TestAuthAuthNoAuth(t *testing.T) {
@@ -48,7 +46,7 @@ func TestAuthAuthNoAuth(t *testing.T) {
 	const testSessionSecret = "edfjiwehfbwbwewe"
 	var testUserModel = models.UserID{ID: 0}
 	var expectedCode = http.StatusUnauthorized
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserAuth(testSessionSecret).Return(testUserModel, ErrAuthSessionNotFound)
 
@@ -59,9 +57,7 @@ func TestAuthAuthNoAuth(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.GET(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestAuthAuthNoCookie(t *testing.T) {
@@ -69,7 +65,7 @@ func TestAuthAuthNoCookie(t *testing.T) {
 	defer mockController.Finish()
 
 	var expectedCode = http.StatusUnauthorized
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("GET", url, nil)
@@ -77,9 +73,7 @@ func TestAuthAuthNoCookie(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.GET(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLoginLoginOk(t *testing.T) {
@@ -87,13 +81,13 @@ func TestLoginLoginOk(t *testing.T) {
 	defer mockController.Finish()
 
 	const testSessionSecret = "edfjiwehfbwbwewe"
-	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 3}
 	var expectedResponse, _ = json.Marshal(testUserModel)
 	var expectedCode = http.StatusOK
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserLogin(testRequestModel).Return(testUserModel, testSessionSecret, nil)
 
@@ -103,27 +97,23 @@ func TestLoginLoginOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
-	if w.Body.String() != string(expectedResponse) {
-		t.Fatalf("body mismatched, expected '%s', got '%s'", string(expectedResponse), w.Body.String())
-	}
-	if !strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret) {
-		t.Fatalf("session mismatched, expected %s, got %s", "session="+testSessionSecret, w.HeaderMap.Get("Set-Cookie"))
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, w.Body.String(), string(expectedResponse), "body mismatched, expected '%s', got '%s'",
+		string(expectedResponse), w.Body.String())
+	assert.Equal(t, strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret), true,
+		"session mismatched, expected %s, got %s", "session="+testSessionSecret, w.HeaderMap.Get("Set-Cookie"))
 }
 
 func TestLoginUserNotFound(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 0}
 	var expectedCode = http.StatusUnauthorized
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserLogin(testRequestModel).Return(testUserModel, "", ErrAuthUserNotFound)
 
@@ -133,9 +123,7 @@ func TestLoginUserNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLoginBadRequest(t *testing.T) {
@@ -145,7 +133,7 @@ func TestLoginBadRequest(t *testing.T) {
 	var testRequestBody = "{bad_json}"
 
 	var expectedCode = http.StatusBadRequest
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("PUT", url, bytes.NewReader([]byte(testRequestBody)))
@@ -153,9 +141,7 @@ func TestLoginBadRequest(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogoutLogoutOk(t *testing.T) {
@@ -164,7 +150,7 @@ func TestLogoutLogoutOk(t *testing.T) {
 	const testSessionSecret = "edfjiwehfbwbwewe"
 
 	var expectedCode = http.StatusOK
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserLogout(testSessionSecret).Return(nil)
 
@@ -175,9 +161,9 @@ func TestLogoutLogoutOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.DELETE(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret), true,
+		"session mismatched, expected %s, got %s", "session="+testSessionSecret, w.HeaderMap.Get("Set-Cookie"))
 }
 
 func TestLogoutSessionNotFound(t *testing.T) {
@@ -186,7 +172,7 @@ func TestLogoutSessionNotFound(t *testing.T) {
 	const testSessionSecret = "edfjiwehfbwbwewe"
 
 	var expectedCode = http.StatusUnauthorized
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserLogout(testSessionSecret).Return(ErrAuthSessionNotFound)
 
@@ -197,9 +183,7 @@ func TestLogoutSessionNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.DELETE(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogoutNoCookie(t *testing.T) {
@@ -207,7 +191,7 @@ func TestLogoutNoCookie(t *testing.T) {
 	defer mockController.Finish()
 
 	var expectedCode = http.StatusUnauthorized
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("DELETE", url, nil)
@@ -215,9 +199,7 @@ func TestLogoutNoCookie(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.DELETE(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogupLogupOk(t *testing.T) {
@@ -225,13 +207,13 @@ func TestLogupLogupOk(t *testing.T) {
 	defer mockController.Finish()
 
 	const testSessionSecret = "edfjiwehfbwbwewe"
-	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 3}
 	var expectedResponse, _ = json.Marshal(testUserModel)
 	var expectedCode = http.StatusOK
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserRegister(testRequestModel).Return(testUserModel, testSessionSecret, nil)
 
@@ -241,27 +223,23 @@ func TestLogupLogupOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.POST(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
-	if w.Body.String() != string(expectedResponse) {
-		t.Fatalf("body mismatched, expected '%s', got '%s'", string(expectedResponse), w.Body.String())
-	}
-	if !strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret) {
-		t.Fatalf("session mismatched, expected %s, got %s", "session="+testSessionSecret, w.HeaderMap.Get("Set-Cookie"))
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, w.Body.String(), string(expectedResponse), "body mismatched, expected '%s', got '%s'",
+		string(expectedResponse), w.Body.String())
+	assert.Equal(t, strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret), true,
+		"session mismatched, expected %s, got %s", "session="+testSessionSecret, w.HeaderMap.Get("Set-Cookie"))
 }
 
 func TestLogupUserConflict(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 0}
 	var expectedCode = http.StatusConflict
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserRegister(testRequestModel).Return(testUserModel, "", ErrAuthEmailUsed)
 
@@ -271,9 +249,7 @@ func TestLogupUserConflict(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.POST(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogupBadRequest(t *testing.T) {
@@ -283,7 +259,7 @@ func TestLogupBadRequest(t *testing.T) {
 	var testRequestBody = "{bad_json}"
 
 	var expectedCode = http.StatusBadRequest
-	useCaseMock := mock_usecases.NewMockAuthUseCases(mockController)
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("POST", url, bytes.NewReader([]byte(testRequestBody)))
@@ -291,7 +267,5 @@ func TestLogupBadRequest(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.POST(w, req)
 
-	if w.Code != expectedCode {
-		t.Fatalf("status code error, expected %d, got %d", expectedCode, w.Code)
-	}
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
