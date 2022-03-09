@@ -3,13 +3,15 @@ package handlers
 import (
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/usecases"
-	"2022_1_OnlyGroup_back/pkg/errors"
 	"encoding/json"
 	"io"
 	"net/http"
+	"regexp"
 	"time"
 )
 
+const emailPattern = "/^(([^<>()[\\]\\\\.,;:\\s@\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$/"
+const passwordPattern = "/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/"
 const authCookie = "session"
 
 type AuthHandler struct {
@@ -20,7 +22,21 @@ func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 	return &AuthHandler{useCase}
 }
 
-func (handler *AuthHandler) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
+func checkValidUserModel(user models.UserAuthInfo) bool {
+	match, err := regexp.Match(emailPattern, []byte(user.Email))
+	if err != nil || match {
+		return false
+	}
+
+	match, err = regexp.Match(passwordPattern, []byte(user.Password))
+	if err != nil || match || len(user.Password) < 6 {
+		return false
+	}
+
+	return true
+}
+
+func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -29,7 +45,7 @@ func (handler *AuthHandler) AuthUserHandler(w http.ResponseWriter, r *http.Reque
 
 	userId, err := handler.AuthUseCase.UserAuth(cook.Value)
 	if err != nil {
-		errCode := errors.ErrorToHTTPCode(err)
+		errCode := ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
 		return
 	}
@@ -37,7 +53,7 @@ func (handler *AuthHandler) AuthUserHandler(w http.ResponseWriter, r *http.Reque
 	w.Write(response)
 }
 
-func (handler *AuthHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
+func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -50,9 +66,14 @@ func (handler *AuthHandler) LoginUserHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if !checkValidUserModel(*user) {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
 	realUser, cook, err := handler.AuthUseCase.UserLogin(*user)
 	if err != nil {
-		errCode := errors.ErrorToHTTPCode(err)
+		errCode := ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
 		return
 	}
@@ -63,7 +84,7 @@ func (handler *AuthHandler) LoginUserHandler(w http.ResponseWriter, r *http.Requ
 	w.Write(response)
 }
 
-func (handler *AuthHandler) LogoutUserHandler(w http.ResponseWriter, r *http.Request) {
+func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -72,14 +93,14 @@ func (handler *AuthHandler) LogoutUserHandler(w http.ResponseWriter, r *http.Req
 
 	err = handler.AuthUseCase.UserLogout(cook.Value)
 	if err != nil {
-		errCode := errors.ErrorToHTTPCode(err)
+		errCode := ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
 	}
 	cookie := http.Cookie{Name: authCookie, Value: "", Expires: time.Now().Add(time.Hour * (-1))}
 	http.SetCookie(w, &cookie)
 }
 
-func (handler *AuthHandler) LogupUserHandler(w http.ResponseWriter, r *http.Request) {
+func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -92,9 +113,14 @@ func (handler *AuthHandler) LogupUserHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if !checkValidUserModel(*user) {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
 	realUser, cook, err := handler.AuthUseCase.UserRegister(*user)
 	if err != nil {
-		errCode := errors.ErrorToHTTPCode(err)
+		errCode := ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
 		return
 	}
