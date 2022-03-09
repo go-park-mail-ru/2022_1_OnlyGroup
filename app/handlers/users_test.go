@@ -81,7 +81,7 @@ func TestLoginLoginOk(t *testing.T) {
 	defer mockController.Finish()
 
 	const testSessionSecret = "edfjiwehfbwbwewe"
-	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test.email@test.ru", Password: "Test_pass123"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 3}
@@ -108,7 +108,7 @@ func TestLoginUserNotFound(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "Test_pass123"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 0}
@@ -137,6 +137,25 @@ func TestLoginBadRequest(t *testing.T) {
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("PUT", url, bytes.NewReader([]byte(testRequestBody)))
+
+	w := httptest.NewRecorder()
+	testingHandler.PUT(w, req)
+
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+}
+
+func TestLoginBadEmail(t *testing.T) {
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "Test_pass123"}
+	var testRequestBody, _ = json.Marshal(testRequestModel)
+
+	var expectedCode = http.StatusBadRequest
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
+
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
+	req := httptest.NewRequest("PUT", url, bytes.NewReader(testRequestBody))
 
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
@@ -207,7 +226,7 @@ func TestLogupLogupOk(t *testing.T) {
 	defer mockController.Finish()
 
 	const testSessionSecret = "edfjiwehfbwbwewe"
-	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "Test_pass123"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 3}
@@ -234,7 +253,7 @@ func TestLogupUserConflict(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "test_pass"}
+	var testRequestModel = models.UserAuthInfo{Email: "test_email@test.ru", Password: "Test_pass123"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
 	var testUserModel = models.UserID{ID: 0}
@@ -242,6 +261,25 @@ func TestLogupUserConflict(t *testing.T) {
 	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	useCaseMock.EXPECT().UserRegister(testRequestModel).Return(testUserModel, "", ErrAuthEmailUsed)
+
+	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
+	req := httptest.NewRequest("POST", url, bytes.NewReader(testRequestBody))
+
+	w := httptest.NewRecorder()
+	testingHandler.POST(w, req)
+
+	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+}
+
+func TestLogupBadEmail(t *testing.T) {
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "Test_pass123"}
+	var testRequestBody, _ = json.Marshal(testRequestModel)
+	
+	var expectedCode = http.StatusBadRequest
+	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
 	req := httptest.NewRequest("POST", url, bytes.NewReader(testRequestBody))
