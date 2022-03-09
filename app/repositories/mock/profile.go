@@ -3,6 +3,7 @@ package mock
 import (
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/pkg/errors"
+	"fmt"
 	"github.com/bxcodec/faker/v3"
 )
 
@@ -15,6 +16,7 @@ func NewProfileMock() *ProfileMock {
 	for i := 0; i < 6; i++ {
 		mock.AddProfile(models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: i, Gender: faker.Gender()})
 	}
+	fmt.Println(mock)
 	return &mock
 }
 

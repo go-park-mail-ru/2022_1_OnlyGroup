@@ -15,7 +15,7 @@ func NewAuthUseCaseImpl(authRepo repositories.AuthRepository, profileRepo reposi
 	return &authUseCaseImpl{authRepo: authRepo, profileRepo: profileRepo}
 }
 
-func (useCase *authUseCaseImpl) Auth(Cookie string) (id models.UserID, err error) {
+func (useCase *authUseCaseImpl) Create(Cookie string) (id models.UserID, err error) {
 	realId, err := useCase.authRepo.GetIdBySession(Cookie)
 	if err != nil {
 		return

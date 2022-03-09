@@ -29,7 +29,7 @@ func generateSecret(size int) string {
 }
 
 func NewAuthMock() *AuthMock {
-	data := []userData{{email: "petrenko", password: "0"}}
+	data := []userData{{email: "petrenko@mail.ru", password: "0"}}
 	for i := 1; i < 6; i++ {
 		data = append(data, userData{email: faker.Email(), password: faker.Password()})
 	}

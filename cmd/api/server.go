@@ -23,7 +23,7 @@ func NewServer(addr string) APIServer {
 	}
 }
 
-func CorsMock(w http.ResponseWriter, r *http.Request) {
+func Cors(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
@@ -40,14 +40,10 @@ func (serv *APIServer) Run() error {
 	multiplexor.HandleFunc("/profiles/candidates", serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//User own profile
 	multiplexor.HandleFunc("/profiles/{id:[0-9]+}", serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
-	multiplexor.HandleFunc("/profiles/{id:[0-9]+}/short", serv.profileHandler.GetProfileHandler).Methods(http.MethodGet) ///дописать
-	multiplexor.HandleFunc("/profiles/{id:[0-9]+}", serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)    //свой профиль
+	multiplexor.HandleFunc("/profiles/{id:[0-9]+}/shorts", serv.profileHandler.GetProfileHandler).Methods(http.MethodGet) ///дописать
+	multiplexor.HandleFunc("/profiles/{id:[0-9]+}", serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)     //свой профиль
 
-	multiplexor.HandleFunc("/profiles", CorsMock).Methods(http.MethodOptions)
-	multiplexor.HandleFunc("/users", CorsMock).Methods(http.MethodOptions)
-	multiplexor.HandleFunc("/profiles/{id:[0-9]+}", CorsMock).Methods(http.MethodOptions)
-	multiplexor.HandleFunc("/profiles/{id:[0-9]+}/short", CorsMock).Methods(http.MethodOptions)
-	multiplexor.HandleFunc("/profiles/candidates", CorsMock).Methods(http.MethodOptions)
+	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
 
 	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
 	return server.ListenAndServe()

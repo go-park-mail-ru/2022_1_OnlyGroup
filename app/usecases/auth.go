@@ -3,7 +3,7 @@ package usecases
 import "2022_1_OnlyGroup_back/app/models"
 
 type AuthUseCases interface {
-	Auth(Cookie string) (id models.UserID, err error)
+	Create(Cookie string) (id models.UserID, err error)
 	Login(userInfo models.UserAuthInfo) (id models.UserID, cookie string, err error)
 	Register(userInfo models.UserAuthInfo) (id models.UserID, cookie string, err error)
 	Logout(Cookie string) error

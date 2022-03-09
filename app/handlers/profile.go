@@ -14,53 +14,51 @@ import (
 
 const patternStr = "^[a-zA-Z]+$"
 const patternDate = "[0-9]+"
+const patternId = "^[0-9]+$"
 
 func checkData(profile *models.Profile) bool {
 	var check bool
+	var err error
 	if len(profile.Birthday) > 0 {
-		check, _ = regexp.MatchString(patternDate, profile.Birthday)
-		if !check {
+		check, err = regexp.MatchString(patternDate, profile.Birthday)
+		if !check || err != nil {
 			return false
 		}
 	}
-
 	if profile.FirstName != "" {
-		check, _ = regexp.MatchString(patternStr, profile.FirstName)
-		if !check {
+		check, err = regexp.MatchString(patternStr, profile.FirstName)
+		if !check || err != nil {
 			return false
 		}
 	}
-
 	if profile.LastName != "" {
-		check, _ = regexp.MatchString(patternStr, profile.LastName)
-		if !check {
+		check, err = regexp.MatchString(patternStr, profile.LastName)
+		if !check || err != nil {
 			return false
 		}
 	}
 	if profile.Gender != "" {
-		check, _ = regexp.MatchString(patternStr, profile.Gender)
-		if !check {
+		check, err = regexp.MatchString(patternStr, profile.Gender)
+		if !check || err != nil {
 			return false
 		}
 	}
 	if profile.City != "" {
-		check, _ = regexp.MatchString(patternStr, profile.City)
-		if !check {
+		check, err = regexp.MatchString(patternStr, profile.City)
+		if !check || err != nil {
 			return false
 		}
 	}
 	if profile.AboutUser != "" {
-		check, _ = regexp.MatchString(patternStr, profile.AboutUser)
-		if !check {
+		check, err = regexp.MatchString(patternStr, profile.AboutUser)
+		if !check || err != nil {
 			return false
 		}
 	}
-	if len(profile.Interests) != 0 {
-		for _, value := range profile.Interests {
-			check, _ = regexp.MatchString(patternStr, value)
-			if !check {
-				return false
-			}
+	for _, value := range profile.Interests {
+		check, _ = regexp.MatchString(patternStr, value)
+		if !check {
+			return false
 		}
 	}
 	return true
@@ -84,7 +82,7 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 	}
 
 	idFromUrl := mux.Vars(r)["id"]
-	checkIdFromUrl, _ := regexp.MatchString("^[0-9]+$", idFromUrl)
+	checkIdFromUrl, _ := regexp.MatchString(patternId, idFromUrl)
 	if !checkIdFromUrl {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return

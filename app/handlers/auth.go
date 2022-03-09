@@ -29,7 +29,7 @@ func (handler *AuthHandler) AuthUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	userId, err := handler.AuthUseCase.Auth(cook.Value)
+	userId, err := handler.AuthUseCase.Create(cook.Value)
 	if err != nil {
 		errCode := errors.ErrorToHTTPCode(err)
 		http.Error(w, http.StatusText(errCode), errCode)
