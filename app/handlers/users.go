@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"regexp"
 	"time"
 )
 
 const emailPattern = "/^(([^<>()[\\]\\\\.,;:\\s@\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$/"
-const passwordPattern = "/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/"
+
+//const passwordPattern = "/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/"
 const authCookie = "session"
 
 type AuthHandler struct {
@@ -22,15 +24,16 @@ func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 }
 
 func checkValidUserModel(user models.UserAuthInfo) bool {
-	//match, err := regexp.Match(emailPattern, []byte(user.Email))
-	//if err != nil || match {
-	//	return false
-	//}
-	//
-	//match, err = regexp.Match(passwordPattern, []byte(user.Password))
-	//if err != nil || match || len(user.Password) < 6 {
-	//	return false
-	//}
+	if len(user.Email) > 64 || len(user.Email) < 2 {
+		return false
+	}
+	if len(user.Password) > 32 || len(user.Email) < 6 {
+		return false
+	}
+	match, err := regexp.MatchString(emailPattern, user.Email)
+	if err != nil || match {
+		return false
+	}
 
 	return true
 }
