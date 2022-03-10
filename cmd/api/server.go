@@ -44,12 +44,12 @@ func (serv *APIServer) Run() error {
 	multiplexor.HandleFunc(ProfileUrlShort, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexor.HandleFunc(ProfileUrl, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)   //свой профиль
 
+	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
+
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
-
-	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
 
 	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
 	return server.ListenAndServe()
