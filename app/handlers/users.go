@@ -10,9 +10,11 @@ import (
 	"time"
 )
 
-const emailPattern = "/^(([^<>()[\\]\\\\.,;:\\s@\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$/"
+const emailPattern = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
+const passwordPattern1 = `[a-z]+`
+const passwordPattern2 = `[A-Z]+`
+const passwordPattern3 = `[0-9]+`
 
-//const passwordPattern = "/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/"
 const authCookie = "session"
 
 type AuthHandler struct {
@@ -24,17 +26,29 @@ func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 }
 
 func checkValidUserModel(user models.UserAuthInfo) bool {
-	if len(user.Email) > 64 || len(user.Email) < 2 {
-		return false
-	}
-	if len(user.Password) > 32 || len(user.Email) < 6 {
-		return false
-	}
+	//processing email
 	match, err := regexp.MatchString(emailPattern, user.Email)
-	if err != nil || match {
+	if err != nil || !match {
 		return false
 	}
 
+	//processing password
+	if len(user.Password) > 32 || len(user.Password) < 6 {
+		return false
+	}
+
+	match, err = regexp.MatchString(passwordPattern1, user.Password)
+	if err != nil || !match {
+		return false
+	}
+	match, err = regexp.MatchString(passwordPattern2, user.Password)
+	if err != nil || !match {
+		return false
+	}
+	match, err = regexp.MatchString(passwordPattern3, user.Password)
+	if err != nil || !match {
+		return false
+	}
 	return true
 }
 
@@ -43,14 +57,14 @@ func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusUnauthorized)
 		return
 	}
 
 	userId, err := handler.AuthUseCase.UserAuth(cook.Value)
 	if err != nil {
 		errCode := ErrorToHTTPCode(err)
-		http.Error(w, http.StatusText(errCode), errCode)
+		http.Error(w, WrapError2Json(err.Error()), errCode)
 		return
 	}
 	response, _ := json.Marshal(userId)
@@ -63,24 +77,24 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusInternalServerError)
 	}
 	user := &models.UserAuthInfo{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	if !checkValidUserModel(*user) {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	realUser, cook, err := handler.AuthUseCase.UserLogin(*user)
 	if err != nil {
 		errCode := ErrorToHTTPCode(err)
-		http.Error(w, http.StatusText(errCode), errCode)
+		http.Error(w, WrapError2Json(err.Error()), errCode)
 		return
 	}
 	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7)}
@@ -95,16 +109,16 @@ func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusUnauthorized)
 		return
 	}
 
 	err = handler.AuthUseCase.UserLogout(cook.Value)
 	if err != nil {
 		errCode := ErrorToHTTPCode(err)
-		http.Error(w, http.StatusText(errCode), errCode)
+		http.Error(w, WrapError2Json(err.Error()), errCode)
 	}
-	cookie := http.Cookie{Name: authCookie, Value: "", Expires: time.Now().Add(time.Hour * (-1))}
+	cookie := http.Cookie{Name: authCookie, Value: cook.Value, Expires: time.Now().Add(time.Hour * (-1))}
 	http.SetCookie(w, &cookie)
 }
 
@@ -114,24 +128,24 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusInternalServerError)
 	}
 	user := &models.UserAuthInfo{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	if !checkValidUserModel(*user) {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	realUser, cook, err := handler.AuthUseCase.UserRegister(*user)
 	if err != nil {
 		errCode := ErrorToHTTPCode(err)
-		http.Error(w, http.StatusText(errCode), errCode)
+		http.Error(w, WrapError2Json(err.Error()), errCode)
 		return
 	}
 	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7)}

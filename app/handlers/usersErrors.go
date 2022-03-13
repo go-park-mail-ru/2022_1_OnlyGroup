@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 )
@@ -21,5 +22,17 @@ var errorsCodes = map[error]int{
 }
 
 func ErrorToHTTPCode(err error) int {
-	return errorsCodes[err]
+	code, has := errorsCodes[err]
+	if !has {
+		code = http.StatusInternalServerError
+	}
+	return code
+}
+
+func WrapError2Json(input string) string {
+	errorStruct := struct {
+		ErrorMsg string
+	}{input}
+	wrappedError, _ := json.Marshal(errorStruct)
+	return string(wrappedError)
 }

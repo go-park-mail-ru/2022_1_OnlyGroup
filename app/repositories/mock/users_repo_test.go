@@ -8,7 +8,7 @@ import (
 )
 
 const numTest = 6
-const defaultMockUser = 6
+const defaultMockUser = 5
 
 func TestGenerateSecret(t *testing.T) {
 	assert := assert.New(t)

@@ -2,7 +2,7 @@
 // Source: app/usecases/auth.go
 
 // Package mock_usecases is a generated GoMock package.
-package mock_usecases
+package mocks
 
 import (
 	models "2022_1_OnlyGroup_back/app/models"
