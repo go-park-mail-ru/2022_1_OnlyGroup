@@ -1,9 +1,9 @@
 package impl
 
 import (
+	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/repositories"
-	"2022_1_OnlyGroup_back/pkg/errors"
 )
 
 type authUseCaseImpl struct {
@@ -63,9 +63,10 @@ func (useCase *authUseCaseImpl) UserChangePassword(userProfile models.UserAuthPr
 	}
 
 	if realIdAuth != realIdSession {
-		err = errors.ErrAuthWrongPassword
+		err = handlers.ErrAuthWrongPassword
 		return
 	}
+
 	err = useCase.authRepo.ChangePassword(realIdAuth, userProfile.NewPassword)
 	return
 }

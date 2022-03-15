@@ -1,8 +1,8 @@
 package mock
 
 import (
+	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
-	"2022_1_OnlyGroup_back/pkg/errors"
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -29,7 +29,7 @@ func TestAddGetProfile(t *testing.T) {
 		})
 	}
 	_, err := ProfileMockTest.GetProfile(TestNum + 1)
-	assert.Equal(err, errors.ErrProfileNotFound)
+	assert.Equal(err, handlers.ErrProfileNotFound)
 
 }
 
@@ -54,7 +54,7 @@ func TestAddGetShortProfile(t *testing.T) {
 		})
 	}
 	_, err := ProfileMockTest.GetProfile(TestNum + 1)
-	assert.Equal(err, errors.ErrProfileNotFound)
+	assert.Equal(err, handlers.ErrProfileNotFound)
 }
 
 func TestAddGetEmptyProfile(t *testing.T) {
@@ -89,7 +89,7 @@ func TestFindCandidate(t *testing.T) {
 		profileRepoTest = append(profileRepoTest, models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: i, Gender: faker.Gender()})
 	}
 	_, err := ProfileMockTest.FindCandidateProfile(TestNum + 1)
-	assert.Equal(err, errors.ErrProfileNotFound)
+	assert.Equal(err, handlers.ErrProfileNotFound)
 
 	for _, test := range profileRepoTest {
 		t.Run("", func(t *testing.T) {
@@ -130,7 +130,7 @@ func TestCheckEmptyProfile(t *testing.T) {
 	err := ProfileMockTest.AddEmptyProfile(TestNum + 1)
 	assert.Equal(err, nil)
 	err = ProfileMockTest.CheckProfileFiled(TestNum + 1)
-	assert.Equal(err, errors.ErrProfileNotFiled)
+	assert.Equal(err, handlers.ErrProfileNotFiled)
 
 	for idx := 0; idx < TestNum; idx++ {
 		t.Run("", func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestCheckEmptyProfile(t *testing.T) {
 		})
 	}
 	err = ProfileMockTest.CheckProfileFiled(TestNum + 2)
-	assert.Equal(err, errors.ErrProfileNotFound)
+	assert.Equal(err, handlers.ErrProfileNotFound)
 }
 
 func TestNewChangeProfile(t *testing.T) {
@@ -156,7 +156,7 @@ func TestNewChangeProfile(t *testing.T) {
 	assert.Equal(err, nil)
 
 	err = ProfileMockTest.ChangeProfile(8, profileRepoTest)
-	assert.Equal(err, errors.ErrProfileNotFound)
+	assert.Equal(err, handlers.ErrProfileNotFound)
 
 }
 
@@ -169,6 +169,6 @@ func TestDeleteChangeProfile(t *testing.T) {
 	assert.Equal(err, nil)
 
 	err = ProfileMockTest.DeleteProfile(8)
-	assert.Equal(err, errors.ErrProfileNotFound)
+	assert.Equal(err, handlers.ErrProfileNotFound)
 
 }

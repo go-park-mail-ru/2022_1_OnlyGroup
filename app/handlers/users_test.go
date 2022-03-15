@@ -312,17 +312,17 @@ func TestUserModelValidationTableDriven(t *testing.T) {
 	var tests = []struct {
 		email          string
 		password       string
-		expectedResult bool
-	}{{"test.email@corp.mail.ru", "TEst_pass123", true},
-		{"test.email@corp.mail.ru", "Len1", false},
-		{"test.email@corp.mail.ru", "len_max_test_kenNCVJNECJNNJCBdY487374367dgydghVGvdgdvfgevfyefhdvbfhevfvd", false},
-		{"test.email@corp.mail.ru", "no_upper_character38247834", false},
-		{"test.email@corp.mail.ru", "NO_LOWER_CHARACTER837463", false},
-		{"test.email@corp.mail.ru", "NO_number", false},
-		{"some_bad_email", "TEst_pass123", false},
-		{"some_bad@email", "TEst_pass123", false},
-		{"some_bad@email.", "TEst_pass123", false},
-		{"@bad.email.ru", "TEst_pass123", false},
+		expectedResult error
+	}{{"test.email@corp.mail.ru", "TEst_pass123", nil},
+		{"test.email@corp.mail.ru", "Len1", ErrAuthValidationPassword},
+		{"test.email@corp.mail.ru", "len_max_test_kenNCVJNECJNNJCBdY487374367dgydghVGvdgdvfgevfyefhdvbfhevfvd", ErrAuthValidationPassword},
+		{"test.email@corp.mail.ru", "no_upper_character38247834", ErrAuthValidationPassword},
+		{"test.email@corp.mail.ru", "NO_LOWER_CHARACTER837463", ErrAuthValidationPassword},
+		{"test.email@corp.mail.ru", "NO_number", ErrAuthValidationPassword},
+		{"some_bad_email", "TEst_pass123", ErrAuthValidationEmail},
+		{"some_bad@email", "TEst_pass123", ErrAuthValidationEmail},
+		{"some_bad@email.", "TEst_pass123", ErrAuthValidationEmail},
+		{"@bad.email.ru", "TEst_pass123", ErrAuthValidationEmail},
 	}
 
 	for _, testCase := range tests {

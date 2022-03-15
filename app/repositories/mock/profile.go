@@ -1,8 +1,8 @@
 package mock
 
 import (
+	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
-	"2022_1_OnlyGroup_back/pkg/errors"
 	"github.com/bxcodec/faker/v3"
 )
 
@@ -25,7 +25,7 @@ func (tables *ProfileMock) GetProfile(profileId int) (profile models.Profile, er
 			return profile, nil
 		}
 	}
-	return profile, errors.ErrProfileNotFound
+	return profile, handlers.ErrProfileNotFound
 }
 
 func (tables *ProfileMock) GetShortProfile(profileId int) (shortProfile models.ShortProfile, err error) {
@@ -37,7 +37,7 @@ func (tables *ProfileMock) GetShortProfile(profileId int) (shortProfile models.S
 			return shortProfile, nil
 		}
 	}
-	return shortProfile, errors.ErrProfileNotFound
+	return shortProfile, handlers.ErrProfileNotFound
 }
 
 var count = 0
@@ -69,15 +69,15 @@ func (tables *ProfileMock) ChangeProfile(profileId int, profile models.Profile) 
 			return nil
 		}
 	}
-	return errors.ErrProfileNotFound
+	return handlers.ErrProfileNotFound
 }
 
 func (tables *ProfileMock) DeleteProfile(profileId int) (err error) {
 	if len(tables.profileRepo) == 0 {
-		return errors.ErrMockIsEmpty
+		return handlers.ErrMockIsEmpty
 	}
 	if len(tables.profileRepo) <= profileId {
-		return errors.ErrProfileNotFound
+		return handlers.ErrProfileNotFound
 	}
 	for count, item := range tables.profileRepo {
 		if item.UserId == profileId {
@@ -85,7 +85,7 @@ func (tables *ProfileMock) DeleteProfile(profileId int) (err error) {
 			return nil
 		}
 	}
-	return errors.ErrProfileNotFound
+	return handlers.ErrProfileNotFound
 }
 
 func (tables *ProfileMock) AddProfile(profile models.Profile) (err error) {
@@ -103,7 +103,7 @@ func (tables *ProfileMock) AddEmptyProfile(profileId int) (err error) {
 
 func (tables *ProfileMock) FindCandidateProfile(profileId int) (candidateProfiles models.VectorCandidate, err error) {
 	if len(tables.profileRepo) == 0 {
-		return candidateProfiles, errors.ErrProfileNotFound
+		return candidateProfiles, handlers.ErrProfileNotFound
 	}
 	for i := 0; i < 3; i++ {
 		if count == len(tables.profileRepo) {
@@ -125,11 +125,11 @@ func (tables *ProfileMock) CheckProfileFiled(profileId int) (err error) {
 				item.Birthday == "" ||
 				len(item.Interests) == 0 ||
 				item.FirstName == "" {
-				return errors.ErrProfileNotFiled
+				return handlers.ErrProfileNotFiled
 			} else {
 				return nil
 			}
 		}
 	}
-	return errors.ErrProfileNotFound
+	return handlers.ErrProfileNotFound
 }

@@ -25,31 +25,31 @@ func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 	return &AuthHandler{useCase}
 }
 
-func checkValidUserModel(user models.UserAuthInfo) bool {
+func checkValidUserModel(user models.UserAuthInfo) error {
 	//processing email
 	match, err := regexp.MatchString(emailPattern, user.Email)
 	if err != nil || !match {
-		return false
+		return ErrAuthValidationEmail
 	}
 
 	//processing password
 	if len(user.Password) > 32 || len(user.Password) < 6 {
-		return false
+		return ErrAuthValidationPassword
 	}
 
 	match, err = regexp.MatchString(passwordPattern1, user.Password)
 	if err != nil || !match {
-		return false
+		return ErrAuthValidationPassword
 	}
 	match, err = regexp.MatchString(passwordPattern2, user.Password)
 	if err != nil || !match {
-		return false
+		return ErrAuthValidationPassword
 	}
 	match, err = regexp.MatchString(passwordPattern3, user.Password)
 	if err != nil || !match {
-		return false
+		return ErrAuthValidationPassword
 	}
-	return true
+	return nil
 }
 
 func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,8 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkValidUserModel(*user) {
+	err = checkValidUserModel(*user)
+	if err != nil {
 		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
 		return
 	}
@@ -137,7 +138,8 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkValidUserModel(*user) {
+	err = checkValidUserModel(*user)
+	if err != nil {
 		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
 		return
 	}
