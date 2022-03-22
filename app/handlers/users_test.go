@@ -34,7 +34,7 @@ func TestAuthAuthOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.GET(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 	assert.Equal(t, w.Body.String(), string(expectedResponse), "body mismatched, expected '%s', got '%s'",
 		string(expectedResponse), w.Body.String())
 }
@@ -57,7 +57,7 @@ func TestAuthAuthNoAuth(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.GET(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestAuthAuthNoCookie(t *testing.T) {
@@ -73,7 +73,7 @@ func TestAuthAuthNoCookie(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.GET(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLoginLoginOk(t *testing.T) {
@@ -97,7 +97,7 @@ func TestLoginLoginOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 	assert.Equal(t, w.Body.String(), string(expectedResponse), "body mismatched, expected '%s', got '%s'",
 		string(expectedResponse), w.Body.String())
 	assert.Equal(t, strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret), true,
@@ -123,7 +123,7 @@ func TestLoginUserNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLoginBadRequest(t *testing.T) {
@@ -141,7 +141,7 @@ func TestLoginBadRequest(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLoginBadEmail(t *testing.T) {
@@ -151,7 +151,7 @@ func TestLoginBadEmail(t *testing.T) {
 	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "Test_pass123"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
-	var expectedCode = http.StatusBadRequest
+	var expectedCode = http.StatusPreconditionFailed
 	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
@@ -160,7 +160,7 @@ func TestLoginBadEmail(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.PUT(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogoutLogoutOk(t *testing.T) {
@@ -180,7 +180,7 @@ func TestLogoutLogoutOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.DELETE(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 	assert.Equal(t, strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret), true,
 		"session mismatched, expected %s, got %s", "session="+testSessionSecret, w.HeaderMap.Get("Set-Cookie"))
 }
@@ -202,7 +202,7 @@ func TestLogoutSessionNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.DELETE(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogoutNoCookie(t *testing.T) {
@@ -218,7 +218,7 @@ func TestLogoutNoCookie(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.DELETE(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogupLogupOk(t *testing.T) {
@@ -242,7 +242,7 @@ func TestLogupLogupOk(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.POST(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 	assert.Equal(t, w.Body.String(), string(expectedResponse), "body mismatched, expected '%s', got '%s'",
 		string(expectedResponse), w.Body.String())
 	assert.Equal(t, strings.HasPrefix(w.HeaderMap.Get("Set-Cookie"), "session="+testSessionSecret), true,
@@ -268,7 +268,7 @@ func TestLogupUserConflict(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.POST(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogupBadEmail(t *testing.T) {
@@ -278,7 +278,7 @@ func TestLogupBadEmail(t *testing.T) {
 	var testRequestModel = models.UserAuthInfo{Email: "test_email", Password: "Test_pass123"}
 	var testRequestBody, _ = json.Marshal(testRequestModel)
 
-	var expectedCode = http.StatusBadRequest
+	var expectedCode = http.StatusPreconditionFailed
 	useCaseMock := mockUseCases.NewMockAuthUseCases(mockController)
 
 	testingHandler := AuthHandler{AuthUseCase: useCaseMock}
@@ -287,7 +287,7 @@ func TestLogupBadEmail(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.POST(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestLogupBadRequest(t *testing.T) {
@@ -305,7 +305,7 @@ func TestLogupBadRequest(t *testing.T) {
 	w := httptest.NewRecorder()
 	testingHandler.POST(w, req)
 
-	assert.Equal(t, w.Code, expectedCode, "status code error, expected %d, got %d", expectedCode, w.Code)
+	assert.Equal(t, expectedCode, w.Code, "status code error, expected %d, got %d", expectedCode, w.Code)
 }
 
 func TestUserModelValidationTableDriven(t *testing.T) {

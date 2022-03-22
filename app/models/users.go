@@ -10,12 +10,6 @@ type UserAuthInfo struct {
 	CaptchaToken string
 }
 
-type ErrorLogin struct {
-	ErrorCode    int
-	ErrorMessage string
-	CaptchaToken string
-}
-
 type UserAuthProfile struct {
 	Email       string
 	OldPassword string

@@ -11,9 +11,11 @@ import (
 )
 
 const emailPattern = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
-const passwordPattern1 = `[a-z]+`
-const passwordPattern2 = `[A-Z]+`
-const passwordPattern3 = `[0-9]+`
+const passwordPatternLowerCase = `[a-z]+`
+const passwordPatternUpperCase = `[A-Z]+`
+const passwordPatternNumber = `[0-9]+`
+const passwordMinLength = 6
+const passwordMaxLength = 32
 
 const authCookie = "session"
 
@@ -33,19 +35,19 @@ func checkValidUserModel(user models.UserAuthInfo) error {
 	}
 
 	//processing password
-	if len(user.Password) > 32 || len(user.Password) < 6 {
+	if len(user.Password) > passwordMaxLength || len(user.Password) < passwordMinLength {
 		return ErrAuthValidationPassword
 	}
 
-	match, err = regexp.MatchString(passwordPattern1, user.Password)
+	match, err = regexp.MatchString(passwordPatternLowerCase, user.Password)
 	if err != nil || !match {
 		return ErrAuthValidationPassword
 	}
-	match, err = regexp.MatchString(passwordPattern2, user.Password)
+	match, err = regexp.MatchString(passwordPatternUpperCase, user.Password)
 	if err != nil || !match {
 		return ErrAuthValidationPassword
 	}
-	match, err = regexp.MatchString(passwordPattern3, user.Password)
+	match, err = regexp.MatchString(passwordPatternNumber, user.Password)
 	if err != nil || !match {
 		return ErrAuthValidationPassword
 	}
@@ -57,14 +59,15 @@ func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusUnauthorized)
+		appErr := ErrAuthRequired
+		http.Error(w, appErr.String(), appErr.Code())
 		return
 	}
 
 	userId, err := handler.AuthUseCase.UserAuth(cook.Value)
 	if err != nil {
-		errCode := ErrorToHTTPCode(err)
-		http.Error(w, WrapError2Json(err.Error()), errCode)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	response, _ := json.Marshal(userId)
@@ -77,25 +80,28 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusInternalServerError)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 	}
 	user := &models.UserAuthInfo{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
+		appErr := ErrBadRequest
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	err = checkValidUserModel(*user)
 	if err != nil {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	realUser, cook, err := handler.AuthUseCase.UserLogin(*user)
 	if err != nil {
-		errCode := ErrorToHTTPCode(err)
-		http.Error(w, WrapError2Json(err.Error()), errCode)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7)}
@@ -110,14 +116,16 @@ func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusUnauthorized)
+		appErr := ErrAuthRequired
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	err = handler.AuthUseCase.UserLogout(cook.Value)
 	if err != nil {
-		errCode := ErrorToHTTPCode(err)
-		http.Error(w, WrapError2Json(err.Error()), errCode)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
+		return
 	}
 	cookie := http.Cookie{Name: authCookie, Value: cook.Value, Expires: time.Now().Add(time.Hour * (-1))}
 	http.SetCookie(w, &cookie)
@@ -129,25 +137,29 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusInternalServerError)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
+		return
 	}
 	user := &models.UserAuthInfo{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
+		appErr := ErrBadRequest
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	err = checkValidUserModel(*user)
 	if err != nil {
-		http.Error(w, WrapError2Json(err.Error()), http.StatusBadRequest)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	realUser, cook, err := handler.AuthUseCase.UserRegister(*user)
 	if err != nil {
-		errCode := ErrorToHTTPCode(err)
-		http.Error(w, WrapError2Json(err.Error()), errCode)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7)}

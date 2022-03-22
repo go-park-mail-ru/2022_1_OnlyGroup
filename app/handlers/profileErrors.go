@@ -1,9 +1,12 @@
 package handlers
 
-import "errors"
+import (
+	"net/http"
+)
 
 var (
-	ErrProfileNotFound = errors.New("profile not found")
-	ErrProfileNotFiled = errors.New("profile not filed")
-	ErrMockIsEmpty     = errors.New("profile not filed")
+	ErrBadUserID       = appError{"bad user id from url", http.StatusBadRequest}
+	ErrProfileNotFound = appError{"profile not found", http.StatusNotFound}
+	ErrProfileNotFiled = appError{"profile not filed", http.StatusNotAcceptable}
+	ErrMockIsEmpty     = appError{"profile not filed", http.StatusNotAcceptable}
 )
