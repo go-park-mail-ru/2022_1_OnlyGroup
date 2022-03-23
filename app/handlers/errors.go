@@ -6,8 +6,8 @@ import (
 )
 
 type appError struct {
-	ErrorMsg string
-	code     int
+	Msg  string
+	code int
 }
 
 var ErrBaseApp = appError{"internal server error", http.StatusInternalServerError}
@@ -22,7 +22,7 @@ func appErrorFromError(inputError error) appError {
 }
 
 func (err appError) Error() string {
-	return err.ErrorMsg
+	return err.Msg
 }
 
 func (err appError) String() string {
