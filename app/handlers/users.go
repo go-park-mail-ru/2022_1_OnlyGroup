@@ -55,6 +55,7 @@ func checkValidUserModel(user models.UserAuthInfo) error {
 }
 
 func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
+	panic("test panic")
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)

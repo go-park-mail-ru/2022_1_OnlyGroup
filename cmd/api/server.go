@@ -54,6 +54,7 @@ func (serv *APIServer) Run() error {
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
 
 	multiplexor.Use(serv.middlewares.AccessLogMiddleware)
+	multiplexor.Use(serv.middlewares.PanicMiddleware)
 
 	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
 	return server.ListenAndServe()
