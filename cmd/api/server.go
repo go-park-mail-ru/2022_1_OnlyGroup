@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 const UrlUsers = "/users"
 const ProfileUrl = "/profiles/{id:[0-9]+}"
 const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"

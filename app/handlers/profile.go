@@ -64,6 +64,19 @@ func checkData(profile *models.Profile) bool {
 	return true
 }
 
+func getIdFromUrl(r *http.Request) (int, error) {
+	idFromUrl := mux.Vars(r)["id"]
+	checkIdFromUrl, _ := regexp.MatchString(patternId, idFromUrl)
+	if !checkIdFromUrl {
+		return 0, ErrBadUserID
+	}
+	id, err := strconv.Atoi(idFromUrl)
+	if errors.Is(err, strconv.ErrSyntax) {
+		return 0, ErrBadUserID
+	}
+	return id, nil
+}
+
 type ProfileHandler struct {
 	ProfileUseCase usecases.ProfileUseCases
 }
@@ -77,35 +90,32 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if errors.Is(err, http.ErrNoCookie) {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		appErr := ErrAuthRequired
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
-	idFromUrl := mux.Vars(r)["id"]
-	checkIdFromUrl, _ := regexp.MatchString(patternId, idFromUrl)
-	if !checkIdFromUrl {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	id, err := strconv.Atoi(idFromUrl)
-	if errors.Is(err, strconv.ErrSyntax) {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	id, err := getIdFromUrl(r)
+	if err != nil {
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	profile, err := handler.ProfileUseCase.Get(cook.Value, id)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	response, err := json.Marshal(profile)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	w.Write(response)
-
 }
 
 func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -113,29 +123,28 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if errors.Is(err, http.ErrNoCookie) {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		appErr := ErrAuthRequired
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
-	idFromUrl := mux.Vars(r)["id"]
-	checkIdFromUrl, _ := regexp.MatchString("^[0-9]+$", idFromUrl)
-	if !checkIdFromUrl {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	id, err := strconv.Atoi(idFromUrl)
-	if errors.Is(err, strconv.ErrSyntax) {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
+	id, err := getIdFromUrl(r)
+	if err != nil {
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	profile, err := handler.ProfileUseCase.GetShort(cook.Value, id)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	response, err := json.Marshal(profile)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	w.Write(response)
@@ -146,7 +155,8 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if errors.Is(err, http.ErrNoCookie) {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		appErr := ErrAuthRequired
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
@@ -159,13 +169,15 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 
 	err = json.Unmarshal(msg, model)
 	if err != nil || !checkData(model) {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 
 	err = handler.ProfileUseCase.Change(cook.Value, *model)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 }
@@ -175,17 +187,20 @@ func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *htt
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if errors.Is(err, http.ErrNoCookie) {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		appErr := ErrAuthRequired
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	profile, err := handler.ProfileUseCase.GetCandidates(cook.Value)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // вот это нужно проверить
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	response, err := json.Marshal(profile)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		appErr := appErrorFromError(err)
+		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
 	w.Write(response)

@@ -5,8 +5,9 @@ type UserID struct {
 }
 
 type UserAuthInfo struct {
-	Email    string
-	Password string
+	Email        string
+	Password     string
+	CaptchaToken string
 }
 
 type UserAuthProfile struct {
