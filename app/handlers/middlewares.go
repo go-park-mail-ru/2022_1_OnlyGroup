@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"2022_1_OnlyGroup_back/app/usecases"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -10,14 +12,18 @@ import (
 )
 
 const requestIdContextKey = "requestId"
+const userIdContextKey = "userId"
+
+//const authCookie = "session"
 
 type Middlewares interface {
 	AccessLogMiddleware(next http.Handler) http.Handler
 	PanicMiddleware(next http.Handler) http.Handler
+	CheckAuthMiddleware(next http.Handler) http.Handler
 }
 
 type MiddlewaresImpl struct {
-	//AuthUseCase usecases.AuthUseCases
+	AuthUseCase usecases.AuthUseCases
 }
 
 func (impl MiddlewaresImpl) AccessLogMiddleware(next http.Handler) http.Handler {
@@ -56,5 +62,24 @@ func (impl MiddlewaresImpl) PanicMiddleware(next http.Handler) http.Handler {
 			}
 		}()
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (imlp MiddlewaresImpl) CheckAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie(authCookie)
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code())
+			return
+		}
+		userIdModel, err := imlp.AuthUseCase.UserAuth(cookie.Value)
+		if errors.Is(err, ErrAuthSessionNotFound) {
+			http.Error(w, ErrAuthSessionNotFound.String(), ErrAuthSessionNotFound.Code())
+			return
+		}
+
+		newContext := context.WithValue(r.Context(), userIdContextKey, userIdModel.ID)
+		rNew := r.Clone(newContext)
+		next.ServeHTTP(w, rNew)
 	})
 }

@@ -88,21 +88,18 @@ func CreateProfileHandler(useCase usecases.ProfileUseCases) *ProfileHandler {
 func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	cook, err := r.Cookie(authCookie)
-	if errors.Is(err, http.ErrNoCookie) {
-		appErr := ErrAuthRequired
-		http.Error(w, appErr.String(), appErr.code)
-		return
-	}
-
 	id, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
-
-	profile, err := handler.ProfileUseCase.Get(cook.Value, id)
+	ctx := r.Context()
+	cookieId, ok := ctx.Value(userIdContextKey).(int)
+	if !ok {
+		return
+	}
+	profile, err := handler.ProfileUseCase.Get(cookieId, id)
 	if err != nil {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
@@ -121,12 +118,6 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	cook, err := r.Cookie(authCookie)
-	if errors.Is(err, http.ErrNoCookie) {
-		appErr := ErrAuthRequired
-		http.Error(w, appErr.String(), appErr.code)
-		return
-	}
 
 	id, err := getIdFromUrl(r)
 	if err != nil {
@@ -134,8 +125,13 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
+	ctx := r.Context()
+	cookieId, ok := ctx.Value(userIdContextKey).(int)
+	if !ok {
+		return
+	}
 
-	profile, err := handler.ProfileUseCase.GetShort(cook.Value, id)
+	profile, err := handler.ProfileUseCase.GetShort(cookieId, id)
 	if err != nil {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
@@ -153,13 +149,7 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	cook, err := r.Cookie(authCookie)
-	if errors.Is(err, http.ErrNoCookie) {
-		appErr := ErrAuthRequired
-		http.Error(w, appErr.String(), appErr.code)
-		return
-	}
-
+	
 	msg, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -173,8 +163,13 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
+	ctx := r.Context()
+	cookieId, ok := ctx.Value(userIdContextKey).(int)
+	if !ok {
+		return
+	}
 
-	err = handler.ProfileUseCase.Change(cook.Value, *model)
+	err = handler.ProfileUseCase.Change(cookieId, *model)
 	if err != nil {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
@@ -185,13 +180,14 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	cook, err := r.Cookie(authCookie)
-	if errors.Is(err, http.ErrNoCookie) {
-		appErr := ErrAuthRequired
-		http.Error(w, appErr.String(), appErr.code)
+
+	ctx := r.Context()
+	cookieId, ok := ctx.Value(userIdContextKey).(int)
+	if !ok {
 		return
 	}
-	profile, err := handler.ProfileUseCase.GetCandidates(cook.Value)
+
+	profile, err := handler.ProfileUseCase.GetCandidates(cookieId)
 	if err != nil {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
