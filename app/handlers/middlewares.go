@@ -20,6 +20,7 @@ type Middlewares interface {
 	AccessLogMiddleware(next http.Handler) http.Handler
 	PanicMiddleware(next http.Handler) http.Handler
 	CheckAuthMiddleware(next http.Handler) http.Handler
+	CorsMiddleware(next http.Handler) http.Handler
 }
 
 type MiddlewaresImpl struct {
@@ -73,13 +74,23 @@ func (imlp MiddlewaresImpl) CheckAuthMiddleware(next http.Handler) http.Handler 
 			return
 		}
 		userIdModel, err := imlp.AuthUseCase.UserAuth(cookie.Value)
-		if errors.Is(err, ErrAuthSessionNotFound) {
-			http.Error(w, ErrAuthSessionNotFound.String(), ErrAuthSessionNotFound.Code())
+		if err != nil {
+			appErr := appErrorFromError(err)
+			http.Error(w, appErr.String(), appErr.Code())
 			return
 		}
 
 		newContext := context.WithValue(r.Context(), userIdContextKey, userIdModel.ID)
 		rNew := r.Clone(newContext)
 		next.ServeHTTP(w, rNew)
+	})
+}
+
+func (imlp MiddlewaresImpl) CorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+		w.Header().Add("Access-Control-Allow-Credentials", "true")
+
+		next.ServeHTTP(w, r)
 	})
 }
