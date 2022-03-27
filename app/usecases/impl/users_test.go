@@ -13,15 +13,16 @@ func TestAuthAuthOk(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 	const testingID = 24
 	expectedUserModel := models.UserID{ID: testingID}
 
-	usersMock.EXPECT().GetIdBySession(testingSecret).Return(testingID, nil)
+	sessionsMock.EXPECT().GetIdBySession(testingSecret).Return(testingID, "", nil)
 	actualUserModel, err := testingUseCase.UserAuth(testingSecret)
 
 	assert.Equal(t, expectedUserModel, actualUserModel, "models mismatched")
@@ -32,13 +33,14 @@ func TestAuthSessionNotFound(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 
-	usersMock.EXPECT().GetIdBySession(testingSecret).Return(0, handlers.ErrAuthSessionNotFound)
+	sessionsMock.EXPECT().GetIdBySession(testingSecret).Return(0, "", handlers.ErrAuthSessionNotFound)
 	_, err := testingUseCase.UserAuth(testingSecret)
 
 	assert.Equal(t, err, handlers.ErrAuthSessionNotFound)
@@ -48,9 +50,10 @@ func TestLoginLoginOk(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 	const testingID = 24
@@ -60,7 +63,7 @@ func TestLoginLoginOk(t *testing.T) {
 	expectedUserModel := models.UserID{ID: testingID}
 
 	usersMock.EXPECT().Authorize(testingEmail, testingPassword).Return(testingID, nil)
-	usersMock.EXPECT().AddSession(testingID).Return(testingSecret, nil)
+	sessionsMock.EXPECT().AddSession(testingID, "").Return(testingSecret, nil)
 	actualUserModel, actualSecret, err := testingUseCase.UserLogin(testUserModel)
 
 	assert.Equal(t, expectedUserModel, actualUserModel, "models mismatched")
@@ -72,9 +75,10 @@ func TestLoginUserNotFound(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingEmail = "test_email@ya.com"
 	const testingPassword = "SomeSecret21"
@@ -90,9 +94,10 @@ func TestLoginSessionNotAdded(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingID = 24
 	const testingEmail = "test_email@ya.com"
@@ -100,7 +105,7 @@ func TestLoginSessionNotAdded(t *testing.T) {
 	testUserModel := models.UserAuthInfo{Email: testingEmail, Password: testingPassword}
 
 	usersMock.EXPECT().Authorize(testingEmail, testingPassword).Return(testingID, nil)
-	usersMock.EXPECT().AddSession(testingID).Return("", handlers.ErrAuthSessionNotFound)
+	sessionsMock.EXPECT().AddSession(testingID, "").Return("", handlers.ErrAuthSessionNotFound)
 	_, _, err := testingUseCase.UserLogin(testUserModel)
 
 	assert.Equal(t, err, handlers.ErrAuthSessionNotFound)
@@ -110,9 +115,10 @@ func TestRegisterRegisterOk(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 	const testingID = 24
@@ -123,7 +129,7 @@ func TestRegisterRegisterOk(t *testing.T) {
 
 	usersMock.EXPECT().AddUser(testingEmail, testingPassword).Return(testingID, nil)
 	profileMock.EXPECT().AddEmptyProfile(testingID).Return(nil)
-	usersMock.EXPECT().AddSession(testingID).Return(testingSecret, nil)
+	sessionsMock.EXPECT().AddSession(testingID, "").Return(testingSecret, nil)
 	actualUserModel, actualSecret, err := testingUseCase.UserRegister(testUserModel)
 
 	assert.Equal(t, expectedUserModel, actualUserModel, "models mismatched")
@@ -135,9 +141,10 @@ func TestRegisterEmailConflict(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingEmail = "test_email@ya.com"
 	const testingPassword = "SomeSecret21"
@@ -153,9 +160,10 @@ func TestRegisterProfileError(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingID = 24
 	const testingEmail = "test_email@ya.com"
@@ -173,9 +181,10 @@ func TestRegisterSessionError(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingID = 24
 	const testingEmail = "test_email@ya.com"
@@ -184,7 +193,7 @@ func TestRegisterSessionError(t *testing.T) {
 
 	usersMock.EXPECT().AddUser(testingEmail, testingPassword).Return(testingID, nil)
 	profileMock.EXPECT().AddEmptyProfile(testingID).Return(nil)
-	usersMock.EXPECT().AddSession(testingID).Return("", handlers.ErrAuthSessionNotFound)
+	sessionsMock.EXPECT().AddSession(testingID, "").Return("", handlers.ErrAuthSessionNotFound)
 	_, _, err := testingUseCase.UserRegister(testUserModel)
 
 	assert.Equal(t, err, handlers.ErrAuthSessionNotFound)
@@ -194,13 +203,14 @@ func TestLogoutLogoutOk(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 
-	usersMock.EXPECT().RemoveSession(testingSecret).Return(nil)
+	sessionsMock.EXPECT().RemoveSession(testingSecret).Return(nil)
 	err := testingUseCase.UserLogout(testingSecret)
 
 	assert.Equal(t, err, nil)
@@ -210,9 +220,10 @@ func TestChangePswdOk(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 	const testingID = 24
@@ -221,7 +232,7 @@ func TestChangePswdOk(t *testing.T) {
 	const testingNewPassword = "SomeSecret82y3"
 	testUserModel := models.UserAuthProfile{Email: testingEmail, OldPassword: testingOldPassword, NewPassword: testingNewPassword}
 
-	usersMock.EXPECT().GetIdBySession(testingSecret).Return(testingID, nil)
+	sessionsMock.EXPECT().GetIdBySession(testingSecret).Return(testingID, "", nil)
 	usersMock.EXPECT().Authorize(testingEmail, testingOldPassword).Return(testingID, nil)
 	usersMock.EXPECT().ChangePassword(testingID, testingNewPassword).Return(nil)
 	err := testingUseCase.UserChangePassword(testUserModel, testingSecret)
@@ -233,9 +244,10 @@ func TestChangePswdWrongSession(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 	const testingID = 24
@@ -245,7 +257,7 @@ func TestChangePswdWrongSession(t *testing.T) {
 	const testingNewPassword = "SomeSecret82y3"
 	testUserModel := models.UserAuthProfile{Email: testingEmail, OldPassword: testingOldPassword, NewPassword: testingNewPassword}
 
-	usersMock.EXPECT().GetIdBySession(testingSecret).Return(badId, nil)
+	sessionsMock.EXPECT().GetIdBySession(testingSecret).Return(badId, "", nil)
 	usersMock.EXPECT().Authorize(testingEmail, testingOldPassword).Return(testingID, nil)
 	err := testingUseCase.UserChangePassword(testUserModel, testingSecret)
 
@@ -256,9 +268,10 @@ func TestChangePswdSecretError(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 	const testingID = 24
@@ -268,7 +281,7 @@ func TestChangePswdSecretError(t *testing.T) {
 	const testingNewPassword = "SomeSecret82y3"
 	testUserModel := models.UserAuthProfile{Email: testingEmail, OldPassword: testingOldPassword, NewPassword: testingNewPassword}
 
-	usersMock.EXPECT().GetIdBySession(testingSecret).Return(badId, handlers.ErrAuthSessionNotFound)
+	sessionsMock.EXPECT().GetIdBySession(testingSecret).Return(badId, "", handlers.ErrAuthSessionNotFound)
 	err := testingUseCase.UserChangePassword(testUserModel, testingSecret)
 
 	assert.Equal(t, err, handlers.ErrAuthSessionNotFound)
@@ -278,9 +291,10 @@ func TestChangePswdAuthError(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
 
-	usersMock := mocks.NewMockAuthRepository(mockController)
+	usersMock := mocks.NewMockUsersRepository(mockController)
+	sessionsMock := mocks.NewMockSessionsRepository(mockController)
 	profileMock := mocks.NewMockProfileRepository(mockController)
-	testingUseCase := NewAuthUseCaseImpl(usersMock, profileMock)
+	testingUseCase := NewAuthUseCaseImpl(usersMock, sessionsMock, profileMock)
 
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 	const testingID = 24
@@ -290,7 +304,7 @@ func TestChangePswdAuthError(t *testing.T) {
 	const testingNewPassword = "SomeSecret82y3"
 	testUserModel := models.UserAuthProfile{Email: testingEmail, OldPassword: testingOldPassword, NewPassword: testingNewPassword}
 
-	usersMock.EXPECT().GetIdBySession(testingSecret).Return(testingID, nil)
+	sessionsMock.EXPECT().GetIdBySession(testingSecret).Return(testingID, "", nil)
 	usersMock.EXPECT().Authorize(testingEmail, testingOldPassword).Return(testingID, handlers.ErrAuthWrongPassword)
 	err := testingUseCase.UserChangePassword(testUserModel, testingSecret)
 

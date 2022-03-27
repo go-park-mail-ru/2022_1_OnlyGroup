@@ -7,11 +7,11 @@ import (
 
 type profileUseCaseImpl struct {
 	profileRepo repositories.ProfileRepository
-	authRepo    repositories.AuthRepository
+	sessionRepo repositories.SessionsRepository
 }
 
-func NewProfileUseCaseImpl(profileRepo repositories.ProfileRepository, authRepo repositories.AuthRepository) *profileUseCaseImpl {
-	return &profileUseCaseImpl{profileRepo: profileRepo, authRepo: authRepo}
+func NewProfileUseCaseImpl(profileRepo repositories.ProfileRepository, authRepo repositories.SessionsRepository) *profileUseCaseImpl {
+	return &profileUseCaseImpl{profileRepo: profileRepo, sessionRepo: authRepo}
 }
 
 func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (profile models.Profile, err error) {

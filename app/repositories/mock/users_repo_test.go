@@ -19,7 +19,7 @@ func TestGenerateSecret(t *testing.T) {
 
 func TestNewAuthMock(t *testing.T) {
 	assert := assert.New(t)
-	TestMock := NewAuthMock()
+	TestMock := NewUsersMock()
 	for i := 1; i < numTest; i++ {
 		len, err := TestMock.AddUser(faker.Email(), faker.Password())
 		assert.Equal(len, defaultMockUser+i)
@@ -29,7 +29,7 @@ func TestNewAuthMock(t *testing.T) {
 
 func TestAuthorizeMock(t *testing.T) {
 	assert := assert.New(t)
-	TestMock := NewAuthMock()
+	TestMock := NewUsersMock()
 
 	for i := 1; i < numTest; i++ {
 		len, err := TestMock.Authorize(faker.Email(), faker.Password())
@@ -40,51 +40,10 @@ func TestAuthorizeMock(t *testing.T) {
 
 func TestChangePasswordMock(t *testing.T) {
 	assert := assert.New(t)
-	TestMock := NewAuthMock()
+	TestMock := NewUsersMock()
 
 	for i := 1; i < numTest; i++ {
 		err := TestMock.ChangePassword(i, faker.Password())
-		assert.Equal(err, nil)
-	}
-}
-
-func TestAddSessionMock(t *testing.T) {
-	assert := assert.New(t)
-	TestMock := NewAuthMock()
-
-	for i := 1; i < numTest; i++ {
-		_, err := TestMock.AddSession(i)
-		assert.Equal(err, nil)
-	}
-}
-
-func TestGetIdBySessionMock(t *testing.T) {
-	assert := assert.New(t)
-	TestMock := NewAuthMock()
-	var secretArray []string
-	for i := 0; i < numTest; i++ {
-		str, err := TestMock.AddSession(i)
-		secretArray = append(secretArray, str)
-		assert.Equal(err, nil)
-	}
-	for i := 0; i < numTest; i++ {
-		str, err := TestMock.GetIdBySession(secretArray[i])
-		assert.Equal(str, i)
-		assert.Equal(err, nil)
-	}
-}
-
-func TestRemoveSessionMock(t *testing.T) {
-	assert := assert.New(t)
-	TestMock := NewAuthMock()
-	var secretArray []string
-	for i := 0; i < numTest; i++ {
-		str, err := TestMock.AddSession(i)
-		secretArray = append(secretArray, str)
-		assert.Equal(err, nil)
-	}
-	for i := 0; i < numTest; i++ {
-		err := TestMock.RemoveSession(secretArray[i])
 		assert.Equal(err, nil)
 	}
 }
