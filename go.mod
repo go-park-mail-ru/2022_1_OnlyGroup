@@ -6,11 +6,13 @@ require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/bxcodec/faker/v3 v3.7.0
 	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.3.0
 	github.com/gomodule/redigo v1.8.8
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/pkg/errors v0.9.1
+	github.com/sirupsen/logrus v1.8.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 )
@@ -34,5 +36,6 @@ require (
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
+	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

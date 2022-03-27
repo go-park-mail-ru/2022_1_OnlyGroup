@@ -86,8 +86,6 @@ func CreateProfileHandler(useCase usecases.ProfileUseCases) *ProfileHandler {
 }
 
 func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	id, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := appErrorFromError(err)
@@ -116,9 +114,6 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 }
 
 func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
-
 	id, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := appErrorFromError(err)
@@ -147,9 +142,6 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 }
 
 func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	
 	msg, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -178,9 +170,6 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 }
 
 func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
-
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
