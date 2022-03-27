@@ -10,46 +10,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockAuthRepository is a mock of AuthRepository interface.
-type MockAuthRepository struct {
+// MockUsersRepository is a mock of UsersRepository interface.
+type MockUsersRepository struct {
 	ctrl     *gomock.Controller
-	recorder *MockAuthRepositoryMockRecorder
+	recorder *MockUsersRepositoryMockRecorder
 }
 
-// MockAuthRepositoryMockRecorder is the mock recorder for MockAuthRepository.
-type MockAuthRepositoryMockRecorder struct {
-	mock *MockAuthRepository
+// MockUsersRepositoryMockRecorder is the mock recorder for MockUsersRepository.
+type MockUsersRepositoryMockRecorder struct {
+	mock *MockUsersRepository
 }
 
-// NewMockAuthRepository creates a new mock instance.
-func NewMockAuthRepository(ctrl *gomock.Controller) *MockAuthRepository {
-	mock := &MockAuthRepository{ctrl: ctrl}
-	mock.recorder = &MockAuthRepositoryMockRecorder{mock}
+// NewMockUsersRepository creates a new mock instance.
+func NewMockUsersRepository(ctrl *gomock.Controller) *MockUsersRepository {
+	mock := &MockUsersRepository{ctrl: ctrl}
+	mock.recorder = &MockUsersRepositoryMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAuthRepository) EXPECT() *MockAuthRepositoryMockRecorder {
+func (m *MockUsersRepository) EXPECT() *MockUsersRepositoryMockRecorder {
 	return m.recorder
 }
 
-// AddSession mocks base method.
-func (m *MockAuthRepository) AddSession(id int) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddSession", id)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// AddSession indicates an expected call of AddSession.
-func (mr *MockAuthRepositoryMockRecorder) AddSession(id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSession", reflect.TypeOf((*MockAuthRepository)(nil).AddSession), id)
-}
-
 // AddUser mocks base method.
-func (m *MockAuthRepository) AddUser(email, password string) (int, error) {
+func (m *MockUsersRepository) AddUser(email, password string) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddUser", email, password)
 	ret0, _ := ret[0].(int)
@@ -58,13 +43,13 @@ func (m *MockAuthRepository) AddUser(email, password string) (int, error) {
 }
 
 // AddUser indicates an expected call of AddUser.
-func (mr *MockAuthRepositoryMockRecorder) AddUser(email, password interface{}) *gomock.Call {
+func (mr *MockUsersRepositoryMockRecorder) AddUser(email, password interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockAuthRepository)(nil).AddUser), email, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUsersRepository)(nil).AddUser), email, password)
 }
 
 // Authorize mocks base method.
-func (m *MockAuthRepository) Authorize(email, password string) (int, error) {
+func (m *MockUsersRepository) Authorize(email, password string) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Authorize", email, password)
 	ret0, _ := ret[0].(int)
@@ -73,13 +58,13 @@ func (m *MockAuthRepository) Authorize(email, password string) (int, error) {
 }
 
 // Authorize indicates an expected call of Authorize.
-func (mr *MockAuthRepositoryMockRecorder) Authorize(email, password interface{}) *gomock.Call {
+func (mr *MockUsersRepositoryMockRecorder) Authorize(email, password interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockAuthRepository)(nil).Authorize), email, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockUsersRepository)(nil).Authorize), email, password)
 }
 
 // ChangePassword mocks base method.
-func (m *MockAuthRepository) ChangePassword(id int, newPassword string) error {
+func (m *MockUsersRepository) ChangePassword(id int, newPassword string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangePassword", id, newPassword)
 	ret0, _ := ret[0].(error)
@@ -87,36 +72,7 @@ func (m *MockAuthRepository) ChangePassword(id int, newPassword string) error {
 }
 
 // ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockAuthRepositoryMockRecorder) ChangePassword(id, newPassword interface{}) *gomock.Call {
+func (mr *MockUsersRepositoryMockRecorder) ChangePassword(id, newPassword interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAuthRepository)(nil).ChangePassword), id, newPassword)
-}
-
-// GetIdBySession mocks base method.
-func (m *MockAuthRepository) GetIdBySession(secret string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetIdBySession", secret)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetIdBySession indicates an expected call of GetIdBySession.
-func (mr *MockAuthRepositoryMockRecorder) GetIdBySession(secret interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIdBySession", reflect.TypeOf((*MockAuthRepository)(nil).GetIdBySession), secret)
-}
-
-// RemoveSession mocks base method.
-func (m *MockAuthRepository) RemoveSession(secret string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveSession", secret)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveSession indicates an expected call of RemoveSession.
-func (mr *MockAuthRepositoryMockRecorder) RemoveSession(secret interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSession", reflect.TypeOf((*MockAuthRepository)(nil).RemoveSession), secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockUsersRepository)(nil).ChangePassword), id, newPassword)
 }
