@@ -55,8 +55,8 @@ func checkValidUserModel(user models.UserAuthInfo) error {
 }
 
 func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
+	//w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	//w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		appErr := ErrAuthRequired
@@ -75,8 +75,6 @@ func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -112,8 +110,6 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
 		appErr := ErrAuthRequired
@@ -132,8 +128,6 @@ func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
