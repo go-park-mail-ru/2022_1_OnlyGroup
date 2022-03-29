@@ -3,8 +3,16 @@ package main
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/repositories/mock"
+	"2022_1_OnlyGroup_back/app/repositories/postgres"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
+	_ "github.com/jackc/pgx"
+	"github.com/jmoiron/sqlx"
+
+	//_ "database/sql"
 	"github.com/gorilla/mux"
+	//_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/stdlib"
+	"log"
 	"net/http"
 	"time"
 )
@@ -14,6 +22,14 @@ const ProfileUrl = "/profiles/{id:[0-9]+}"
 const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"
 const ProfileUrlCandidates = "/profiles/candidates"
 
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "kdv"
+	password = "5051"
+	dbname   = "kdv"
+)
+
 type APIServer struct {
 	address        string
 	authHandler    *handlers.AuthHandler
@@ -21,6 +37,23 @@ type APIServer struct {
 }
 
 func NewServer(addr string) APIServer {
+	//conf := pgx.ConnConfig{Password: password, Port: port, User: user, Database: dbname, Host: host}
+	//db, err := sqlx.Connect("pgx", "host=localhost user=kdv password=5051 dbname=kdv")
+	db, err := sqlx.Connect("pgx", "user=kdv password=5051 dbname=kdv sslmode=disable")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	profRepo, err := postgres.NewProfilePostgres(db, "kdv", "users")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	//m := models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: 1, Gender: faker.Gender()}
+	log.Println(profRepo.CheckProfileFiled(2))
+
 	profileRepo := mock.NewProfileMock()
 	authRepo := mock.NewAuthMock()
 	return APIServer{address: addr, authHandler: handlers.CreateAuthHandler(impl.NewAuthUseCaseImpl(authRepo, profileRepo)),
