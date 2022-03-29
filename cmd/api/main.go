@@ -1,5 +1,9 @@
 package main
 
+import (
+	_ "github.com/jackc/pgx/v4/stdlib"
+)
+
 //import res"2022_1_OnlyGroup_back/app/repositories/redis"
 
 func main() {
@@ -40,22 +44,45 @@ func main() {
 //}
 
 //func main() {
-//	connConf, err := pgx.ParseConnectionString("postgresql://ilya:il28102001@localhost/ilya")
+//connConf, err := pgx.ParseConnectionString("postgresql://ilya:il28102001@localhost/ilya")
+//if err != nil {
+//	fmt.Println(err)
+//	return
+//}
+//conn, err := pgx.Connect(context.Background(), connConf)
+//if err != nil {
+//	fmt.Println(err)
+//	return
+//}
+
+//conn, err := pgx.Connect(context.Background(), "")
+//if err != nil {
+//	return
+//}
+
+//	connect, err := sqlx.Open("pgx", "postgresql://ilya:il28102001@localhost/ilya")
 //	if err != nil {
-//		fmt.Println(err)
 //		return
 //	}
-//	conn, err := pgx.Connect(connConf)
+//
+//	err = connect.Ping()
 //	if err != nil {
-//		fmt.Println(err)
 //		return
 //	}
-//	repo, err := postgres.CreatePostgresUsersRepo(conn, "testTable")
+//
+//	repo, err := postgres.NewPostgresUsersRepo(connect, "test_name")
 //	if err != nil {
 //		fmt.Println(err)
 //		return
 //	}
 //	user, err := repo.AddUser("test@mail.ru", "test_pass")
+//	if err != nil {
+//		fmt.Println(err)
+//		return
+//	}
+//	fmt.Println(user)
+//
+//	user, err = repo.AddUser("test@mail.ru", "test_pass")
 //	if err != nil {
 //		fmt.Println(err)
 //		return

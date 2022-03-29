@@ -2,7 +2,7 @@ package mock
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
-	"math/rand"
+	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
 )
 
 type sessionData struct {
@@ -11,29 +11,22 @@ type sessionData struct {
 }
 
 type SessionsMock struct {
-	sessionTable map[string]sessionData
+	sessionTable    map[string]sessionData
+	secretGenerator sessionGenerator.SessionGenerator
 }
 
 func NewSessionsMock() *SessionsMock {
-	return &SessionsMock{sessionTable: map[string]sessionData{}}
+	return &SessionsMock{sessionTable: map[string]sessionData{}, secretGenerator: sessionGenerator.NewRandomGenerator()}
 }
 
-func generateSecret(size int) string {
-	result := ""
-	for i := 0; i < size; i++ {
-		result += string(secretRunes[rand.Intn(len(secretRunes))])
-	}
-	return result
-}
-
-func (tables *SessionsMock) AddSession(id int, additionalData string) (string, error) {
-	secret := generateSecret(hashSize)
+func (tables *SessionsMock) Add(id int, additionalData string) (string, error) {
+	secret := tables.secretGenerator.String(hashSize)
 
 	tables.sessionTable[secret] = sessionData{userID: id, additionalData: additionalData}
 	return secret, nil
 }
 
-func (tables *SessionsMock) GetIdBySession(secret string) (int, string, error) {
+func (tables *SessionsMock) Get(secret string) (int, string, error) {
 	data, has := tables.sessionTable[secret]
 	if !has {
 		return 0, "", handlers.ErrAuthSessionNotFound
@@ -41,7 +34,7 @@ func (tables *SessionsMock) GetIdBySession(secret string) (int, string, error) {
 	return data.userID, data.additionalData, nil
 }
 
-func (tables *SessionsMock) RemoveSession(secret string) (err error) {
+func (tables *SessionsMock) Remove(secret string) (err error) {
 	_, has := tables.sessionTable[secret]
 	if !has {
 		return handlers.ErrAuthSessionNotFound

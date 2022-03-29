@@ -33,47 +33,47 @@ func (m *MockSessionsRepository) EXPECT() *MockSessionsRepositoryMockRecorder {
 	return m.recorder
 }
 
-// AddSession mocks base method.
-func (m *MockSessionsRepository) AddSession(id int, additionalData string) (string, error) {
+// Add mocks base method.
+func (m *MockSessionsRepository) Add(id int, additionalData string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddSession", id, additionalData)
+	ret := m.ctrl.Call(m, "Add", id, additionalData)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// AddSession indicates an expected call of AddSession.
-func (mr *MockSessionsRepositoryMockRecorder) AddSession(id, additionalData interface{}) *gomock.Call {
+// Add indicates an expected call of Add.
+func (mr *MockSessionsRepositoryMockRecorder) Add(id, additionalData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSession", reflect.TypeOf((*MockSessionsRepository)(nil).AddSession), id, additionalData)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockSessionsRepository)(nil).Add), id, additionalData)
 }
 
-// GetIdBySession mocks base method.
-func (m *MockSessionsRepository) GetIdBySession(secret string) (int, string, error) {
+// Get mocks base method.
+func (m *MockSessionsRepository) Get(secret string) (int, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetIdBySession", secret)
+	ret := m.ctrl.Call(m, "Get", secret)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetIdBySession indicates an expected call of GetIdBySession.
-func (mr *MockSessionsRepositoryMockRecorder) GetIdBySession(secret interface{}) *gomock.Call {
+// Get indicates an expected call of Get.
+func (mr *MockSessionsRepositoryMockRecorder) Get(secret interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIdBySession", reflect.TypeOf((*MockSessionsRepository)(nil).GetIdBySession), secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockSessionsRepository)(nil).Get), secret)
 }
 
-// RemoveSession mocks base method.
-func (m *MockSessionsRepository) RemoveSession(secret string) error {
+// Remove mocks base method.
+func (m *MockSessionsRepository) Remove(secret string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveSession", secret)
+	ret := m.ctrl.Call(m, "Remove", secret)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// RemoveSession indicates an expected call of RemoveSession.
-func (mr *MockSessionsRepositoryMockRecorder) RemoveSession(secret interface{}) *gomock.Call {
+// Remove indicates an expected call of Remove.
+func (mr *MockSessionsRepositoryMockRecorder) Remove(secret interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSession", reflect.TypeOf((*MockSessionsRepository)(nil).RemoveSession), secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockSessionsRepository)(nil).Remove), secret)
 }

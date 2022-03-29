@@ -17,7 +17,7 @@ func NewAuthUseCaseImpl(usersRepo repositories.UsersRepository, sessionsRepo rep
 }
 
 func (useCase *authUseCaseImpl) UserAuth(Cookie string) (id models.UserID, err error) {
-	realId, _, err := useCase.sessionsRepo.GetIdBySession(Cookie)
+	realId, _, err := useCase.sessionsRepo.Get(Cookie)
 	if err != nil {
 		return
 	}
@@ -29,7 +29,7 @@ func (useCase *authUseCaseImpl) UserLogin(userInfo models.UserAuthInfo) (id mode
 	if err != nil {
 		return
 	}
-	cookie, err = useCase.sessionsRepo.AddSession(realId, "")
+	cookie, err = useCase.sessionsRepo.Add(realId, "")
 	id.ID = realId
 	return
 }
@@ -43,17 +43,17 @@ func (useCase *authUseCaseImpl) UserRegister(userInfo models.UserAuthInfo) (id m
 	if err != nil {
 		return
 	}
-	cookie, err = useCase.sessionsRepo.AddSession(realId, "")
+	cookie, err = useCase.sessionsRepo.Add(realId, "")
 	id.ID = realId
 	return
 }
 
 func (useCase *authUseCaseImpl) UserLogout(Cookie string) error {
-	return useCase.sessionsRepo.RemoveSession(Cookie)
+	return useCase.sessionsRepo.Remove(Cookie)
 }
 
 func (useCase *authUseCaseImpl) UserChangePassword(userProfile models.UserAuthProfile, Cookie string) (err error) {
-	realIdSession, _, err := useCase.sessionsRepo.GetIdBySession(Cookie)
+	realIdSession, _, err := useCase.sessionsRepo.Get(Cookie)
 	if err != nil {
 		return
 	}
