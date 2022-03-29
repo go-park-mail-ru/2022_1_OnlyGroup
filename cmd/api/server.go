@@ -3,12 +3,16 @@ package main
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/repositories/mock"
+	"2022_1_OnlyGroup_back/app/repositories/postgres"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
 	_ "github.com/jackc/pgx"
+	"github.com/jmoiron/sqlx"
+
 	//_ "database/sql"
 	"github.com/gorilla/mux"
 	//_ "github.com/lib/pq"
 	_ "github.com/jackc/pgx/stdlib"
+	"log"
 	"net/http"
 	"time"
 )
@@ -33,6 +37,20 @@ type APIServer struct {
 }
 
 func NewServer(addr string) APIServer {
+
+	db, err := sqlx.Connect("pgx", "user=kdv password=5051 dbname=kdv sslmode=disable")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	profRepo, err := postgres.NewProfilePostgres(db, "kdv", "users")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(profRepo.FindCandidateProfile(1))
 	profileRepo := mock.NewProfileMock()
 	authRepo := mock.NewAuthMock()
 	return APIServer{address: addr, authHandler: handlers.CreateAuthHandler(impl.NewAuthUseCaseImpl(authRepo, profileRepo)),
