@@ -4,6 +4,7 @@ import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
 	"context"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"strconv"
@@ -32,12 +33,10 @@ func (repo *redisSessionsRepo) addSessionInternal(id int, additionalData string,
 	success, err := repo.client.HSet(context.Background(), key, secret, additionalData).Result()
 	if err != nil || success != 1 {
 		if err != nil {
-			err = errors.Wrap(handlers.ErrBaseApp, err.Error())
-			err = errors.Wrap(err, "redis session add failed")
-		} else {
-			err = errors.Wrap(handlers.ErrBaseApp, "redis session add failed")
+			return "", fmt.Errorf("redis session add failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 		}
-		return "", err
+		return "", fmt.Errorf("redis session add failed: hset returned not 1 sucsess result, %w", handlers.ErrBaseApp)
+
 	}
 	return secret, nil
 }
@@ -56,9 +55,7 @@ func (repo *redisSessionsRepo) Get(secret string) (int, string, error) {
 	idInString := separated[0]
 	id, err := strconv.Atoi(idInString)
 	if err != nil {
-		err = errors.Wrap(handlers.ErrAuthSessionNotFound, err.Error())
-		err = errors.Wrap(err, "session id atoi failed")
-		return 0, "", err
+		return 0, "", fmt.Errorf("session id atoi failed: %s, %w", err.Error(), handlers.ErrAuthSessionNotFound)
 	}
 
 	key := strings.Join([]string{repo.sessionsPrefix, idInString}, sessionIdAndSecretSep)
@@ -68,9 +65,7 @@ func (repo *redisSessionsRepo) Get(secret string) (int, string, error) {
 		return 0, "", handlers.ErrAuthSessionNotFound
 	}
 	if err != nil {
-		err = errors.Wrap(handlers.ErrBaseApp, err.Error())
-		err = errors.Wrap(err, "redis session get failed")
-		return 0, "", err
+		return 0, "", fmt.Errorf("redis session get failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 
 	return id, additionalData, nil
@@ -85,9 +80,7 @@ func (repo *redisSessionsRepo) Remove(secret string) error {
 	key := strings.Join([]string{repo.sessionsPrefix, idInString}, sessionIdAndSecretSep)
 	success, err := repo.client.HDel(context.Background(), key, secret).Result()
 	if err != nil {
-		err = errors.Wrap(handlers.ErrBaseApp, err.Error())
-		err = errors.Wrap(err, "session delete failed")
-		return err
+		return fmt.Errorf("session delete failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 	if success != 1 {
 		return handlers.ErrAuthSessionNotFound
