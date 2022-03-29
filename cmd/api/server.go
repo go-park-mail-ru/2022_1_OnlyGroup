@@ -37,8 +37,7 @@ type APIServer struct {
 }
 
 func NewServer(addr string) APIServer {
-	//conf := pgx.ConnConfig{Password: password, Port: port, User: user, Database: dbname, Host: host}
-	//db, err := sqlx.Connect("pgx", "host=localhost user=kdv password=5051 dbname=kdv")
+
 	db, err := sqlx.Connect("pgx", "user=kdv password=5051 dbname=kdv sslmode=disable")
 	if err != nil {
 		log.Fatalln(err)
