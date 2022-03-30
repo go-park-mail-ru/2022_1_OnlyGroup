@@ -24,10 +24,11 @@ type APIServer struct {
 
 func NewServer(addr string) APIServer {
 	profileRepo := mock.NewProfileMock()
-	authRepo := mock.NewAuthMock()
-	authUseCase := impl.NewAuthUseCaseImpl(authRepo, profileRepo)
+	usersRepo := mock.NewUsersMock()
+	sessionsRepo := mock.NewSessionsMock()
+	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profileRepo)
 	return APIServer{address: addr, authHandler: handlers.CreateAuthHandler(authUseCase),
-		profileHandler: handlers.CreateProfileHandler(impl.NewProfileUseCaseImpl(profileRepo, authRepo)),
+		profileHandler: handlers.CreateProfileHandler(impl.NewProfileUseCaseImpl(profileRepo)),
 		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
 	}
 }
