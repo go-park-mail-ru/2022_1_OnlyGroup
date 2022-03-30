@@ -7,17 +7,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const subTableName = "interests"
-
 type ProfilePostgres struct {
-	dataBase          *sqlx.DB
-	tableNameProfiles string
-	tableNameUsers    string
+	dataBase           *sqlx.DB
+	tableNameProfiles  string
+	tableNameUsers     string
+	tableNameInterests string
 }
 
-var count int
+const sizeVectorCandidates = 3
 
-func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string) (*ProfilePostgres, error) {
+func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string, tableNameInterests string) (*ProfilePostgres, error) {
 	_, err := dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameProfile + "(" +
 		"UserId     bigserial unique references " + tableNameUsers + "(id),\n" +
 		"FirstName   varchar(32) default '',\n" +
@@ -31,7 +30,7 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 		return nil, fmt.Errorf("create table failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 
-	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + subTableName + "(" +
+	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameInterests + "(" +
 		"UserId bigserial references " + tableNameUsers + "(id)," +
 		"Interests varchar(32) default '');")
 
@@ -39,7 +38,7 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 		return nil, fmt.Errorf("create table failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 
-	return &ProfilePostgres{dataBase, tableNameProfile, tableNameUsers}, nil
+	return &ProfilePostgres{dataBase, tableNameProfile, tableNameUsers, tableNameInterests}, nil
 }
 
 func (repo *ProfilePostgres) GetProfile(profileId int) (profile models.Profile, err error) {
@@ -49,7 +48,7 @@ func (repo *ProfilePostgres) GetProfile(profileId int) (profile models.Profile, 
 	}
 
 	var interests []string
-	err = repo.dataBase.Select(&interests, "SELECT interests FROM "+subTableName+" WHERE userid=$1", profileId)
+	err = repo.dataBase.Select(&interests, "SELECT interests FROM "+repo.tableNameInterests+" WHERE userid=$1", profileId)
 	if err != nil {
 		return profile, fmt.Errorf("get interests failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
@@ -70,13 +69,13 @@ func (repo *ProfilePostgres) ChangeProfile(profileId int, profile models.Profile
 	if err != nil {
 		return fmt.Errorf("create table failed: %s, %w", err, handlers.ErrBaseApp)
 	}
-	_, err = repo.dataBase.Exec("DELETE FROM "+subTableName+" WHERE userid = $1", profileId)
+	_, err = repo.dataBase.Exec("DELETE FROM "+repo.tableNameInterests+" WHERE userid = $1", profileId)
 	if err != nil {
 		return fmt.Errorf("delete interests failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 
 	for _, val := range profile.Interests {
-		_, err = repo.dataBase.Exec("INSERT INTO "+subTableName+" (userid, interests) VALUES ($1, $2)", profile.UserId, val)
+		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameInterests+" (userid, interests) VALUES ($1, $2)", profile.UserId, val)
 		if err != nil {
 			return fmt.Errorf("change interests failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 		}
@@ -91,7 +90,7 @@ func (repo *ProfilePostgres) DeleteProfile(profileId int) (err error) {
 		return err
 	}
 
-	_, err = repo.dataBase.Exec("DELETE FROM "+subTableName+" WHERE userid = $1", profileId)
+	_, err = repo.dataBase.Exec("DELETE FROM "+repo.tableNameInterests+" WHERE userid = $1", profileId)
 	if err != nil {
 		return fmt.Errorf("delete interests failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
@@ -99,13 +98,12 @@ func (repo *ProfilePostgres) DeleteProfile(profileId int) (err error) {
 }
 
 func (repo *ProfilePostgres) AddProfile(profile models.Profile) (err error) {
-	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameProfiles+" (firstname, lastname, birthday, city, aboutuser, userid, gender) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-		profile.FirstName, profile.LastName, profile.Birthday, profile.City, profile.AboutUser, profile.UserId, profile.Gender)
+	_, err = repo.dataBase.NamedExec("INSERT INTO "+repo.tableNameProfiles+" (firstname, lastname, birthday, city, aboutuser, userid, gender) VALUES (:firstname, :lastname, :birthday, :city, :aboutuser, :userid, :gender)", profile)
 	if err != nil {
 		return fmt.Errorf("insert profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 	for _, val := range profile.Interests {
-		_, err = repo.dataBase.Exec("INSERT INTO "+subTableName+" (userid, interests) VALUES ($1, $2)", profile.UserId, val)
+		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameInterests+" (userid, interests) VALUES ($1, $2)", profile.UserId, val)
 		if err != nil {
 			return fmt.Errorf("insert interests failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 		}
@@ -122,29 +120,26 @@ func (repo *ProfilePostgres) AddEmptyProfile(profileId int) (err error) {
 }
 
 func (repo *ProfilePostgres) FindCandidateProfile(profileId int) (candidateProfiles models.VectorCandidate, err error) {
-	var profile []models.Profile
-	err = repo.dataBase.Select(&profile, "SELECT * FROM "+repo.tableNameProfiles)
+	var profilesid []int
+	err = repo.dataBase.Select(&profilesid, "SELECT userid FROM "+repo.tableNameProfiles+" ORDER BY userid ASC LIMIT 3")
 	if err != nil {
 		return candidateProfiles, fmt.Errorf("get profiles failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
-	for i := 0; i < 3; i++ {
-		if count == len(profile) {
-			count = 0
-		}
-		candidateProfiles.Candidates = append(candidateProfiles.Candidates, profile[count].UserId)
-		count += 1
+	candidateProfiles.Candidates = make([]int, sizeVectorCandidates)
+	for idx, val := range profilesid {
+		candidateProfiles.Candidates[idx] = val
 	}
 	return
 }
 
 func (repo *ProfilePostgres) CheckProfileFiled(profileId int) (err error) {
 	var profile models.Profile
-	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, gender FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&profile)
+	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, gender FROM "+repo.tableNameProfiles+" WHERE userid=$1 LIMIT 3 ", profileId).StructScan(&profile)
 	if err != nil {
 		return fmt.Errorf("get profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 	var interests []string
-	err = repo.dataBase.Select(&interests, "SELECT interests FROM "+subTableName+" WHERE userid=$1", profileId)
+	err = repo.dataBase.Select(&interests, "SELECT interests FROM "+repo.tableNameInterests+" WHERE userid=$1", profileId)
 	if err != nil {
 		return fmt.Errorf("get interests failed: %s, %w", err, handlers.ErrBaseApp)
 	}

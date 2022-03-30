@@ -1,20 +1,20 @@
 package models
 
 type Profile struct {
-	FirstName string   `db:"firstname"`
-	LastName  string   `db:"lastname"`
-	Birthday  string   `db:"birthday"`
-	City      string   `db:"city"`
-	Interests []string `db:"interests"`
-	AboutUser string   `db:"aboutuser"`
-	UserId    int      `db:"userid"`
-	Gender    string   `db:"gender"`
+	FirstName string
+	LastName  string
+	Birthday  string
+	City      string
+	Interests []string
+	AboutUser string
+	UserId    int
+	Gender    string
 }
 
 type ShortProfile struct {
-	FirstName string `db:"firstname"`
-	LastName  string `db:"lastname"`
-	City      string `db:"city"`
+	FirstName string
+	LastName  string
+	City      string
 }
 
 type VectorCandidate struct {
