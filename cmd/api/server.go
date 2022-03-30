@@ -6,7 +6,6 @@ import (
 	"2022_1_OnlyGroup_back/app/usecases/impl"
 	"github.com/gorilla/mux"
 	_ "github.com/jackc/pgx"
-	_ "github.com/jackc/pgx/stdlib"
 	"net/http"
 	"time"
 )

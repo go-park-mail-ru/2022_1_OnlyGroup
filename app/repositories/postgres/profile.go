@@ -24,6 +24,7 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 		"Birthday   varchar(32) default '',\n" +
 		"City       varchar(32) default '',\n" +
 		"AboutUser  text default '',\n" +
+		"Height     numeric default 0,\n" +
 		"Gender     varchar(32) default '');")
 
 	if err != nil {
@@ -42,7 +43,7 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 }
 
 func (repo *ProfilePostgres) GetProfile(profileId int) (profile models.Profile, err error) {
-	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, gender FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&profile)
+	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, height,gender FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&profile)
 	if err != nil {
 		return profile, fmt.Errorf("get profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
@@ -65,7 +66,7 @@ func (repo *ProfilePostgres) GetShortProfile(profileId int) (shortProfile models
 }
 
 func (repo *ProfilePostgres) ChangeProfile(profileId int, profile models.Profile) (err error) {
-	_, err = repo.dataBase.NamedExec("UPDATE "+repo.tableNameProfiles+" SET firstname=:firstname, lastname=:lastname, birthday=:birthday, city=:city, aboutuser=:aboutuser, gender=:gender WHERE userid = :userid", profile)
+	_, err = repo.dataBase.NamedExec("UPDATE "+repo.tableNameProfiles+" SET firstname=:firstname, lastname=:lastname, birthday=:birthday, city=:city, aboutuser=:aboutuser, gender=:gender, height=:height WHERE userid = :userid", profile)
 	if err != nil {
 		return fmt.Errorf("create table failed: %s, %w", err, handlers.ErrBaseApp)
 	}
@@ -98,7 +99,7 @@ func (repo *ProfilePostgres) DeleteProfile(profileId int) (err error) {
 }
 
 func (repo *ProfilePostgres) AddProfile(profile models.Profile) (err error) {
-	_, err = repo.dataBase.NamedExec("INSERT INTO "+repo.tableNameProfiles+" (firstname, lastname, birthday, city, aboutuser, userid, gender) VALUES (:firstname, :lastname, :birthday, :city, :aboutuser, :userid, :gender)", profile)
+	_, err = repo.dataBase.NamedExec("INSERT INTO "+repo.tableNameProfiles+" (firstname, lastname, birthday, city, aboutuser, userid, gender, height) VALUES (:firstname, :lastname, :birthday, :city, :aboutuser, :userid, :gender, :height)", profile)
 	if err != nil {
 		return fmt.Errorf("insert profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
@@ -120,13 +121,13 @@ func (repo *ProfilePostgres) AddEmptyProfile(profileId int) (err error) {
 }
 
 func (repo *ProfilePostgres) FindCandidateProfile(profileId int) (candidateProfiles models.VectorCandidate, err error) {
-	var profilesid []int
-	err = repo.dataBase.Select(&profilesid, "SELECT userid FROM "+repo.tableNameProfiles+" ORDER BY userid ASC LIMIT 3")
+	var profilesId []int
+	err = repo.dataBase.Select(&profilesId, "SELECT userid FROM "+repo.tableNameProfiles+" WHERE userid !=$1 ORDER BY random() LIMIT 3", profileId)
 	if err != nil {
 		return candidateProfiles, fmt.Errorf("get profiles failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
 	candidateProfiles.Candidates = make([]int, sizeVectorCandidates)
-	for idx, val := range profilesid {
+	for idx, val := range profilesId {
 		candidateProfiles.Candidates[idx] = val
 	}
 	return
@@ -134,7 +135,7 @@ func (repo *ProfilePostgres) FindCandidateProfile(profileId int) (candidateProfi
 
 func (repo *ProfilePostgres) CheckProfileFiled(profileId int) (err error) {
 	var profile models.Profile
-	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, gender FROM "+repo.tableNameProfiles+" WHERE userid=$1 LIMIT 3 ", profileId).StructScan(&profile)
+	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, gender, height FROM "+repo.tableNameProfiles+" WHERE userid=$1 LIMIT 3 ", profileId).StructScan(&profile)
 	if err != nil {
 		return fmt.Errorf("get profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
 	}
