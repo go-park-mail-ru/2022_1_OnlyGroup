@@ -35,9 +35,9 @@ func (m *MockProfileRepository) EXPECT() *MockProfileRepositoryMockRecorder {
 }
 
 // AddEmptyProfile mocks base method.
-func (m *MockProfileRepository) AddEmptyProfile(profileId int) error {
+func (m *MockProfileRepository) AddEmpty(profileId int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddEmptyProfile", profileId)
+	ret := m.ctrl.Call(m, "AddEmpty", profileId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -45,13 +45,13 @@ func (m *MockProfileRepository) AddEmptyProfile(profileId int) error {
 // AddEmptyProfile indicates an expected call of AddEmptyProfile.
 func (mr *MockProfileRepositoryMockRecorder) AddEmptyProfile(profileId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEmptyProfile", reflect.TypeOf((*MockProfileRepository)(nil).AddEmptyProfile), profileId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEmpty", reflect.TypeOf((*MockProfileRepository)(nil).AddEmpty), profileId)
 }
 
 // AddProfile mocks base method.
-func (m *MockProfileRepository) AddProfile(profile models.Profile) error {
+func (m *MockProfileRepository) Add(profile models.Profile) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddProfile", profile)
+	ret := m.ctrl.Call(m, "Add", profile)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -59,13 +59,13 @@ func (m *MockProfileRepository) AddProfile(profile models.Profile) error {
 // AddProfile indicates an expected call of AddProfile.
 func (mr *MockProfileRepositoryMockRecorder) AddProfile(profile interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddProfile", reflect.TypeOf((*MockProfileRepository)(nil).AddProfile), profile)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockProfileRepository)(nil).Add), profile)
 }
 
 // ChangeProfile mocks base method.
-func (m *MockProfileRepository) ChangeProfile(profileId int, profile models.Profile) error {
+func (m *MockProfileRepository) Change(profileId int, profile models.Profile) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangeProfile", profileId, profile)
+	ret := m.ctrl.Call(m, "Change", profileId, profile)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -73,13 +73,13 @@ func (m *MockProfileRepository) ChangeProfile(profileId int, profile models.Prof
 // ChangeProfile indicates an expected call of ChangeProfile.
 func (mr *MockProfileRepositoryMockRecorder) ChangeProfile(profileId, profile interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeProfile", reflect.TypeOf((*MockProfileRepository)(nil).ChangeProfile), profileId, profile)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Change", reflect.TypeOf((*MockProfileRepository)(nil).Change), profileId, profile)
 }
 
 // CheckProfileFiled mocks base method.
-func (m *MockProfileRepository) CheckProfileFiled(profileId int) error {
+func (m *MockProfileRepository) CheckFiled(profileId int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckProfileFiled", profileId)
+	ret := m.ctrl.Call(m, "CheckFiled", profileId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -87,13 +87,13 @@ func (m *MockProfileRepository) CheckProfileFiled(profileId int) error {
 // CheckProfileFiled indicates an expected call of CheckProfileFiled.
 func (mr *MockProfileRepositoryMockRecorder) CheckProfileFiled(profileId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckProfileFiled", reflect.TypeOf((*MockProfileRepository)(nil).CheckProfileFiled), profileId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckFiled", reflect.TypeOf((*MockProfileRepository)(nil).CheckFiled), profileId)
 }
 
 // DeleteProfile mocks base method.
-func (m *MockProfileRepository) DeleteProfile(profileId int) error {
+func (m *MockProfileRepository) Delete(profileId int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteProfile", profileId)
+	ret := m.ctrl.Call(m, "Delete", profileId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -101,13 +101,13 @@ func (m *MockProfileRepository) DeleteProfile(profileId int) error {
 // DeleteProfile indicates an expected call of DeleteProfile.
 func (mr *MockProfileRepositoryMockRecorder) DeleteProfile(profileId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProfile", reflect.TypeOf((*MockProfileRepository)(nil).DeleteProfile), profileId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockProfileRepository)(nil).Delete), profileId)
 }
 
 // FindCandidateProfile mocks base method.
-func (m *MockProfileRepository) FindCandidateProfile(profileId int) (models.VectorCandidate, error) {
+func (m *MockProfileRepository) FindCandidate(profileId int) (models.VectorCandidate, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCandidateProfile", profileId)
+	ret := m.ctrl.Call(m, "FindCandidate", profileId)
 	ret0, _ := ret[0].(models.VectorCandidate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -116,13 +116,13 @@ func (m *MockProfileRepository) FindCandidateProfile(profileId int) (models.Vect
 // FindCandidateProfile indicates an expected call of FindCandidateProfile.
 func (mr *MockProfileRepositoryMockRecorder) FindCandidateProfile(profileId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCandidateProfile", reflect.TypeOf((*MockProfileRepository)(nil).FindCandidateProfile), profileId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCandidate", reflect.TypeOf((*MockProfileRepository)(nil).FindCandidate), profileId)
 }
 
 // GetProfile mocks base method.
-func (m *MockProfileRepository) GetProfile(profileId int) (models.Profile, error) {
+func (m *MockProfileRepository) Get(profileId int) (models.Profile, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProfile", profileId)
+	ret := m.ctrl.Call(m, "Get", profileId)
 	ret0, _ := ret[0].(models.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -131,13 +131,13 @@ func (m *MockProfileRepository) GetProfile(profileId int) (models.Profile, error
 // GetProfile indicates an expected call of GetProfile.
 func (mr *MockProfileRepositoryMockRecorder) GetProfile(profileId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfile", reflect.TypeOf((*MockProfileRepository)(nil).GetProfile), profileId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockProfileRepository)(nil).Get), profileId)
 }
 
 // GetShortProfile mocks base method.
-func (m *MockProfileRepository) GetShortProfile(profileId int) (models.ShortProfile, error) {
+func (m *MockProfileRepository) GetShort(profileId int) (models.ShortProfile, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetShortProfile", profileId)
+	ret := m.ctrl.Call(m, "GetShort", profileId)
 	ret0, _ := ret[0].(models.ShortProfile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -146,5 +146,5 @@ func (m *MockProfileRepository) GetShortProfile(profileId int) (models.ShortProf
 // GetShortProfile indicates an expected call of GetShortProfile.
 func (mr *MockProfileRepositoryMockRecorder) GetShortProfile(profileId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShortProfile", reflect.TypeOf((*MockProfileRepository)(nil).GetShortProfile), profileId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShort", reflect.TypeOf((*MockProfileRepository)(nil).GetShort), profileId)
 }

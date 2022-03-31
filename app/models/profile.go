@@ -9,6 +9,7 @@ type Profile struct {
 	AboutUser string
 	UserId    int
 	Gender    string
+	Height    int `required:"true"`
 }
 
 type ShortProfile struct {

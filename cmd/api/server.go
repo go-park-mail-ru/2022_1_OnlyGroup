@@ -5,6 +5,7 @@ import (
 	"2022_1_OnlyGroup_back/app/repositories/mock"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
 	"github.com/gorilla/mux"
+	_ "github.com/jackc/pgx"
 	"net/http"
 	"time"
 )
