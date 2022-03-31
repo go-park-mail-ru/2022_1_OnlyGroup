@@ -42,7 +42,7 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 	return &ProfilePostgres{dataBase, tableNameProfile, tableNameUsers, tableNameInterests}, nil
 }
 
-func (repo *ProfilePostgres) GetProfile(profileId int) (profile models.Profile, err error) {
+func (repo *ProfilePostgres) Get(profileId int) (profile models.Profile, err error) {
 	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, height,gender FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&profile)
 	if err != nil {
 		return profile, fmt.Errorf("get profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
@@ -57,7 +57,7 @@ func (repo *ProfilePostgres) GetProfile(profileId int) (profile models.Profile, 
 	return
 }
 
-func (repo *ProfilePostgres) GetShortProfile(profileId int) (shortProfile models.ShortProfile, err error) {
+func (repo *ProfilePostgres) GetShort(profileId int) (shortProfile models.ShortProfile, err error) {
 	err = repo.dataBase.QueryRowx("SELECT firstName, lastname, city FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&shortProfile)
 	if err != nil {
 		return shortProfile, fmt.Errorf("get shortProfile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
@@ -65,7 +65,7 @@ func (repo *ProfilePostgres) GetShortProfile(profileId int) (shortProfile models
 	return
 }
 
-func (repo *ProfilePostgres) ChangeProfile(profileId int, profile models.Profile) (err error) {
+func (repo *ProfilePostgres) Change(profileId int, profile models.Profile) (err error) {
 	_, err = repo.dataBase.NamedExec("UPDATE "+repo.tableNameProfiles+" SET firstname=:firstname, lastname=:lastname, birthday=:birthday, city=:city, aboutuser=:aboutuser, gender=:gender, height=:height WHERE userid = :userid", profile)
 	if err != nil {
 		return fmt.Errorf("create table failed: %s, %w", err, handlers.ErrBaseApp)
@@ -84,7 +84,7 @@ func (repo *ProfilePostgres) ChangeProfile(profileId int, profile models.Profile
 	return
 }
 
-func (repo *ProfilePostgres) DeleteProfile(profileId int) (err error) {
+func (repo *ProfilePostgres) Delete(profileId int) (err error) {
 	_, err = repo.dataBase.Exec("DELETE FROM "+repo.tableNameProfiles+" WHERE userid = $1", profileId)
 	if err != nil {
 		fmt.Errorf("delete profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
@@ -98,7 +98,7 @@ func (repo *ProfilePostgres) DeleteProfile(profileId int) (err error) {
 	return
 }
 
-func (repo *ProfilePostgres) AddProfile(profile models.Profile) (err error) {
+func (repo *ProfilePostgres) Add(profile models.Profile) (err error) {
 	_, err = repo.dataBase.NamedExec("INSERT INTO "+repo.tableNameProfiles+" (firstname, lastname, birthday, city, aboutuser, userid, gender, height) VALUES (:firstname, :lastname, :birthday, :city, :aboutuser, :userid, :gender, :height)", profile)
 	if err != nil {
 		return fmt.Errorf("insert profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
@@ -112,7 +112,7 @@ func (repo *ProfilePostgres) AddProfile(profile models.Profile) (err error) {
 	return
 }
 
-func (repo *ProfilePostgres) AddEmptyProfile(profileId int) (err error) {
+func (repo *ProfilePostgres) AddEmpty(profileId int) (err error) {
 	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameProfiles+"(userid) VALUES ($1)", profileId)
 	if err != nil {
 		return fmt.Errorf("insert empty profile failed: %s, %w", err.Error(), handlers.ErrBaseApp)
@@ -120,7 +120,7 @@ func (repo *ProfilePostgres) AddEmptyProfile(profileId int) (err error) {
 	return
 }
 
-func (repo *ProfilePostgres) FindCandidateProfile(profileId int) (candidateProfiles models.VectorCandidate, err error) {
+func (repo *ProfilePostgres) FindCandidate(profileId int) (candidateProfiles models.VectorCandidate, err error) {
 	var profilesId []int
 	err = repo.dataBase.Select(&profilesId, "SELECT userid FROM "+repo.tableNameProfiles+" WHERE userid !=$1 ORDER BY random() LIMIT 3", profileId)
 	if err != nil {
@@ -133,7 +133,7 @@ func (repo *ProfilePostgres) FindCandidateProfile(profileId int) (candidateProfi
 	return
 }
 
-func (repo *ProfilePostgres) CheckProfileFiled(profileId int) (err error) {
+func (repo *ProfilePostgres) CheckFiled(profileId int) (err error) {
 	var profile models.Profile
 	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, gender, height FROM "+repo.tableNameProfiles+" WHERE userid=$1 LIMIT 3 ", profileId).StructScan(&profile)
 	if err != nil {

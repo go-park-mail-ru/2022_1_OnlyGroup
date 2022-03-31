@@ -16,14 +16,6 @@ const ProfileIdUrl = "/profiles/{id:[0-9]+}"
 const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"
 const ProfileUrlCandidates = "/profiles/candidates"
 
-const (
-	host     = "localhost"
-	port     = "5432"
-	user     = "kdv"
-	password = "5051"
-	dbname   = "kdv"
-)
-
 type APIServer struct {
 	address        string
 	authHandler    *handlers.AuthHandler

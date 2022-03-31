@@ -39,7 +39,7 @@ func (useCase *authUseCaseImpl) UserRegister(userInfo models.UserAuthInfo) (id m
 	if err != nil {
 		return
 	}
-	err = useCase.profileRepo.AddEmptyProfile(realId)
+	err = useCase.profileRepo.AddEmpty(realId)
 	if err != nil {
 		return
 	}
