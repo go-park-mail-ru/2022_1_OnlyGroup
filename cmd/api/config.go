@@ -9,54 +9,56 @@ import (
 const defaultWriteFilePerm = 0644
 
 type PostgresConnectConf struct {
-	Username string
-	Password string
-	Address  string
-	Port     string
-	DbName   string
-	Params   string
+	Username             string
+	Password             string
+	Address              string
+	Port                 string
+	DbName               string
+	Params               string
+	UsersDbTableName     string
+	ProfilesDbTableName  string
+	InterestsDbTableName string
 }
 
 type RedisConnectConf struct {
-	Username string
-	Password string
-	Address  string
-	Port     string
-	DbNum    int
+	Username       string
+	Password       string
+	Address        string
+	Port           string
+	DbNum          int
+	SessionsPrefix string
 }
 
 type APIServerConf struct {
-	RedisConf        RedisConnectConf
-	PostgresConf     PostgresConnectConf
-	ServerPort       string
-	ServerAddr       string
-	ApiPathPrefix    string
-	UsersDbTable     string
-	ProfilesDbTable  string
-	InterestsDbTable string
+	RedisConf     RedisConnectConf
+	PostgresConf  PostgresConnectConf
+	ServerPort    string
+	ServerAddr    string
+	ApiPathPrefix string
 }
 
 var ApiServerDefaultConf = APIServerConf{
-	ServerPort:       "8080",
-	ServerAddr:       "0.0.0.0",
-	ApiPathPrefix:    "",
-	UsersDbTable:     "os_users",
-	ProfilesDbTable:  "os_profiles",
-	InterestsDbTable: "os_interests",
+	ServerPort:    "8080",
+	ServerAddr:    "0.0.0.0",
+	ApiPathPrefix: "",
 	RedisConf: RedisConnectConf{
-		Username: "",
-		Password: "",
-		Address:  "localhost",
-		Port:     "6379",
-		DbNum:    1,
+		Username:       "",
+		Password:       "",
+		Address:        "localhost",
+		Port:           "6379",
+		DbNum:          1,
+		SessionsPrefix: "os_sessions",
 	},
 	PostgresConf: PostgresConnectConf{
-		Username: "postgres",
-		Password: "postgres",
-		Address:  "localhost",
-		Port:     "5432",
-		DbName:   "postgres",
-		Params:   "",
+		Username:             "postgres",
+		Password:             "postgres",
+		Address:              "localhost",
+		Port:                 "5432",
+		DbName:               "postgres",
+		Params:               "",
+		UsersDbTableName:     "os_users",
+		ProfilesDbTableName:  "os_profiles",
+		InterestsDbTableName: "os_interests",
 	},
 }
 

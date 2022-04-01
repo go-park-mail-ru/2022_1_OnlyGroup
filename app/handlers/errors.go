@@ -25,7 +25,7 @@ func AppErrorFromError(inputError error) AppError {
 }
 
 func (err AppError) IsInternalError() bool {
-	if err.Code%100 == 5 {
+	if err.Code/100 == 5 {
 		return true
 	}
 	return false
