@@ -21,14 +21,14 @@ func TestAddGetProfile(t *testing.T) {
 	for idx, test := range profileRepoTest {
 		t.Run("", func(t *testing.T) {
 			//t.Parallel()
-			err := ProfileMockTest.AddProfile(test)
+			err := ProfileMockTest.Add(test)
 			assert.Equal(nil, err)
-			res, err := ProfileMockTest.GetProfile(idx)
+			res, err := ProfileMockTest.Get(idx)
 			assert.Equal(res, test)
 			assert.Equal(nil, err)
 		})
 	}
-	_, err := ProfileMockTest.GetProfile(TestNum + 1)
+	_, err := ProfileMockTest.Get(TestNum + 1)
 	assert.Equal(err, handlers.ErrProfileNotFound)
 
 }
@@ -44,15 +44,15 @@ func TestAddGetShortProfile(t *testing.T) {
 	for idx, test := range profileRepoTest {
 		t.Run("", func(t *testing.T) {
 			//t.Parallel()
-			err := ProfileMockTest.AddProfile(test)
+			err := ProfileMockTest.Add(test)
 			assert.Equal(nil, err)
-			res, err := ProfileMockTest.GetShortProfile(idx)
+			res, err := ProfileMockTest.GetShort(idx)
 			expectRes := models.ShortProfile{FirstName: test.FirstName, LastName: test.LastName, City: test.City}
 			assert.Equal(expectRes, res)
 			assert.Equal(nil, err)
 		})
 	}
-	_, err := ProfileMockTest.GetProfile(TestNum + 1)
+	_, err := ProfileMockTest.Get(TestNum + 1)
 	assert.Equal(err, handlers.ErrProfileNotFound)
 }
 
@@ -63,10 +63,10 @@ func TestAddGetEmptyProfile(t *testing.T) {
 	for idx := 0; idx < TestNum; idx++ {
 		t.Run("", func(t *testing.T) {
 			//t.Parallel()
-			err := ProfileMockTest.AddEmptyProfile(idx)
+			err := ProfileMockTest.AddEmpty(idx)
 			assert.Equal(nil, err)
 
-			res, err := ProfileMockTest.GetProfile(idx)
+			res, err := ProfileMockTest.Get(idx)
 			assert.Equal(models.Profile{Interests: []string{}, UserId: idx}, res)
 			assert.Equal(nil, err)
 		})
@@ -80,25 +80,25 @@ func TestFindCandidate(t *testing.T) {
 	for i := 0; i < TestNum; i++ {
 		profileRepoTest = append(profileRepoTest, models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: i, Gender: faker.Gender()})
 	}
-	_, err := ProfileMockTest.FindCandidateProfile(TestNum + 1)
+	_, err := ProfileMockTest.FindCandidate(TestNum + 1)
 	assert.Equal(err, handlers.ErrProfileNotFound)
 
 	for _, test := range profileRepoTest {
 		t.Run("", func(t *testing.T) {
 			//t.Parallel()
-			err := ProfileMockTest.AddProfile(test)
+			err := ProfileMockTest.Add(test)
 			assert.Equal(nil, err)
 		})
 	}
 
 	for i := 0; i < TestNum; i++ {
-		candidateProfiles, err := ProfileMockTest.FindCandidateProfile(i)
+		candidateProfiles, err := ProfileMockTest.FindCandidate(i)
 		assert.Equal(nil, err)
 		if len(candidateProfiles.Candidates) != 3 {
 			t.Error("len candidate < 3")
 		}
 		for _, value := range candidateProfiles.Candidates {
-			_, err := ProfileMockTest.GetProfile(value)
+			_, err := ProfileMockTest.Get(value)
 			assert.Equal(nil, err)
 		}
 	}
@@ -115,26 +115,26 @@ func TestCheckEmptyProfile(t *testing.T) {
 	for _, test := range profileRepoTest {
 		t.Run("", func(t *testing.T) {
 			//t.Parallel()
-			err := ProfileMockTest.AddProfile(test)
+			err := ProfileMockTest.Add(test)
 			assert.Equal(nil, err)
 		})
 	}
-	err := ProfileMockTest.AddEmptyProfile(TestNum + 1)
+	err := ProfileMockTest.AddEmpty(TestNum + 1)
 	assert.Equal(nil, err)
-	err = ProfileMockTest.CheckProfileFiled(TestNum + 1)
+	err = ProfileMockTest.CheckFiled(TestNum + 1)
 	assert.Equal(err, handlers.ErrProfileNotFiled)
 
 	for idx := 0; idx < TestNum; idx++ {
 		t.Run("", func(t *testing.T) {
 			//t.Parallel()
-			err := ProfileMockTest.AddEmptyProfile(idx)
+			err := ProfileMockTest.AddEmpty(idx)
 			assert.Equal(nil, err)
 
-			err = ProfileMockTest.CheckProfileFiled(idx)
+			err = ProfileMockTest.CheckFiled(idx)
 			assert.Equal(nil, err)
 		})
 	}
-	err = ProfileMockTest.CheckProfileFiled(TestNum + 2)
+	err = ProfileMockTest.CheckFiled(TestNum + 2)
 	assert.Equal(err, handlers.ErrProfileNotFound)
 }
 
@@ -144,10 +144,10 @@ func TestNewChangeProfile(t *testing.T) {
 	ProfileMockTest := NewProfileMock()
 	profileRepoTest := models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: 0, Gender: faker.Gender()}
 
-	err := ProfileMockTest.ChangeProfile(0, profileRepoTest)
+	err := ProfileMockTest.Change(0, profileRepoTest)
 	assert.Equal(nil, err)
 
-	err = ProfileMockTest.ChangeProfile(8, profileRepoTest)
+	err = ProfileMockTest.Change(8, profileRepoTest)
 	assert.Equal(err, handlers.ErrProfileNotFound)
 
 }
@@ -157,10 +157,10 @@ func TestDeleteChangeProfile(t *testing.T) {
 
 	ProfileMockTest := NewProfileMock()
 
-	err := ProfileMockTest.DeleteProfile(5)
+	err := ProfileMockTest.Delete(5)
 	assert.Equal(nil, err)
 
-	err = ProfileMockTest.DeleteProfile(8)
+	err = ProfileMockTest.Delete(8)
 	assert.Equal(err, handlers.ErrProfileNotFound)
 
 }

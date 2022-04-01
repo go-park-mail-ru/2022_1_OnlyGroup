@@ -15,13 +15,13 @@ func NewProfileUseCaseImpl(profileRepo repositories.ProfileRepository) *profileU
 
 func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (profile models.Profile, err error) {
 	if profileId == cookieProfileId {
-		profile, err = useCase.profileRepo.GetProfile(cookieProfileId)
+		profile, err = useCase.profileRepo.Get(cookieProfileId)
 		if err != nil {
 			return profile, err
 		}
 		return
 	}
-	profile, err = useCase.profileRepo.GetProfile(profileId)
+	profile, err = useCase.profileRepo.Get(profileId)
 	if err != nil {
 		return profile, err
 	}
@@ -29,12 +29,12 @@ func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (prof
 }
 
 func (useCase *profileUseCaseImpl) Change(profileId int, profile models.Profile) (err error) {
-	err = useCase.profileRepo.ChangeProfile(profileId, profile)
+	err = useCase.profileRepo.Change(profileId, profile)
 	return
 }
 
 func (useCase *profileUseCaseImpl) Delete(profileId int) (err error) {
-	err = useCase.profileRepo.DeleteProfile(profileId)
+	err = useCase.profileRepo.Delete(profileId)
 	return
 }
 
@@ -42,12 +42,12 @@ func (useCase *profileUseCaseImpl) GetShort(cookieId int, profileId int) (profil
 	if cookieId != profileId {
 		return
 	}
-	profile, err = useCase.profileRepo.GetShortProfile(profileId)
+	profile, err = useCase.profileRepo.GetShort(profileId)
 	return
 }
 
 func (useCase *profileUseCaseImpl) GetCandidates(profileId int) (candidateProfiles models.VectorCandidate, err error) {
 
-	candidateProfiles, err = useCase.profileRepo.FindCandidateProfile(profileId)
+	candidateProfiles, err = useCase.profileRepo.FindCandidate(profileId)
 	return
 }

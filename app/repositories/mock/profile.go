@@ -13,12 +13,12 @@ type ProfileMock struct {
 func NewProfileMock() *ProfileMock {
 	mock := ProfileMock{}
 	for i := 0; i < 6; i++ {
-		mock.AddProfile(models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: i, Gender: faker.Gender()})
+		mock.Add(models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(), Birthday: faker.Date(), City: "Moscow", Interests: []string{faker.Word(), faker.Word()}, AboutUser: faker.Sentence(), UserId: i, Gender: faker.Gender()})
 	}
 	return &mock
 }
 
-func (tables *ProfileMock) GetProfile(profileId int) (profile models.Profile, err error) {
+func (tables *ProfileMock) Get(profileId int) (profile models.Profile, err error) {
 	for _, item := range tables.profileRepo {
 		if item.UserId == profileId {
 			profile = item
@@ -28,7 +28,7 @@ func (tables *ProfileMock) GetProfile(profileId int) (profile models.Profile, er
 	return profile, handlers.ErrProfileNotFound
 }
 
-func (tables *ProfileMock) GetShortProfile(profileId int) (shortProfile models.ShortProfile, err error) {
+func (tables *ProfileMock) GetShort(profileId int) (shortProfile models.ShortProfile, err error) {
 	for _, item := range tables.profileRepo {
 		if item.UserId == profileId {
 			shortProfile.FirstName = item.FirstName
@@ -42,7 +42,7 @@ func (tables *ProfileMock) GetShortProfile(profileId int) (shortProfile models.S
 
 var count = 0
 
-func (tables *ProfileMock) ChangeProfile(profileId int, profile models.Profile) (err error) {
+func (tables *ProfileMock) Change(profileId int, profile models.Profile) (err error) {
 	for id, item := range tables.profileRepo {
 		if item.UserId == profileId {
 			if len(profile.Interests) != 0 {
@@ -72,7 +72,7 @@ func (tables *ProfileMock) ChangeProfile(profileId int, profile models.Profile) 
 	return handlers.ErrProfileNotFound
 }
 
-func (tables *ProfileMock) DeleteProfile(profileId int) (err error) {
+func (tables *ProfileMock) Delete(profileId int) (err error) {
 	if len(tables.profileRepo) == 0 {
 		return handlers.ErrMockIsEmpty
 	}
@@ -88,12 +88,12 @@ func (tables *ProfileMock) DeleteProfile(profileId int) (err error) {
 	return handlers.ErrProfileNotFound
 }
 
-func (tables *ProfileMock) AddProfile(profile models.Profile) (err error) {
+func (tables *ProfileMock) Add(profile models.Profile) (err error) {
 	tables.profileRepo = append(tables.profileRepo, profile)
 	return nil
 }
 
-func (tables *ProfileMock) AddEmptyProfile(profileId int) (err error) {
+func (tables *ProfileMock) AddEmpty(profileId int) (err error) {
 	profile := models.Profile{FirstName: "", LastName: "",
 		Birthday: "", City: "", Interests: []string{}, AboutUser: "", UserId: profileId,
 		Gender: ""}
@@ -101,7 +101,7 @@ func (tables *ProfileMock) AddEmptyProfile(profileId int) (err error) {
 	return nil
 }
 
-func (tables *ProfileMock) FindCandidateProfile(profileId int) (candidateProfiles models.VectorCandidate, err error) {
+func (tables *ProfileMock) FindCandidate(profileId int) (candidateProfiles models.VectorCandidate, err error) {
 	if len(tables.profileRepo) == 0 {
 		return candidateProfiles, handlers.ErrProfileNotFound
 	}
@@ -115,7 +115,7 @@ func (tables *ProfileMock) FindCandidateProfile(profileId int) (candidateProfile
 	return candidateProfiles, nil
 }
 
-func (tables *ProfileMock) CheckProfileFiled(profileId int) (err error) {
+func (tables *ProfileMock) CheckFiled(profileId int) (err error) {
 	for _, item := range tables.profileRepo {
 		if item.UserId == profileId {
 			if item.Gender == "" ||
