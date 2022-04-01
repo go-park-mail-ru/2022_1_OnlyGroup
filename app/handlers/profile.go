@@ -13,10 +13,10 @@ import (
 )
 
 const patternStr = "^[a-zA-Z]+$"
-const patternDate = "[0-9]+"
-const patternId = "^[0-9]+$"
+const patternDate = "\\d{2}.\\d{2}.\\d{4}"
+const patternInt = "^[0-9]+$"
 
-func checkData(profile *models.Profile) bool {
+func checkProfileData(profile *models.Profile) bool {
 	var check bool
 	var err error
 	if len(profile.Birthday) > 0 {
@@ -61,12 +61,20 @@ func checkData(profile *models.Profile) bool {
 			return false
 		}
 	}
+	check, err = regexp.MatchString(patternInt, strconv.Itoa(profile.UserId))
+	if !check || err != nil {
+		return false
+	}
+	check, err = regexp.MatchString(patternInt, strconv.Itoa(profile.Height))
+	if !check || err != nil {
+		return false
+	}
 	return true
 }
 
 func getIdFromUrl(r *http.Request) (int, error) {
 	idFromUrl := mux.Vars(r)["id"]
-	checkIdFromUrl, _ := regexp.MatchString(patternId, idFromUrl)
+	checkIdFromUrl, _ := regexp.MatchString(patternInt, idFromUrl)
 	if !checkIdFromUrl {
 		return 0, ErrBadUserID
 	}
@@ -125,14 +133,13 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 	if !ok {
 		return
 	}
-
-	profile, err := handler.ProfileUseCase.GetShort(cookieId, id)
+	model, err := handler.ProfileUseCase.GetShort(cookieId, id)
 	if err != nil {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
 		return
 	}
-	response, err := json.Marshal(profile)
+	response, err := json.Marshal(model)
 	if err != nil {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
@@ -150,7 +157,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	model := &models.Profile{}
 
 	err = json.Unmarshal(msg, model)
-	if err != nil || !checkData(model) {
+	if err != nil || !checkProfileData(model) {
 		appErr := appErrorFromError(err)
 		http.Error(w, appErr.String(), appErr.code)
 		return

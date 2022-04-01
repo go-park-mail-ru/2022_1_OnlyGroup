@@ -15,22 +15,24 @@ const UrlUsers = "/users"
 const ProfileIdUrl = "/profiles/{id:[0-9]+}"
 const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"
 const ProfileUrlCandidates = "/profiles/candidates"
+const LikesUrl = "/likes"
 
 type APIServer struct {
 	address        string
 	authHandler    *handlers.AuthHandler
 	profileHandler *handlers.ProfileHandler
+	likesHandler   *handlers.LikesHandler
 	middlewares    handlers.Middlewares
 }
 
 func NewServer(addr string) APIServer {
-	profileRepo := mock.NewProfileMock()
 	usersRepo := mock.NewUsersMock()
 	sessionsRepo := mock.NewSessionsMock()
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profileRepo)
 	return APIServer{address: addr, authHandler: handlers.CreateAuthHandler(authUseCase),
 		profileHandler: handlers.CreateProfileHandler(impl.NewProfileUseCaseImpl(profileRepo)),
 		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
+		likesHandler:   handlers.CreateLikesHandler(impl.NewLikesUseCaseImpl(d)),
 	}
 }
 
@@ -62,6 +64,9 @@ func (serv *APIServer) Run() error {
 	multiplexorProfile.HandleFunc(ProfileIdUrl, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorProfile.HandleFunc(ProfileUrlShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexorProfile.HandleFunc(ProfileIdUrl, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)      //свой профиль
+	//like methods
+	multiplexorProfile.HandleFunc(LikesUrl, serv.likesHandler.Set).Methods(http.MethodPut)
+	multiplexorProfile.HandleFunc(LikesUrl, serv.likesHandler.Get).Methods(http.MethodGet)
 
 	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
 	return server.ListenAndServe()
