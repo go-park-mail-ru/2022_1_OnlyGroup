@@ -1,15 +1,16 @@
 package main
 
 import (
+	"fmt"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 //import res"2022_1_OnlyGroup_back/app/repositories/redis"
 
-func main() {
-	serv := NewServer(":8080")
-	serv.Run()
-}
+//func main() {
+//	serv := NewServer(":8080")
+//	serv.Run()
+//}
 
 //func main() {
 //	client := redis.NewClient(&redis.Options{})
@@ -44,22 +45,22 @@ func main() {
 //}
 
 //func main() {
-//connConf, err := pgx.ParseConnectionString("postgresql://ilya:il28102001@localhost/ilya")
-//if err != nil {
-//	fmt.Println(err)
-//	return
-//}
-//conn, err := pgx.Connect(context.Background(), connConf)
-//if err != nil {
-//	fmt.Println(err)
-//	return
-//}
-
-//conn, err := pgx.Connect(context.Background(), "")
-//if err != nil {
-//	return
-//}
-
+//	//connConf, err := pgx.ParseConnectionString("postgresql://ilya:il28102001@localhost/ilya")
+//	//if err != nil {
+//	//	fmt.Println(err)
+//	//	return
+//	//}
+//	//conn, err := pgx.Connect(context.Background(), connConf)
+//	//if err != nil {
+//	//	fmt.Println(err)
+//	//	return
+//	//}
+//
+//	//conn, err := pgx.Connect(context.Background(), "")
+//	//if err != nil {
+//	//	return
+//	//}
+//
 //	connect, err := sqlx.Open("pgx", "postgresql://ilya:il28102001@localhost/ilya")
 //	if err != nil {
 //		return
@@ -104,3 +105,13 @@ func main() {
 //	fmt.Println(a)
 //
 //}
+
+func main() {
+	var conf APIServerConf
+	exit := conf.ProcessConfiguration("os_api_server.conf")
+	if exit {
+		fmt.Println("exit true")
+		return
+	}
+	fmt.Println("exit false")
+}

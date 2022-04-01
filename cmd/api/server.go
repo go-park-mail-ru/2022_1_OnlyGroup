@@ -6,7 +6,6 @@ import (
 	"2022_1_OnlyGroup_back/app/usecases/impl"
 	"github.com/gorilla/mux"
 	"net/http"
-	"time"
 )
 
 const UrlUsers = "/users"
@@ -16,18 +15,18 @@ const ProfileUrlShort = "/profiles/{id:[0-9]+}/shorts"
 const ProfileUrlCandidates = "/profiles/candidates"
 
 type APIServer struct {
-	address        string
+	conf           APIServerConf
 	authHandler    *handlers.AuthHandler
 	profileHandler *handlers.ProfileHandler
 	middlewares    handlers.Middlewares
 }
 
-func NewServer(addr string) APIServer {
+func NewServer(conf APIServerConf) APIServer {
 	profileRepo := mock.NewProfileMock()
 	usersRepo := mock.NewUsersMock()
 	sessionsRepo := mock.NewSessionsMock()
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profileRepo)
-	return APIServer{address: addr, authHandler: handlers.CreateAuthHandler(authUseCase),
+	return APIServer{conf: conf, authHandler: handlers.CreateAuthHandler(authUseCase),
 		profileHandler: handlers.CreateProfileHandler(impl.NewProfileUseCaseImpl(profileRepo)),
 		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
 	}
@@ -62,6 +61,7 @@ func (serv *APIServer) Run() error {
 	multiplexorProfile.HandleFunc(ProfileUrlShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexorProfile.HandleFunc(ProfileIdUrl, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)      //свой профиль
 
-	server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
-	return server.ListenAndServe()
+	//server := http.Server{Addr: serv.address, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
+	//return server.ListenAndServe()
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"2022_1_OnlyGroup_back/app/usecases"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -13,8 +12,6 @@ import (
 
 const requestIdContextKey = "requestId"
 const userIdContextKey = "userId"
-
-//const authCookie = "session"
 
 type Middlewares interface {
 	AccessLogMiddleware(next http.Handler) http.Handler
@@ -58,8 +55,8 @@ func (impl MiddlewaresImpl) PanicMiddleware(next http.Handler) http.Handler {
 					"mode": "panic_log",
 					"time": time.Now().String(),
 				}).Errorf("[%s] Panic! %v %s %s %s", reqId, err, r.RemoteAddr, r.Method, r.RequestURI)
-				appErr := appError{code: http.StatusInternalServerError, Msg: fmt.Sprint(err)}
-				http.Error(w, appErr.String(), appErr.Code())
+				appErr := ErrBaseApp
+				http.Error(w, appErr.String(), appErr.Code)
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -70,13 +67,13 @@ func (imlp MiddlewaresImpl) CheckAuthMiddleware(next http.Handler) http.Handler 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(authCookie)
 		if errors.Is(err, http.ErrNoCookie) {
-			http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code())
+			http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code)
 			return
 		}
 		userIdModel, err := imlp.AuthUseCase.UserAuth(cookie.Value)
 		if err != nil {
-			appErr := appErrorFromError(err)
-			http.Error(w, appErr.String(), appErr.Code())
+			appErr := AppErrorFromError(err)
+			http.Error(w, appErr.String(), appErr.Code)
 			return
 		}
 

@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	ErrBadUserID       = appError{"bad user id from url", http.StatusBadRequest}
-	ErrProfileNotFound = appError{"profile not found", http.StatusNotFound}
-	ErrProfileNotFiled = appError{"profile not filed", http.StatusNotAcceptable}
-	ErrMockIsEmpty     = appError{"profile not filed", http.StatusNotAcceptable}
+	ErrBadUserID       = AppError{"bad user id from url", http.StatusBadRequest, nil, ""}
+	ErrProfileNotFound = AppError{"profile not found", http.StatusNotFound, nil, ""}
+	ErrProfileNotFiled = AppError{"profile not filed", http.StatusNotAcceptable, nil, ""}
+	ErrMockIsEmpty     = AppError{"profile not filed", http.StatusNotAcceptable, nil, ""}
 )
