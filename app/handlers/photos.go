@@ -65,8 +65,7 @@ func (handler PhotosHandler) GETPhoto(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := ErrBaseApp
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 		return
 	}
 
@@ -118,8 +117,7 @@ func (handler PhotosHandler) POST(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := ErrBaseApp
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 		return
 	}
 	createdPhoto, err := handler.PhotosUseCase.Create(userId)
@@ -142,8 +140,7 @@ func (handler PhotosHandler) POSTPhoto(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := ErrBaseApp
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 		return
 	}
 
@@ -158,8 +155,7 @@ func (handler PhotosHandler) POSTPhoto(w http.ResponseWriter, r *http.Request) {
 	realSizeString := r.Header.Get("Content-Length")
 	realSize, err := strconv.Atoi(realSizeString)
 	if err != nil {
-		appErr := ErrBadRequest
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
 	}
 
@@ -191,8 +187,7 @@ func (handler PhotosHandler) POSTPhoto(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		}
-		appErr := ErrContentLengthMismatched
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrContentLengthMismatched.String(), ErrContentLengthMismatched.Code)
 		return
 	}
 
@@ -223,16 +218,14 @@ func (handler PhotosHandler) PUTParams(w http.ResponseWriter, r *http.Request) {
 	photoParams := &models.PhotoParams{}
 	err = json.Unmarshal(body, photoParams)
 	if err != nil {
-		appErr := ErrBadRequest
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
 	}
 
 	ctx := r.Context()
 	userId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := ErrBaseApp
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 		return
 	}
 
@@ -255,8 +248,7 @@ func (handler PhotosHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := ErrBaseApp
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 		return
 	}
 
@@ -317,8 +309,7 @@ func (handler PhotosHandler) PUTAvatar(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userIdCookie, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := ErrBaseApp
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 		return
 	}
 
@@ -332,8 +323,7 @@ func (handler PhotosHandler) PUTAvatar(w http.ResponseWriter, r *http.Request) {
 	avatar := models.UserAvatar{}
 	err = json.Unmarshal(body, &avatar)
 	if err != nil {
-		appErr := ErrBadRequest
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
 	}
 
