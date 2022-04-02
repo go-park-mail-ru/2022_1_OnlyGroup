@@ -10,11 +10,14 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 const patternStr = "^[a-zA-Z]+$"
 const patternDate = "\\d{2}.\\d{2}.\\d{4}"
 const patternInt = "^[0-9]+$"
+const textSize = 256
+const nameSize = 32
 
 func checkProfileData(profile *models.Profile) bool {
 	var check bool
@@ -25,23 +28,27 @@ func checkProfileData(profile *models.Profile) bool {
 			return false
 		}
 	}
-	if profile.FirstName != "" {
+	if profile.FirstName != "" || len(profile.FirstName) > nameSize {
 		check, err = regexp.MatchString(patternStr, profile.FirstName)
 		if !check || err != nil {
 			return false
 		}
 	}
-	if profile.LastName != "" {
+	if profile.LastName != "" || len(profile.LastName) > nameSize {
 		check, err = regexp.MatchString(patternStr, profile.LastName)
 		if !check || err != nil {
 			return false
 		}
 	}
-	if profile.Gender != "" {
+	if profile.Gender != "" || len(profile.Gender) > nameSize {
 		check, err = regexp.MatchString(patternStr, profile.Gender)
-		if !check || err != nil {
+		if (!check) || (err != nil) {
 			return false
 		}
+		if !(strings.ToLower(profile.Gender) == "male" || strings.ToLower(profile.Gender) == "female") {
+			return false
+		}
+		profile.Gender = strings.ToLower(profile.Gender)
 	}
 	if profile.City != "" {
 		check, err = regexp.MatchString(patternStr, profile.City)
@@ -49,24 +56,15 @@ func checkProfileData(profile *models.Profile) bool {
 			return false
 		}
 	}
-	if profile.AboutUser != "" {
-		check, err = regexp.MatchString(patternStr, profile.AboutUser)
-		if !check || err != nil {
-			return false
-		}
-	}
-	for _, value := range profile.Interests {
-		check, _ = regexp.MatchString(patternStr, value)
-		if !check {
-			return false
-		}
-	}
-	check, err = regexp.MatchString(patternInt, strconv.Itoa(profile.UserId))
-	if !check || err != nil {
+	if len(profile.AboutUser) > textSize {
 		return false
 	}
-	check, err = regexp.MatchString(patternInt, strconv.Itoa(profile.Height))
-	if !check || err != nil {
+	for _, value := range profile.Interests {
+		if len(value) > textSize {
+			return false
+		}
+	}
+	if profile.Height > 300 || profile.Height < 0 {
 		return false
 	}
 	return true
@@ -96,26 +94,28 @@ func CreateProfileHandler(useCase usecases.ProfileUseCases) *ProfileHandler {
 func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := getIdFromUrl(r)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	profile, err := handler.ProfileUseCase.Get(cookieId, id)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 
 	response, err := json.Marshal(profile)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	w.Write(response)
@@ -124,25 +124,27 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := getIdFromUrl(r)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	model, err := handler.ProfileUseCase.GetShort(cookieId, id)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	response, err := json.Marshal(model)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	w.Write(response)
@@ -152,26 +154,30 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	msg, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	model := &models.Profile{}
 
 	err = json.Unmarshal(msg, model)
+
 	if err != nil || !checkProfileData(model) {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
 	}
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 
 	err = handler.ProfileUseCase.Change(cookieId, *model)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 }
@@ -180,19 +186,21 @@ func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *htt
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 
-	profile, err := handler.ProfileUseCase.GetCandidates(cookieId)
+	vectorCandidates, err := handler.ProfileUseCase.GetCandidates(cookieId)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	response, err := json.Marshal(profile)
+	response, err := json.Marshal(vectorCandidates)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	w.Write(response)

@@ -3,7 +3,9 @@ package postgres
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
-	"fmt"
+	"errors"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -19,7 +21,7 @@ func NewLikesPostgres(dataBase *sqlx.DB, tableNameLikes string, tableNameUsers s
 		"lastId     bigserial references " + tableNameUsers + "(id),\n" +
 		"action     numeric default -1);")
 	if err != nil {
-		return nil, fmt.Errorf("create table failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+		return nil, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}
 
 	return &LikesPostgres{dataBase: dataBase, tableNameLikes: tableNameLikes, tableNameUsers: tableNameUsers}, nil
@@ -28,20 +30,27 @@ func NewLikesPostgres(dataBase *sqlx.DB, tableNameLikes string, tableNameUsers s
 func (repo *LikesPostgres) SetAction(profileId int, likes models.Likes) (err error) {
 	_, err = repo.dataBase.Exec("DELETE FROM "+repo.tableNameLikes+" WHERE (firstId=$1 and lastId=$2)", profileId, likes.Id)
 	if err != nil {
-		return fmt.Errorf("delete action failed: %s, %w", err, handlers.ErrBaseApp)
+		return handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}
 	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameLikes+" (firstId, lastId, action) VALUES ($1, $2, $3)", profileId, likes.Id, likes.Action)
-
-	if checkError(&err, "Insert", "set action") != nil {
-		return
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case pgerrcode.ForeignKeyViolation:
+				return handlers.ErrBadRequest
+			case pgerrcode.NoData:
+				return handlers.ErrBaseApp
+			}
+		}
 	}
 	return
 }
 
 func (repo *LikesPostgres) GetMatched(profileId int) (likesVector models.LikesMatched, err error) {
-	err = repo.dataBase.Select(&likesVector.VectorId, "select l1.lastid from "+repo.tableNameLikes+" as l1 join likes as l2 on l1.lastid = l2.firstid where l1.firstid=l2.lastid and l1.firstid=$1", profileId)
+	err = repo.dataBase.Select(&likesVector.VectorId, "select l1.lastid from "+repo.tableNameLikes+" as l1 join likes as l2 on l1.lastid = l2.firstid and l1.action=1 where l1.firstid=l2.lastid and l2.action=1 and l1.firstid=$1", profileId)
 	if err != nil {
-		return likesVector, fmt.Errorf("insert action failed: %s, %w", err, handlers.ErrBaseApp)
+		return likesVector, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}
 	return
 }

@@ -31,7 +31,7 @@ func (repo *postgresUsersRepository) AddUser(email string, password string) (int
 	err = repo.connection.QueryRow("INSERT INTO "+repo.tableName+" (email, password) VALUES ($1, $2) RETURNING id;", email, password).Scan(&id)
 
 	if err != nil {
-		return 0, fmt.Errorf("add user failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+		return 0, handlers.ErrBaseApp.Wrap(err, "add user failed")
 	}
 	return id, nil
 }
@@ -44,7 +44,7 @@ func (repo *postgresUsersRepository) Authorize(email string, password string) (i
 		return 0, handlers.ErrAuthWrongPassword
 	}
 	if err != nil {
-		return 0, fmt.Errorf("auth failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+		return 0, handlers.ErrBaseApp.Wrap(err, "auth failed")
 	}
 	if dbPassword != password {
 		return 0, handlers.ErrAuthWrongPassword
@@ -55,11 +55,11 @@ func (repo *postgresUsersRepository) Authorize(email string, password string) (i
 func (repo *postgresUsersRepository) ChangePassword(id int, newPassword string) error {
 	result, err := repo.connection.Exec("UPDATE "+repo.tableName+" SET password=$1 WHERE id=$2;", newPassword, id)
 	if err != nil {
-		return fmt.Errorf("changePassword failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+		return handlers.ErrBaseApp.Wrap(err, "changePassword failed")
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("changePassword failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+		return handlers.ErrBaseApp.Wrap(err, "changePassword failed")
 	}
 	if affected == 0 {
 		return handlers.ErrAuthUserNotFound
