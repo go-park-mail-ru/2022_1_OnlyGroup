@@ -76,6 +76,7 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
+		return
 	}
 	user := &models.UserAuthInfo{}
 	err = json.Unmarshal(body, user)
