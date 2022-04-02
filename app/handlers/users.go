@@ -55,8 +55,7 @@ func checkValidUserModel(user models.UserAuthInfo) error {
 func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
-		appErr := ErrAuthRequired
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code)
 		return
 	}
 
@@ -80,8 +79,7 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 	user := &models.UserAuthInfo{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
-		appErr := ErrBadRequest
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
 	}
 
@@ -108,8 +106,7 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 	cook, err := r.Cookie(authCookie)
 	if err == http.ErrNoCookie {
-		appErr := ErrAuthRequired
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code)
 		return
 	}
 
@@ -134,8 +131,7 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 	user := &models.UserAuthInfo{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
-		appErr := ErrBadRequest
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
 	}
 
