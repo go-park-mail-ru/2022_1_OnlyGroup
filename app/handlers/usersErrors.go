@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	ErrAuthRequired           = appError{"authentication required", http.StatusUnauthorized}
-	ErrAuthEmailUsed          = appError{"email already registered", http.StatusConflict}
-	ErrAuthWrongPassword      = appError{"wrong password", http.StatusUnauthorized}
-	ErrAuthUserNotFound       = appError{"user not registered", http.StatusUnauthorized}
-	ErrAuthSessionNotFound    = appError{"session not found", http.StatusUnauthorized}
-	ErrAuthValidationEmail    = appError{"email validation failed", http.StatusPreconditionFailed}
-	ErrAuthValidationPassword = appError{"password validation failed", http.StatusPreconditionFailed}
+	ErrAuthRequired           = AppError{"authentication required", http.StatusUnauthorized, nil, ""}
+	ErrAuthEmailUsed          = AppError{"email already registered", http.StatusConflict, nil, ""}
+	ErrAuthWrongPassword      = AppError{"wrong password", http.StatusUnauthorized, nil, ""}
+	ErrAuthUserNotFound       = AppError{"user not registered", http.StatusUnauthorized, nil, ""}
+	ErrAuthSessionNotFound    = AppError{"session not found", http.StatusUnauthorized, nil, ""}
+	ErrAuthValidationEmail    = AppError{"email validation failed", http.StatusPreconditionFailed, nil, ""}
+	ErrAuthValidationPassword = AppError{"password validation failed", http.StatusPreconditionFailed, nil, ""}
 )

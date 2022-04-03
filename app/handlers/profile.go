@@ -88,26 +88,28 @@ func CreateProfileHandler(useCase usecases.ProfileUseCases) *ProfileHandler {
 func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := getIdFromUrl(r)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := ErrAuthRequired.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	profile, err := handler.ProfileUseCase.Get(cookieId, id)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 
 	response, err := json.Marshal(profile)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	w.Write(response)
@@ -116,8 +118,8 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := getIdFromUrl(r)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	ctx := r.Context()
@@ -128,14 +130,14 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 
 	profile, err := handler.ProfileUseCase.GetShort(cookieId, id)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	response, err := json.Marshal(profile)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	w.Write(response)
@@ -151,8 +153,8 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 
 	err = json.Unmarshal(msg, model)
 	if err != nil || !checkData(model) {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	ctx := r.Context()
@@ -163,8 +165,8 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 
 	err = handler.ProfileUseCase.Change(cookieId, *model)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 }
@@ -178,14 +180,14 @@ func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *htt
 
 	profile, err := handler.ProfileUseCase.GetCandidates(cookieId)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	response, err := json.Marshal(profile)
 	if err != nil {
-		appErr := appErrorFromError(err)
-		http.Error(w, appErr.String(), appErr.code)
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	w.Write(response)

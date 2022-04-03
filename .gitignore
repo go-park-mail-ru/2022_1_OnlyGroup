@@ -15,3 +15,5 @@
 # vendor/
 .gitignore
 .idea
+*.conf
+*.conf.new

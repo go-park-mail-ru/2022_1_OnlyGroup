@@ -33,10 +33,9 @@ func (repo *redisSessionsRepo) addSessionInternal(id int, additionalData string,
 	success, err := repo.client.HSet(context.Background(), key, secret, additionalData).Result()
 	if err != nil || success != 1 {
 		if err != nil {
-			return "", fmt.Errorf("redis session add failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+			return "", handlers.ErrBaseApp.Wrap(err, "redis session add failed")
 		}
-		return "", fmt.Errorf("redis session add failed: hset returned not 1 sucsess result, %w", handlers.ErrBaseApp)
-
+		return "", handlers.ErrBaseApp.Wrap(fmt.Errorf("hset returned not 1 sucsess result"), "redis session add failed")
 	}
 	return secret, nil
 }
@@ -55,7 +54,7 @@ func (repo *redisSessionsRepo) Get(secret string) (int, string, error) {
 	idInString := separated[0]
 	id, err := strconv.Atoi(idInString)
 	if err != nil {
-		return 0, "", fmt.Errorf("session id atoi failed: %s, %w", err.Error(), handlers.ErrAuthSessionNotFound)
+		return 0, "", handlers.ErrAuthSessionNotFound.Wrap(err, "session id atoi failed")
 	}
 
 	key := strings.Join([]string{repo.sessionsPrefix, idInString}, sessionIdAndSecretSep)
@@ -65,7 +64,7 @@ func (repo *redisSessionsRepo) Get(secret string) (int, string, error) {
 		return 0, "", handlers.ErrAuthSessionNotFound
 	}
 	if err != nil {
-		return 0, "", fmt.Errorf("redis session get failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+		return 0, "", handlers.ErrBaseApp.Wrap(err, "redis session get failed")
 	}
 
 	return id, additionalData, nil
@@ -80,7 +79,7 @@ func (repo *redisSessionsRepo) Remove(secret string) error {
 	key := strings.Join([]string{repo.sessionsPrefix, idInString}, sessionIdAndSecretSep)
 	success, err := repo.client.HDel(context.Background(), key, secret).Result()
 	if err != nil {
-		return fmt.Errorf("session delete failed: %s, %w", err.Error(), handlers.ErrBaseApp)
+		return handlers.ErrBaseApp.Wrap(err, "session delete failed")
 	}
 	if success != 1 {
 		return handlers.ErrAuthSessionNotFound
