@@ -7,10 +7,10 @@ import (
 )
 
 type AppError struct {
-	Msg         string `json:"Msg"`
-	Code        int    `json:",omitempty"`
-	Base        error  `json:",omitempty"`
-	Description string `json:",omitempty"`
+	Msg         string
+	Code        int
+	Base        error  `json:"-"`
+	Description string `json:"-"`
 }
 
 var ErrBaseApp = AppError{"internal server error", http.StatusInternalServerError, nil, ""}
