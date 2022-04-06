@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/microcosm-cc/bluemonday"
+	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strconv"
 )
@@ -18,51 +21,59 @@ const patternInt = "^[0-9]+$"
 const textSize = 256
 const nameSize = 32
 
-func checkProfileData(profile *models.Profile) bool {
-	var check bool
-	var err error
-	if len(profile.Birthday) > 0 {
-		check, err = regexp.MatchString(patternDate, profile.Birthday)
-		if !check || err != nil {
-			return false
+func setValidators() {
+	validator.SetValidationFunc("interests", func(val interface{}, _ string) error {
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.Slice {
+			return validator.ErrUnsupported
 		}
-	}
-	if profile.FirstName != "" || len(profile.FirstName) > nameSize {
-		check, err = regexp.MatchString(patternStr, profile.FirstName)
-		if !check || err != nil {
-			return false
+		if v.IsNil() {
+			return nil
 		}
-	}
-	if profile.LastName != "" || len(profile.LastName) > nameSize {
-		check, err = regexp.MatchString(patternStr, profile.LastName)
-		if !check || err != nil {
-			return false
+		nVal := val.([]string)
+		for _, value := range nVal {
+			if len(value) > 32 {
+				return validator.ErrLen
+			}
 		}
-	}
-	if profile.Gender > 1 || profile.Gender < 0 {
-		return false
-	}
-	if profile.City != "" {
-		check, err = regexp.MatchString(patternStr, profile.City)
-		if !check || err != nil {
-			return false
+		return nil
+	})
+	validator.SetValidationFunc("birthday", func(val interface{}, _ string) error {
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.String {
+			return validator.ErrUnsupported
 		}
-	}
-	if len(profile.AboutUser) > textSize {
-		return false
-	}
-	for _, value := range profile.Interests {
-		if len(value) > textSize {
-			return false
+		if v.IsZero() {
+			return nil
 		}
+		nVal := val.(string)
+		if len(nVal) > 10 {
+			return validator.ErrLen
+		}
+		check, err := regexp.MatchString("d{2}.d{2}.d{4}", nVal)
+		if err != nil {
+			return ErrBaseApp
+		}
+		if !check {
+			return validator.ErrRegexp
+		}
+		return nil
+	})
+}
+
+func sanitizeProfileModel(profile *models.Profile) {
+	sanitizer := bluemonday.UGCPolicy()
+	for idx, value := range profile.Interests {
+		profile.Interests[idx] = sanitizer.Sanitize(value)
 	}
-	if profile.Height > 300 || profile.Height < 0 {
-		return false
-	}
-	return true
+	profile.Birthday = sanitizer.Sanitize(profile.Birthday)
+	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
+	profile.AboutUser = sanitizer.Sanitize(profile.AboutUser)
+	profile.LastName = sanitizer.Sanitize(profile.LastName)
 }
 
 func getIdFromUrl(r *http.Request) (int, error) {
+
 	idFromUrl := mux.Vars(r)["id"]
 	checkIdFromUrl, _ := regexp.MatchString(patternInt, idFromUrl)
 	if !checkIdFromUrl {
@@ -80,6 +91,7 @@ type ProfileHandler struct {
 }
 
 func CreateProfileHandler(useCase usecases.ProfileUseCases) *ProfileHandler {
+	setValidators()
 	return &ProfileHandler{ProfileUseCase: useCase}
 }
 
@@ -153,10 +165,13 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	model := &models.Profile{}
 
 	err = json.Unmarshal(msg, model)
-
-	if err != nil || !checkProfileData(model) {
+	if err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
+	}
+	sanitizeProfileModel(model)
+	if err = validator.Validate(model); err != nil {
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 	}
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
