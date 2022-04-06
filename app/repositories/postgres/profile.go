@@ -24,7 +24,7 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 		"City       varchar(32) default '',\n" +
 		"AboutUser  text default '',\n" +
 		"Height     numeric default 0,\n" +
-		"Gender     varchar(32) default '');")
+		"Gender     numeric default -1 );")
 
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
@@ -142,7 +142,7 @@ func (repo *ProfilePostgres) CheckFiled(profileId int) (err error) {
 		return handlers.ErrBaseApp.Wrap(err, "get interests failed")
 	}
 	profile.Interests = interests
-	if profile.Gender == "" ||
+	if profile.Gender == -1 ||
 		profile.City == "" ||
 		profile.LastName == "" ||
 		profile.AboutUser == "" ||

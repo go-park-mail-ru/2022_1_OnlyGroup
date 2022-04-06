@@ -8,7 +8,7 @@ type Profile struct {
 	Interests []string
 	AboutUser string
 	UserId    int
-	Gender    string
+	Gender    int
 	Height    int
 }
 

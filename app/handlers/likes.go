@@ -6,17 +6,10 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"regexp"
-	"strconv"
 )
 
-const patternLikesAction = "^[1-2]$"
-
 func checkLikesData(likes *models.Likes) bool {
-	var check bool
-	var err error
-	check, err = regexp.MatchString(patternLikesAction, strconv.Itoa(likes.Action))
-	if !check || err != nil {
+	if likes.Action > 2 || likes.Action < 1 {
 		return false
 	}
 	return true

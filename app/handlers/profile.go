@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 const patternStr = "^[a-zA-Z]+$"
@@ -40,15 +39,8 @@ func checkProfileData(profile *models.Profile) bool {
 			return false
 		}
 	}
-	if profile.Gender != "" || len(profile.Gender) > nameSize {
-		check, err = regexp.MatchString(patternStr, profile.Gender)
-		if (!check) || (err != nil) {
-			return false
-		}
-		if !(strings.ToLower(profile.Gender) == "male" || strings.ToLower(profile.Gender) == "female") {
-			return false
-		}
-		profile.Gender = strings.ToLower(profile.Gender)
+	if profile.Gender > 1 || profile.Gender < 0 {
+		return false
 	}
 	if profile.City != "" {
 		check, err = regexp.MatchString(patternStr, profile.City)

@@ -31,7 +31,7 @@ func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (prof
 
 func (useCase *profileUseCaseImpl) Change(profileId int, profile models.Profile) (err error) {
 	if profileId != profile.UserId {
-		return handlers.ErrBadRequest
+		return handlers.ErrProfileForbiddenChange
 	}
 	err = useCase.profileRepo.Change(profileId, profile)
 	return
