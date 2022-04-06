@@ -55,8 +55,7 @@ func (impl MiddlewaresImpl) PanicMiddleware(next http.Handler) http.Handler {
 					"mode": "panic_log",
 					"time": time.Now().String(),
 				}).Errorf("[%s] Panic! %v %s %s %s", reqId, err, r.RemoteAddr, r.Method, r.RequestURI)
-				appErr := ErrBaseApp
-				http.Error(w, appErr.String(), appErr.Code)
+				http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 			}
 		}()
 		next.ServeHTTP(w, r)

@@ -21,6 +21,7 @@ const UrlUsersPostfix = "/users"
 const UrlProfileIdPostfix = "/profiles/{id:[0-9]+}"
 const UrlProfileIdShortPostfix = "/profiles/{id:[0-9]+}/shorts"
 const UrlProfileCandidatesPostfix = "/profiles/candidates"
+const UrlPhotosPostfix = "/photos"
 const UrlPhotosIdPostfix = "/photos/{id:[0-9]+}"
 const UrlPhotosIdParamsPostfix = "/photos/{id:[0-9]+}/params"
 const UrlProfilePhotosPostfix = "/profile/{id:[0-9]+}/photos"
@@ -98,6 +99,7 @@ func (serv *APIServer) Run() error {
 	UrlProfileId := serv.conf.ApiPathPrefix + UrlProfileIdPostfix
 	UrlProfileIdShort := serv.conf.ApiPathPrefix + UrlProfileIdShortPostfix
 	UrlProfileCandidates := serv.conf.ApiPathPrefix + UrlProfileCandidatesPostfix
+	UrlPhotos := serv.conf.ApiPathPrefix + UrlPhotosPostfix
 	UrlPhotosId := serv.conf.ApiPathPrefix + UrlPhotosIdPostfix
 	UrlPhotosIdParams := serv.conf.ApiPathPrefix + UrlPhotosIdParamsPostfix
 	UrlProfilePhotos := serv.conf.ApiPathPrefix + UrlProfilePhotosPostfix
@@ -128,6 +130,7 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
 
 	//photos
+	multiplexorWithAuth.HandleFunc(UrlPhotos, serv.photosHandler.POST).Methods(http.MethodPost)
 	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.GETPhoto).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.POSTPhoto).Methods(http.MethodPost)
 	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.DELETE).Methods(http.MethodDelete)

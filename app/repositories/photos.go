@@ -9,7 +9,7 @@ type PhotosRepository interface {
 	GetAuthor(id int) (int, error)
 	SetParams(id int, params models.PhotoParams) error
 	GetParams(id int) (models.PhotoParams, error)
-	GetPath(id int) (string, error)
+	GetPathIfFilled(id int) (string, error)
 	Delete(id int) error
 	GetAvatar(userId int) (int, models.PhotoParams, error)
 	SetAvatar(id int, params models.PhotoParams, userId int) error

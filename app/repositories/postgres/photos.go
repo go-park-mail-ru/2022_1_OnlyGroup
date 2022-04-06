@@ -52,9 +52,13 @@ func (repo *postgresPhotosRepository) Save(id int, path string) error {
 }
 
 func (repo *postgresPhotosRepository) IsSaved(id int) (bool, error) {
-	path, err := repo.getPathInternal(id)
+	var path *string
+	err := repo.connection.QueryRow("SELECT path FROM "+repo.photosTableName+" WHERE id=$1;", id).Scan(&path)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, handlers.ErrPhotoNotFound
+	}
 	if err != nil {
-		return false, err
+		return false, handlers.ErrBaseApp.Wrap(err, "is saved photo failed")
 	}
 	return path != nil, nil
 }
@@ -101,22 +105,14 @@ func (repo *postgresPhotosRepository) GetParams(id int) (models.PhotoParams, err
 	return models.PhotoParams{LeftTop: [2]int{*leftTopX, *leftTopY}, RightBottom: [2]int{*rightBottomX, *rightBottomY}}, nil
 }
 
-func (repo *postgresPhotosRepository) getPathInternal(id int) (*string, error) {
+func (repo *postgresPhotosRepository) GetPathIfFilled(id int) (string, error) {
 	var path *string
-	err := repo.connection.QueryRow("SELECT path FROM "+repo.photosTableName+" WHERE id=$1;", id).Scan(&path)
+	err := repo.connection.QueryRow("SELECT path FROM "+repo.photosTableName+" WHERE id=$1 AND left_top_x IS NOT NULL AND left_top_y IS NOT NULL AND right_bottom_x IS NOT NULL AND right_bottom_y IS NOT NULL;", id).Scan(&path)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, handlers.ErrPhotoNotFound
+		return "", handlers.ErrPhotoNotFound
 	}
 	if err != nil {
-		return nil, handlers.ErrBaseApp.Wrap(err, "save photo failed")
-	}
-	return path, nil
-}
-
-func (repo *postgresPhotosRepository) GetPath(id int) (string, error) {
-	path, err := repo.getPathInternal(id)
-	if err != nil {
-		return "", err
+		return "", handlers.ErrBaseApp.Wrap(err, "save photo failed")
 	}
 	if path == nil {
 		return "", handlers.ErrPhotoNotFound

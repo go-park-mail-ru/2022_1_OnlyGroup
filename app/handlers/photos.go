@@ -55,7 +55,7 @@ func (handler *PhotosHandler) getPhotoPath(photoId int) string {
 	return strconv.Itoa(photoId)
 }
 
-func (handler PhotosHandler) GETPhoto(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) GETPhoto(w http.ResponseWriter, r *http.Request) {
 	photoId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -94,7 +94,7 @@ func (handler PhotosHandler) GETPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (handler PhotosHandler) GETParams(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) GETParams(w http.ResponseWriter, r *http.Request) {
 	photoId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -113,7 +113,7 @@ func (handler PhotosHandler) GETParams(w http.ResponseWriter, r *http.Request) {
 	w.Write(marshal)
 }
 
-func (handler PhotosHandler) POST(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) POST(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
@@ -130,7 +130,7 @@ func (handler PhotosHandler) POST(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func (handler PhotosHandler) POSTPhoto(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) POSTPhoto(w http.ResponseWriter, r *http.Request) {
 	photoId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -200,7 +200,7 @@ func (handler PhotosHandler) POSTPhoto(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler PhotosHandler) PUTParams(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) PUTParams(w http.ResponseWriter, r *http.Request) {
 	photoId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -238,7 +238,7 @@ func (handler PhotosHandler) PUTParams(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler PhotosHandler) DELETE(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 	photoId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -261,7 +261,7 @@ func (handler PhotosHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler PhotosHandler) GETAll(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) GETAll(w http.ResponseWriter, r *http.Request) {
 	userId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -280,7 +280,7 @@ func (handler PhotosHandler) GETAll(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func (handler PhotosHandler) GETAvatar(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) GETAvatar(w http.ResponseWriter, r *http.Request) {
 	userId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -299,7 +299,7 @@ func (handler PhotosHandler) GETAvatar(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func (handler PhotosHandler) PUTAvatar(w http.ResponseWriter, r *http.Request) {
+func (handler *PhotosHandler) PUTAvatar(w http.ResponseWriter, r *http.Request) {
 	userId, err := getIdFromUrl(r)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))

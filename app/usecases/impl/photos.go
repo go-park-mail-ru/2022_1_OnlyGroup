@@ -46,7 +46,7 @@ func (useCase *photosUseCase) Save(id int, path string) error {
 }
 
 func (useCase *photosUseCase) Read(id int, userId int) (string, error) {
-	return useCase.repo.GetPath(id)
+	return useCase.repo.GetPathIfFilled(id)
 }
 
 func (useCase *photosUseCase) SetParams(id int, userId int, params models.PhotoParams) error {
