@@ -18,10 +18,12 @@ type Middlewares interface {
 	PanicMiddleware(next http.Handler) http.Handler
 	CheckAuthMiddleware(next http.Handler) http.Handler
 	CorsMiddleware(next http.Handler) http.Handler
+	CSRFMiddleware(next http.Handler) http.Handler
 }
 
 type MiddlewaresImpl struct {
 	AuthUseCase usecases.AuthUseCases
+	JwtConf     *JwtToken
 }
 
 func (impl MiddlewaresImpl) AccessLogMiddleware(next http.Handler) http.Handler {
@@ -87,6 +89,39 @@ func (imlp MiddlewaresImpl) CorsMiddleware(next http.Handler) http.Handler {
 		w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		w.Header().Add("Access-Control-Allow-Credentials", "true")
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (imlp MiddlewaresImpl) CSRFMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		csrfToken := r.Header.Get("X-CSRF-TOKEN")
+		if len(csrfToken) == 0 {
+			http.Error(w, ErrBadCSRF.String(), ErrBadCSRF.Code)
+			return
+		}
+		cookie, err := r.Cookie(authCookie)
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code)
+			return
+		}
+		userIdModel, err := imlp.AuthUseCase.UserAuth(cookie.Value)
+		if err != nil {
+			appErr := AppErrorFromError(err)
+			http.Error(w, appErr.String(), appErr.Code)
+			return
+		}
+		err = imlp.JwtConf.Check(cookie.Value, userIdModel.ID, csrfToken)
+		if ErrBadSession.Is(err) {
+			http.Error(w, ErrBadSession.Wrap(err, "").String(), ErrBadSession.Code)
+			return
+		} else if ErrBadCSRF.Is(err) {
+			http.Error(w, ErrBadCSRF.String(), ErrBadCSRF.Code)
+			return
+		} else {
+			http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

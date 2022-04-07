@@ -30,12 +30,17 @@ type RedisConnectConf struct {
 	SessionsPrefix string
 }
 
+type JwtConf struct {
+	Enable bool
+}
+
 type APIServerConf struct {
 	RedisConf     RedisConnectConf
 	PostgresConf  PostgresConnectConf
 	ServerPort    string
 	ServerAddr    string
 	ApiPathPrefix string
+	JwtConf       JwtConf
 }
 
 var ApiServerDefaultConf = APIServerConf{
@@ -61,6 +66,9 @@ var ApiServerDefaultConf = APIServerConf{
 		ProfilesDbTableName:  "os_profiles",
 		InterestsDbTableName: "os_interests",
 		LikesDbTableName:     "os_likes",
+	},
+	JwtConf: JwtConf{
+		Enable: false,
 	},
 }
 

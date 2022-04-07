@@ -30,6 +30,7 @@ type APIServer struct {
 	profileHandler *handlers.ProfileHandler
 	likesHandler   *handlers.LikesHandler
 	middlewares    handlers.Middlewares
+	JwtConf        *handlers.JwtToken
 }
 
 func NewServer(conf APIServerConf) (APIServer, error) {
@@ -66,6 +67,9 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	}
 	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, sessionGenerator.NewRandomGenerator())
 
+	//jwtToken
+	randGenerator := sessionGenerator.NewRandomGenerator()
+	jwt, _ := handlers.NewJwtToken(randGenerator.String(16))
 	//useCases
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
 	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo)
@@ -76,7 +80,8 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		authHandler:    handlers.CreateAuthHandler(authUseCase),
 		profileHandler: handlers.CreateProfileHandler(profileUseCase),
 		likesHandler:   handlers.CreateLikesHandler(likeUseCase),
-		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
+		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase, JwtConf: jwt},
+		JwtConf:        jwt,
 	}, nil
 }
 
@@ -93,7 +98,7 @@ func (serv *APIServer) Run() error {
 
 	//main multiplexor
 	multiplexor := mux.NewRouter()
-
+	//multiplexor.Use()
 	multiplexor.Use(serv.middlewares.AccessLogMiddleware)
 	multiplexor.Use(serv.middlewares.PanicMiddleware)
 	multiplexor.Use(serv.middlewares.CorsMiddleware)
