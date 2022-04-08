@@ -4,18 +4,12 @@ import (
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/usecases"
 	"encoding/json"
+	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
-	"regexp"
 	"time"
 )
 
-const emailPattern = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
-const passwordPatternLowerCase = `[a-z]+`
-const passwordPatternUpperCase = `[A-Z]+`
-const passwordPatternNumber = `[0-9]+`
-const passwordMinLength = 6
-const passwordMaxLength = 32
 const authCookie = "session"
 
 type AuthHandler struct {
@@ -24,32 +18,6 @@ type AuthHandler struct {
 
 func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 	return &AuthHandler{useCase}
-}
-
-func checkValidUserModel(user models.UserAuthInfo) error {
-	//processing email
-	match, err := regexp.MatchString(emailPattern, user.Email)
-	if err != nil || !match {
-		return ErrAuthValidationEmail
-	}
-	//processing password
-	if len(user.Password) > passwordMaxLength || len(user.Password) < passwordMinLength {
-		return ErrAuthValidationPassword
-	}
-
-	match, err = regexp.MatchString(passwordPatternLowerCase, user.Password)
-	if err != nil || !match {
-		return ErrAuthValidationPassword
-	}
-	match, err = regexp.MatchString(passwordPatternUpperCase, user.Password)
-	if err != nil || !match {
-		return ErrAuthValidationPassword
-	}
-	match, err = regexp.MatchString(passwordPatternNumber, user.Password)
-	if err != nil || !match {
-		return ErrAuthValidationPassword
-	}
-	return nil
 }
 
 func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
@@ -83,9 +51,9 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkValidUserModel(*user)
+	err = validator.Validate(user)
 	if err != nil {
-		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		appErr := ErrAuthValidationPassword.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
@@ -135,9 +103,9 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkValidUserModel(*user)
+	err = validator.Validate(user)
 	if err != nil {
-		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		appErr := ErrAuthValidationPassword.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}

@@ -15,11 +15,7 @@ import (
 	"strconv"
 )
 
-const patternStr = "^[a-zA-Z]+$"
-const patternDate = "\\d{2}.\\d{2}.\\d{4}"
 const patternInt = "^[0-9]+$"
-const textSize = 256
-const nameSize = 32
 
 func setValidators() {
 	validator.SetValidationFunc("interests", func(val interface{}, _ string) error {
@@ -32,7 +28,7 @@ func setValidators() {
 		}
 		nVal := val.([]string)
 		for _, value := range nVal {
-			if len(value) > 32 {
+			if len(value) > models.InterestSize {
 				return validator.ErrLen
 			}
 		}
@@ -47,16 +43,45 @@ func setValidators() {
 			return nil
 		}
 		nVal := val.(string)
-		if len(nVal) > 10 {
+		if len(nVal) > models.BirthdaySize {
 			return validator.ErrLen
 		}
-		check, err := regexp.MatchString("d{2}.d{2}.d{4}", nVal)
+		check, err := regexp.MatchString(models.BirthdayRexexp, nVal)
 		if err != nil {
 			return ErrBaseApp
 		}
 		if !check {
 			return validator.ErrRegexp
 		}
+		return nil
+	})
+	validator.SetValidationFunc("password", func(val interface{}, _ string) error {
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.String {
+			return validator.ErrUnsupported
+		}
+		if v.IsZero() {
+			return nil
+		}
+		nVal := val.(string)
+
+		if len(nVal) > models.PasswordMaxLength || len(nVal) < models.PasswordMinLength {
+			return validator.ErrLen
+		}
+		match, err := regexp.MatchString(models.PasswordPatternLowerCase, nVal)
+		if err != nil || !match {
+			return validator.ErrRegexp
+		}
+		match, err = regexp.MatchString(models.PasswordPatternUpperCase, nVal)
+		if err != nil || !match {
+			return validator.ErrRegexp
+		}
+		match, err = regexp.MatchString(models.PasswordPatternNumber, nVal)
+		if err != nil || !match {
+			return validator.ErrRegexp
+		}
+		return nil
+
 		return nil
 	})
 }
@@ -69,6 +94,13 @@ func sanitizeProfileModel(profile *models.Profile) {
 	profile.Birthday = sanitizer.Sanitize(profile.Birthday)
 	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
 	profile.AboutUser = sanitizer.Sanitize(profile.AboutUser)
+	profile.LastName = sanitizer.Sanitize(profile.LastName)
+}
+
+func sanitizeShortProfileModel(profile *models.ShortProfile) {
+	sanitizer := bluemonday.UGCPolicy()
+	profile.City = sanitizer.Sanitize(profile.City)
+	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
 	profile.LastName = sanitizer.Sanitize(profile.LastName)
 }
 
@@ -115,7 +147,7 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-
+	sanitizeProfileModel(&profile)
 	response, err := json.Marshal(profile)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -145,6 +177,7 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
+	sanitizeShortProfileModel(&model)
 	response, err := json.Marshal(model)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -162,14 +195,14 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	model := &models.Profile{}
+	model := models.Profile{}
 
 	err = json.Unmarshal(msg, model)
 	if err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
 	}
-	sanitizeProfileModel(model)
+	sanitizeProfileModel(&model)
 	if err = validator.Validate(model); err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 	}
@@ -181,7 +214,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	err = handler.ProfileUseCase.Change(cookieId, *model)
+	err = handler.ProfileUseCase.Change(cookieId, model)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
