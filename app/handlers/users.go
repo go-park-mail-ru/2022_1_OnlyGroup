@@ -104,6 +104,11 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = validator.Validate(user)
+	if ErrBaseApp.Is(err) {
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
 	if err != nil {
 		appErr := ErrAuthValidationPassword.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)

@@ -10,81 +10,11 @@ import (
 	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
-	"reflect"
 	"regexp"
 	"strconv"
 )
 
 const patternInt = "^[0-9]+$"
-
-func setValidators() {
-	validator.SetValidationFunc("interests", func(val interface{}, _ string) error {
-		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.Slice {
-			return validator.ErrUnsupported
-		}
-		if v.IsNil() {
-			return nil
-		}
-		nVal := val.([]string)
-		for _, value := range nVal {
-			if len(value) > models.InterestSize {
-				return validator.ErrLen
-			}
-		}
-		return nil
-	})
-	validator.SetValidationFunc("birthday", func(val interface{}, _ string) error {
-		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.String {
-			return validator.ErrUnsupported
-		}
-		if v.IsZero() {
-			return nil
-		}
-		nVal := val.(string)
-		if len(nVal) > models.BirthdaySize {
-			return validator.ErrLen
-		}
-		check, err := regexp.MatchString(models.BirthdayRexexp, nVal)
-		if err != nil {
-			return ErrBaseApp
-		}
-		if !check {
-			return validator.ErrRegexp
-		}
-		return nil
-	})
-	validator.SetValidationFunc("password", func(val interface{}, _ string) error {
-		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.String {
-			return validator.ErrUnsupported
-		}
-		if v.IsZero() {
-			return nil
-		}
-		nVal := val.(string)
-
-		if len(nVal) > models.PasswordMaxLength || len(nVal) < models.PasswordMinLength {
-			return validator.ErrLen
-		}
-		match, err := regexp.MatchString(models.PasswordPatternLowerCase, nVal)
-		if err != nil || !match {
-			return validator.ErrRegexp
-		}
-		match, err = regexp.MatchString(models.PasswordPatternUpperCase, nVal)
-		if err != nil || !match {
-			return validator.ErrRegexp
-		}
-		match, err = regexp.MatchString(models.PasswordPatternNumber, nVal)
-		if err != nil || !match {
-			return validator.ErrRegexp
-		}
-		return nil
-
-		return nil
-	})
-}
 
 func sanitizeProfileModel(profile *models.Profile) {
 	sanitizer := bluemonday.UGCPolicy()
@@ -123,7 +53,6 @@ type ProfileHandler struct {
 }
 
 func CreateProfileHandler(useCase usecases.ProfileUseCases) *ProfileHandler {
-	setValidators()
 	return &ProfileHandler{ProfileUseCase: useCase}
 }
 
@@ -203,8 +132,16 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		return
 	}
 	sanitizeProfileModel(&model)
-	if err = validator.Validate(model); err != nil {
-		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
+	err = validator.Validate(model)
+	if ErrBaseApp.Is(err) {
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
+	if err != nil {
+		appErr := ErrValidateProfile.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
+		return
 	}
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
