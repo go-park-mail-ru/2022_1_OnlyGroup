@@ -133,7 +133,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	}
 	sanitizeProfileModel(&model)
 	err = validator.Validate(model)
-	if ErrBaseApp.Is(err) {
+	if err == ErrBaseApp {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return

@@ -4,6 +4,7 @@ import (
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/usecases"
 	"encoding/json"
+	"fmt"
 	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
@@ -11,6 +12,26 @@ import (
 )
 
 const authCookie = "session"
+
+func identityValidatorErr(err error) error {
+	if err != nil {
+		errs, ok := err.(validator.ErrorMap)
+		if !ok {
+			return ErrBaseApp
+		}
+		for _, value := range errs["Email"] {
+			if value != nil {
+				return ErrAuthValidationEmail
+			}
+		}
+		for _, value := range errs["Password"] {
+			if value != nil {
+				return ErrAuthValidationPassword
+			}
+		}
+	}
+	return nil
+}
 
 type AuthHandler struct {
 	AuthUseCase usecases.AuthUseCases
@@ -52,9 +73,15 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = validator.Validate(user)
-	if err != nil {
-		appErr := ErrAuthValidationPassword.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
+	if err == ErrBaseApp {
+		fmt.Println(ErrBaseApp.Is(err))
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
+	if err := identityValidatorErr(err); err != nil {
+		err := AppErrorFromError(err)
+		http.Error(w, err.String(), err.Code)
 		return
 	}
 
@@ -104,13 +131,14 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = validator.Validate(user)
-	if ErrBaseApp.Is(err) {
+	if err == ErrBaseApp {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	if err != nil {
-		http.Error(w, ErrAuthValidationPassword.String(), ErrAuthValidationPassword.Code)
+	if err := identityValidatorErr(err); err != nil {
+		err := AppErrorFromError(err)
+		http.Error(w, err.String(), err.Code)
 		return
 	}
 

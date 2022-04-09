@@ -11,7 +11,7 @@ type UserID struct {
 }
 
 type UserAuthInfo struct {
-	Email        string `validate:"regexp=^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$"`
+	Email        string `validate:"regexp=^[0-9a-zA-Z!#$%&'*+/=?^_{|}~-]+@[0-9a-zA-Z+/=?^_{|}~-]+(\\.[0-9a-zA-Z+/=?^_{|}~-]+)+$"`
 	Password     string `validate:"password"`
 	CaptchaToken string
 }
