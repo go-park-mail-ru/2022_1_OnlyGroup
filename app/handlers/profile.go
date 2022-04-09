@@ -139,8 +139,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		return
 	}
 	if err != nil {
-		appErr := ErrValidateProfile.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrValidateProfile.String(), ErrValidateProfile.Code)
 		return
 	}
 	ctx := r.Context()

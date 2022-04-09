@@ -110,8 +110,7 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		appErr := ErrAuthValidationPassword.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
-		http.Error(w, appErr.String(), appErr.Code)
+		http.Error(w, ErrAuthValidationPassword.String(), ErrAuthValidationPassword.Code)
 		return
 	}
 
