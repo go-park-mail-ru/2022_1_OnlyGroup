@@ -21,6 +21,7 @@ const UrlUsersPostfix = "/users"
 const UrlProfileIdPostfix = "/profiles/{id:[0-9]+}"
 const UrlProfileIdShortPostfix = "/profiles/{id:[0-9]+}/shorts"
 const UrlProfileCandidatesPostfix = "/profiles/candidates"
+const UrlCSRFPostfix = "/csrf"
 
 const UrlLikesPostfix = "/likes"
 
@@ -30,7 +31,7 @@ type APIServer struct {
 	profileHandler *handlers.ProfileHandler
 	likesHandler   *handlers.LikesHandler
 	middlewares    handlers.Middlewares
-	JwtConf        *handlers.JwtToken
+	jwtHandler     *handlers.CSRFHandler
 }
 
 func NewServer(conf APIServerConf) (APIServer, error) {
@@ -81,7 +82,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		profileHandler: handlers.CreateProfileHandler(profileUseCase),
 		likesHandler:   handlers.CreateLikesHandler(likeUseCase),
 		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase, JwtConf: jwt},
-		JwtConf:        jwt,
+		jwtHandler:     handlers.CreateCSRFHandler(*jwt, conf.JwtConf.TimeToLife),
 	}, nil
 }
 
@@ -95,7 +96,7 @@ func (serv *APIServer) Run() error {
 	UrlProfileIdShort := serv.conf.ApiPathPrefix + UrlProfileIdShortPostfix
 	UrlProfileCandidates := serv.conf.ApiPathPrefix + UrlProfileCandidatesPostfix
 	UrlLikes := serv.conf.ApiPathPrefix + UrlLikesPostfix
-
+	UrlCSRF := serv.conf.ApiPathPrefix + UrlCSRFPostfix
 	//main multiplexor
 	multiplexor := mux.NewRouter()
 	//multiplexor.Use()
@@ -107,22 +108,28 @@ func (serv *APIServer) Run() error {
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
 
 	//profile multiplexor
 	multiplexorProfile := multiplexor.PathPrefix("").Subrouter()
 
 	multiplexorProfile.Use(serv.middlewares.CheckAuthMiddleware)
 	//сandidate methods
-	multiplexorProfile.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
+	multiplexorProfile.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodGet)
+
 	//profile methods
-
-	multiplexorProfile.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
 	multiplexorProfile.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
-
 	multiplexorProfile.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorProfile.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
-	multiplexorProfile.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
+
+	//csrf method
+	multiplexorProfile.HandleFunc(UrlCSRF, serv.jwtHandler.GetCSRF).Methods(http.MethodGet)
+
+	//csrf multiplexor
+	multiplexorCsrf := multiplexorProfile.PathPrefix("").Subrouter()
+	multiplexorCsrf.Use(serv.middlewares.CSRFMiddleware)
+	multiplexorCsrf.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
+	multiplexorCsrf.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)
+	multiplexorCsrf.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
 
 	serverAddr := serv.conf.ServerAddr + ":" + serv.conf.ServerPort
 	server := http.Server{Addr: serverAddr, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}

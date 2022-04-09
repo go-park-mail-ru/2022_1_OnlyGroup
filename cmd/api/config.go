@@ -31,7 +31,8 @@ type RedisConnectConf struct {
 }
 
 type JwtConf struct {
-	Enable bool
+	Enable     bool
+	TimeToLife int
 }
 
 type APIServerConf struct {
@@ -68,7 +69,8 @@ var ApiServerDefaultConf = APIServerConf{
 		LikesDbTableName:     "os_likes",
 	},
 	JwtConf: JwtConf{
-		Enable: false,
+		Enable:     false,
+		TimeToLife: 24,
 	},
 }
 

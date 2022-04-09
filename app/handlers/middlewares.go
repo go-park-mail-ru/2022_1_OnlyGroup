@@ -111,14 +111,14 @@ func (imlp MiddlewaresImpl) CSRFMiddleware(next http.Handler) http.Handler {
 			http.Error(w, appErr.String(), appErr.Code)
 			return
 		}
-		err = imlp.JwtConf.Check(cookie.Value, userIdModel.ID, csrfToken)
-		if ErrBadSession.Is(err) {
+		err = imlp.JwtConf.Check(cookie.Value, userIdModel.ID, r.URL.String(), csrfToken)
+		if errors.Is(ErrBadSession, err) {
 			http.Error(w, ErrBadSession.Wrap(err, "").String(), ErrBadSession.Code)
 			return
-		} else if ErrBadCSRF.Is(err) {
+		} else if errors.Is(ErrBadCSRF, err) {
 			http.Error(w, ErrBadCSRF.String(), ErrBadCSRF.Code)
 			return
-		} else {
+		} else if err != nil {
 			http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 			return
 		}

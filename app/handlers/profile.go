@@ -153,7 +153,6 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	model := &models.Profile{}
 
 	err = json.Unmarshal(msg, model)
-
 	if err != nil || !checkProfileData(model) {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return

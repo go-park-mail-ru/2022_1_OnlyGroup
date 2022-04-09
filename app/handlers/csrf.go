@@ -1,58 +1,52 @@
 package handlers
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	"2022_1_OnlyGroup_back/app/models"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
 	"time"
 )
 
-type JwtToken struct {
-	Secret []byte
+type CSRFHandler struct {
+	JwtToken      JwtToken
+	TokenLifeTime int
 }
 
-func NewJwtToken(secret string) (*JwtToken, error) {
-	return &JwtToken{Secret: []byte(secret)}, nil
+func CreateCSRFHandler(jwt JwtToken, lifeTime int) *CSRFHandler {
+	return &CSRFHandler{jwt, lifeTime}
 }
 
-type JwtCsrfClaims struct {
-	Session string `json:"sid"`
-	UserID  int    `json:"uid"`
-	jwt.StandardClaims
-}
+func (impl *CSRFHandler) GetCSRF(w http.ResponseWriter, r *http.Request) {
+	msg, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	model := &models.CSRF{}
 
-func (tk *JwtToken) Create(session string, id int, tokenExpTime int64) (string, error) {
-	data := JwtCsrfClaims{
-		Session: session,
-		UserID:  id,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: tokenExpTime,
-			IssuedAt:  time.Now().Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, data)
-	return token.SignedString(tk.Secret)
-}
-
-func (tk *JwtToken) parseSecretGetter(token *jwt.Token) (interface{}, error) {
-	method, ok := token.Method.(*jwt.SigningMethodHMAC)
-	if !ok || method.Alg() != "HS256" {
-		return nil, jwt.ErrInvalidKey
-	}
-	return tk.Secret, nil
-}
-
-func (tk *JwtToken) Check(session string, id int, inputToken string) error {
-	payload := &JwtCsrfClaims{}
-	_, err := jwt.ParseWithClaims(inputToken, payload, tk.parseSecretGetter)
+	err = json.Unmarshal(msg, model)
 	if err != nil {
-		return ErrBadCSRF.Wrap(err, "")
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
+		return
 	}
-	if payload.Valid() != nil {
-		return ErrBadCSRF.Wrap(jwt.ValidationError{Inner: jwt.ErrInvalidKey, Errors: jwt.ValidationErrorExpired}, "")
+	ctx := r.Context()
+	cookie, err := r.Cookie(authCookie)
+	if errors.Is(err, http.ErrNoCookie) {
+		http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code)
+		return
 	}
-	if payload.Session != session && payload.UserID != id {
-		return ErrBaseApp.Wrap(jwt.ValidationError{Inner: jwt.ErrInvalidKey, Errors: jwt.ValidationErrorId}, "")
-
+	cookieId, ok := ctx.Value(userIdContextKey).(int)
+	if !ok {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
+		return
 	}
-
-	return nil
+	fmt.Println(time.Now().Add(time.Hour * time.Duration(impl.TokenLifeTime)))
+	token, err := impl.JwtToken.Create(cookie.Value, cookieId, model.URL, time.Now().Add(time.Hour*time.Duration(impl.TokenLifeTime)).Unix())
+	if err != nil {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
+	w.Header().Add("X-CSRF-TOKEN", token)
 }
