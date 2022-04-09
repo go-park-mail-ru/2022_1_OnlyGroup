@@ -6,63 +6,36 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/microcosm-cc/bluemonday"
+	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 )
 
-const patternStr = "^[a-zA-Z]+$"
-const patternDate = "\\d{2}.\\d{2}.\\d{4}"
 const patternInt = "^[0-9]+$"
-const textSize = 256
-const nameSize = 32
 
-func checkProfileData(profile *models.Profile) bool {
-	var check bool
-	var err error
-	if len(profile.Birthday) > 0 {
-		check, err = regexp.MatchString(patternDate, profile.Birthday)
-		if !check || err != nil {
-			return false
-		}
+func sanitizeProfileModel(profile *models.Profile) {
+	sanitizer := bluemonday.UGCPolicy()
+	for idx, value := range profile.Interests {
+		profile.Interests[idx] = sanitizer.Sanitize(value)
 	}
-	if profile.FirstName != "" || len(profile.FirstName) > nameSize {
-		check, err = regexp.MatchString(patternStr, profile.FirstName)
-		if !check || err != nil {
-			return false
-		}
-	}
-	if profile.LastName != "" || len(profile.LastName) > nameSize {
-		check, err = regexp.MatchString(patternStr, profile.LastName)
-		if !check || err != nil {
-			return false
-		}
-	}
-	if profile.Gender > 1 || profile.Gender < 0 {
-		return false
-	}
-	if profile.City != "" {
-		check, err = regexp.MatchString(patternStr, profile.City)
-		if !check || err != nil {
-			return false
-		}
-	}
-	if len(profile.AboutUser) > textSize {
-		return false
-	}
-	for _, value := range profile.Interests {
-		if len(value) > textSize {
-			return false
-		}
-	}
-	if profile.Height > 300 || profile.Height < 0 {
-		return false
-	}
-	return true
+	profile.Birthday = sanitizer.Sanitize(profile.Birthday)
+	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
+	profile.AboutUser = sanitizer.Sanitize(profile.AboutUser)
+	profile.LastName = sanitizer.Sanitize(profile.LastName)
+}
+
+func sanitizeShortProfileModel(profile *models.ShortProfile) {
+	sanitizer := bluemonday.UGCPolicy()
+	profile.City = sanitizer.Sanitize(profile.City)
+	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
+	profile.LastName = sanitizer.Sanitize(profile.LastName)
 }
 
 func getIdFromUrl(r *http.Request) (int, error) {
+
 	idFromUrl := mux.Vars(r)["id"]
 	checkIdFromUrl, _ := regexp.MatchString(patternInt, idFromUrl)
 	if !checkIdFromUrl {
@@ -103,7 +76,7 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-
+	sanitizeProfileModel(&profile)
 	response, err := json.Marshal(profile)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -133,6 +106,7 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
+	sanitizeShortProfileModel(&model)
 	response, err := json.Marshal(model)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -150,12 +124,23 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	model := &models.Profile{}
+	model := models.Profile{}
 
 	err = json.Unmarshal(msg, model)
-
-	if err != nil || !checkProfileData(model) {
+	if err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
+		return
+	}
+	sanitizeProfileModel(&model)
+	err = validator.Validate(model)
+	if ErrBaseApp.Is(err) {
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
+	if err != nil {
+		appErr := ErrValidateProfile.Wrap(err, "not validate").LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	ctx := r.Context()
@@ -166,7 +151,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	err = handler.ProfileUseCase.Change(cookieId, *model)
+	err = handler.ProfileUseCase.Change(cookieId, model)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)

@@ -6,6 +6,7 @@ import (
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
 	_ "2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
+	"2022_1_OnlyGroup_back/pkg/dataValidator"
 	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
 	"context"
 	"github.com/go-redis/redis/v8"
@@ -65,7 +66,8 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, sessionGenerator.NewRandomGenerator())
-
+	//set validators
+	dataValidator.SetValidators()
 	//useCases
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
 	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo)
