@@ -4,8 +4,11 @@ import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/repositories/postgres"
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
+	_ "2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
 	impl2 "2022_1_OnlyGroup_back/pkg/fileService/impl"
+	"2022_1_OnlyGroup_back/pkg/dataValidator"
+
 	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
 	"context"
 	"github.com/go-redis/redis/v8"
@@ -27,11 +30,14 @@ const UrlPhotosIdParamsPostfix = "/photos/{id:[0-9]+}/params"
 const UrlProfilePhotosPostfix = "/profile/{id:[0-9]+}/photos"
 const UrlProfilePhotosAvatarPostfix = "/profile/{id:[0-9]+}/photos/avatar"
 
+const UrlLikesPostfix = "/likes"
+
 type APIServer struct {
 	conf           APIServerConf
 	authHandler    *handlers.AuthHandler
 	profileHandler *handlers.ProfileHandler
 	photosHandler  *handlers.PhotosHandler
+	likesHandler   *handlers.LikesHandler
 	middlewares    handlers.Middlewares
 }
 
@@ -63,13 +69,19 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
+  
 	photosRepo, err := postgres.NewPostgresPhotoRepository(postgresConnect, conf.PostgresConf.PhotosDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.AvatarDbTableName)
 	if err != nil {
 		return APIServer{}, err
 	}
 
+	likesRepo, err := postgres.NewLikesPostgres(postgresConnect, conf.PostgresConf.LikesDbTableName, conf.PostgresConf.UsersDbTableName)
+	if err != nil {
+		return APIServer{}, err
+	}
 	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, sessionGenerator.NewRandomGenerator())
-
+	//set validators
+	dataValidator.SetValidators()
 	//useCases
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
 	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo)
@@ -80,12 +92,14 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
+	likeUseCase := impl.NewLikesUseCaseImpl(likesRepo)
 
 	return APIServer{
 		conf:           conf,
 		authHandler:    handlers.CreateAuthHandler(authUseCase),
 		profileHandler: handlers.CreateProfileHandler(profileUseCase),
 		photosHandler:  handlers.CreatePhotosHandler(photosUseCase, photosService),
+		likesHandler:   handlers.CreateLikesHandler(likeUseCase),
 		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
 	}, nil
 }
@@ -104,6 +118,7 @@ func (serv *APIServer) Run() error {
 	UrlPhotosIdParams := serv.conf.ApiPathPrefix + UrlPhotosIdParamsPostfix
 	UrlProfilePhotos := serv.conf.ApiPathPrefix + UrlProfilePhotosPostfix
 	UrlProfilePhotosAvatar := serv.conf.ApiPathPrefix + UrlProfilePhotosAvatarPostfix
+	UrlLikes := serv.conf.ApiPathPrefix + UrlLikesPostfix
 
 	//main multiplexor
 	multiplexor := mux.NewRouter()
@@ -125,6 +140,7 @@ func (serv *APIServer) Run() error {
 	//сandidate methods
 	multiplexorWithAuth.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//profile methods
+
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
@@ -139,6 +155,14 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotos, serv.photosHandler.GETAll).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
+
+
+	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
+	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
+
+	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
+	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
+	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
 
 	serverAddr := serv.conf.ServerAddr + ":" + serv.conf.ServerPort
 	server := http.Server{Addr: serverAddr, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}

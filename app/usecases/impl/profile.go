@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/repositories"
 )
@@ -29,6 +30,9 @@ func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (prof
 }
 
 func (useCase *profileUseCaseImpl) Change(profileId int, profile models.Profile) (err error) {
+	if profileId != profile.UserId {
+		return handlers.ErrProfileForbiddenChange
+	}
 	err = useCase.profileRepo.Change(profileId, profile)
 	return
 }
@@ -39,7 +43,8 @@ func (useCase *profileUseCaseImpl) Delete(profileId int) (err error) {
 }
 
 func (useCase *profileUseCaseImpl) GetShort(cookieId int, profileId int) (profile models.ShortProfile, err error) {
-	if cookieId != profileId {
+	if cookieId == profileId {
+		profile, err = useCase.profileRepo.GetShort(cookieId)
 		return
 	}
 	profile, err = useCase.profileRepo.GetShort(profileId)
