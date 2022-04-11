@@ -18,6 +18,8 @@ type PostgresConnectConf struct {
 	UsersDbTableName     string
 	ProfilesDbTableName  string
 	InterestsDbTableName string
+	PhotosDbTableName    string
+	AvatarDbTableName    string
 	LikesDbTableName     string
 }
 
@@ -31,17 +33,19 @@ type RedisConnectConf struct {
 }
 
 type APIServerConf struct {
-	RedisConf     RedisConnectConf
-	PostgresConf  PostgresConnectConf
-	ServerPort    string
-	ServerAddr    string
-	ApiPathPrefix string
+	RedisConf              RedisConnectConf
+	PostgresConf           PostgresConnectConf
+	ServerPort             string
+	ServerAddr             string
+	ApiPathPrefix          string
+	PhotosStorageDirectory string
 }
 
 var ApiServerDefaultConf = APIServerConf{
-	ServerPort:    "8080",
-	ServerAddr:    "0.0.0.0",
-	ApiPathPrefix: "",
+	ServerPort:             "8080",
+	ServerAddr:             "0.0.0.0",
+	ApiPathPrefix:          "",
+	PhotosStorageDirectory: "./photos",
 	RedisConf: RedisConnectConf{
 		Username:       "",
 		Password:       "",
@@ -60,6 +64,8 @@ var ApiServerDefaultConf = APIServerConf{
 		UsersDbTableName:     "os_users",
 		ProfilesDbTableName:  "os_profiles",
 		InterestsDbTableName: "os_interests",
+		PhotosDbTableName:    "os_photos",
+		AvatarDbTableName:    "os_avatars",
 		LikesDbTableName:     "os_likes",
 	},
 }

@@ -39,11 +39,11 @@ func getIdFromUrl(r *http.Request) (int, error) {
 	idFromUrl := mux.Vars(r)["id"]
 	checkIdFromUrl, _ := regexp.MatchString(patternInt, idFromUrl)
 	if !checkIdFromUrl {
-		return 0, ErrBadUserID
+		return 0, ErrBadID
 	}
 	id, err := strconv.Atoi(idFromUrl)
 	if errors.Is(err, strconv.ErrSyntax) {
-		return 0, ErrBadUserID
+		return 0, ErrBadID
 	}
 	return id, nil
 }
