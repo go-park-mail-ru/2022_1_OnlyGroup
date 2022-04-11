@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
+	"database/sql"
 	"github.com/jackc/pgx/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -141,7 +142,7 @@ func TestAuthTableDriven(t *testing.T) {
 		{
 			"User not registered",
 			func(mock *sqlmock.Sqlmock) {
-				(*mock).ExpectQuery("SELECT id, password FROM test_user_table WHERE email=$1;").WithArgs("test@mail.ru").WillReturnError(pgx.ErrNoRows)
+				(*mock).ExpectQuery("SELECT id, password FROM test_user_table WHERE email=$1;").WithArgs("test@mail.ru").WillReturnError(sql.ErrNoRows)
 			},
 			handlers.ErrAuthWrongPassword,
 			0,

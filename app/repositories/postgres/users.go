@@ -2,8 +2,8 @@ package postgres
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
+	"database/sql"
 	"fmt"
-	"github.com/jackc/pgx/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -40,7 +40,7 @@ func (repo *postgresUsersRepository) Authorize(email string, password string) (i
 	var id int
 	var dbPassword string
 	err := repo.connection.QueryRow("SELECT id, password FROM "+repo.tableName+" WHERE email=$1;", email).Scan(&id, &dbPassword)
-	if errors.Is(err, pgx.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
 		return 0, handlers.ErrAuthWrongPassword
 	}
 	if err != nil {

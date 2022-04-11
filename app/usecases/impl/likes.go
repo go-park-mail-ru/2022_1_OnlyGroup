@@ -4,7 +4,6 @@ import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/repositories"
-	"fmt"
 )
 
 type likesUseCaseImpl struct {
@@ -17,7 +16,7 @@ func NewLikesUseCaseImpl(likesRepo repositories.LikesRepository) *likesUseCaseIm
 
 func (useCase *likesUseCaseImpl) SetAction(userid int, likes models.Likes) (err error) {
 	if userid == likes.Id {
-		return fmt.Errorf("like to own profile failed: %w", handlers.ErrBadRequest)
+		return handlers.ErrBadRequest
 	}
 	err = useCase.likesRepo.SetAction(userid, likes)
 	if err != nil {
