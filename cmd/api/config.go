@@ -18,6 +18,7 @@ type PostgresConnectConf struct {
 	UsersDbTableName     string
 	ProfilesDbTableName  string
 	InterestsDbTableName string
+	LikesDbTableName     string
 }
 
 type RedisConnectConf struct {
@@ -59,6 +60,7 @@ var ApiServerDefaultConf = APIServerConf{
 		UsersDbTableName:     "os_users",
 		ProfilesDbTableName:  "os_profiles",
 		InterestsDbTableName: "os_interests",
+		LikesDbTableName:     "os_likes",
 	},
 }
 

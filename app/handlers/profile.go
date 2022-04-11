@@ -6,67 +6,38 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/microcosm-cc/bluemonday"
+	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 )
 
-const patternStr = "^[a-zA-Z]+$"
-const patternDate = "[0-9]+"
-const patternId = "^[0-9]+$"
+const patternInt = "^[0-9]+$"
 
-func checkData(profile *models.Profile) bool {
-	var check bool
-	var err error
-	if len(profile.Birthday) > 0 {
-		check, err = regexp.MatchString(patternDate, profile.Birthday)
-		if !check || err != nil {
-			return false
-		}
+func sanitizeProfileModel(profile *models.Profile) {
+	sanitizer := bluemonday.UGCPolicy()
+	for idx, value := range profile.Interests {
+		profile.Interests[idx] = sanitizer.Sanitize(value)
 	}
-	if profile.FirstName != "" {
-		check, err = regexp.MatchString(patternStr, profile.FirstName)
-		if !check || err != nil {
-			return false
-		}
-	}
-	if profile.LastName != "" {
-		check, err = regexp.MatchString(patternStr, profile.LastName)
-		if !check || err != nil {
-			return false
-		}
-	}
-	if profile.Gender != "" {
-		check, err = regexp.MatchString(patternStr, profile.Gender)
-		if !check || err != nil {
-			return false
-		}
-	}
-	if profile.City != "" {
-		check, err = regexp.MatchString(patternStr, profile.City)
-		if !check || err != nil {
-			return false
-		}
-	}
-	if profile.AboutUser != "" {
-		check, err = regexp.MatchString(patternStr, profile.AboutUser)
-		if !check || err != nil {
-			return false
-		}
-	}
-	for _, value := range profile.Interests {
-		check, _ = regexp.MatchString(patternStr, value)
-		if !check {
-			return false
-		}
-	}
-	return true
+	profile.Birthday = sanitizer.Sanitize(profile.Birthday)
+	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
+	profile.AboutUser = sanitizer.Sanitize(profile.AboutUser)
+	profile.LastName = sanitizer.Sanitize(profile.LastName)
+}
+
+func sanitizeShortProfileModel(profile *models.ShortProfile) {
+	sanitizer := bluemonday.UGCPolicy()
+	profile.City = sanitizer.Sanitize(profile.City)
+	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
+	profile.LastName = sanitizer.Sanitize(profile.LastName)
 }
 
 func getIdFromUrl(r *http.Request) (int, error) {
+
 	idFromUrl := mux.Vars(r)["id"]
-	checkIdFromUrl, _ := regexp.MatchString(patternId, idFromUrl)
+	checkIdFromUrl, _ := regexp.MatchString(patternInt, idFromUrl)
 	if !checkIdFromUrl {
 		return 0, ErrBadUserID
 	}
@@ -95,7 +66,7 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := ErrAuthRequired.LogServerError(r.Context().Value(requestIdContextKey))
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
@@ -105,7 +76,7 @@ func (handler *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-
+	sanitizeProfileModel(&profile)
 	response, err := json.Marshal(profile)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
@@ -125,16 +96,18 @@ func (handler *ProfileHandler) GetShortProfileHandler(w http.ResponseWriter, r *
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-
-	profile, err := handler.ProfileUseCase.GetShort(cookieId, id)
+	model, err := handler.ProfileUseCase.GetShort(cookieId, id)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	response, err := json.Marshal(profile)
+	sanitizeShortProfileModel(&model)
+	response, err := json.Marshal(model)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
@@ -147,23 +120,37 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	msg, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	model := &models.Profile{}
+	model := models.Profile{}
 
 	err = json.Unmarshal(msg, model)
-	if err != nil || !checkData(model) {
+	if err != nil {
+		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
+		return
+	}
+	sanitizeProfileModel(&model)
+	err = validator.Validate(model)
+	if err == ErrBaseApp {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
+	if err != nil {
+		http.Error(w, ErrValidateProfile.String(), ErrValidateProfile.Code)
 		return
 	}
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 
-	err = handler.ProfileUseCase.Change(cookieId, *model)
+	err = handler.ProfileUseCase.Change(cookieId, model)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
@@ -175,16 +162,18 @@ func (handler *ProfileHandler) GetCandidateHandler(w http.ResponseWriter, r *htt
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 
-	profile, err := handler.ProfileUseCase.GetCandidates(cookieId)
+	vectorCandidates, err := handler.ProfileUseCase.GetCandidates(cookieId)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	response, err := json.Marshal(profile)
+	response, err := json.Marshal(vectorCandidates)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)

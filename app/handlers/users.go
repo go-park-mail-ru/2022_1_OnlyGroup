@@ -4,19 +4,34 @@ import (
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/usecases"
 	"encoding/json"
+	"fmt"
+	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
-	"regexp"
 	"time"
 )
 
-const emailPattern = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
-const passwordPatternLowerCase = `[a-z]+`
-const passwordPatternUpperCase = `[A-Z]+`
-const passwordPatternNumber = `[0-9]+`
-const passwordMinLength = 6
-const passwordMaxLength = 32
 const authCookie = "session"
+
+func identityValidatorErr(err error) error {
+	if err != nil {
+		errs, ok := err.(validator.ErrorMap)
+		if !ok {
+			return ErrBaseApp
+		}
+		for _, value := range errs["Email"] {
+			if value != nil {
+				return ErrAuthValidationEmail
+			}
+		}
+		for _, value := range errs["Password"] {
+			if value != nil {
+				return ErrAuthValidationPassword
+			}
+		}
+	}
+	return nil
+}
 
 type AuthHandler struct {
 	AuthUseCase usecases.AuthUseCases
@@ -24,32 +39,6 @@ type AuthHandler struct {
 
 func CreateAuthHandler(useCase usecases.AuthUseCases) *AuthHandler {
 	return &AuthHandler{useCase}
-}
-
-func checkValidUserModel(user models.UserAuthInfo) error {
-	//processing email
-	match, err := regexp.MatchString(emailPattern, user.Email)
-	if err != nil || !match {
-		return ErrAuthValidationEmail
-	}
-	//processing password
-	if len(user.Password) > passwordMaxLength || len(user.Password) < passwordMinLength {
-		return ErrAuthValidationPassword
-	}
-
-	match, err = regexp.MatchString(passwordPatternLowerCase, user.Password)
-	if err != nil || !match {
-		return ErrAuthValidationPassword
-	}
-	match, err = regexp.MatchString(passwordPatternUpperCase, user.Password)
-	if err != nil || !match {
-		return ErrAuthValidationPassword
-	}
-	match, err = regexp.MatchString(passwordPatternNumber, user.Password)
-	if err != nil || !match {
-		return ErrAuthValidationPassword
-	}
-	return nil
 }
 
 func (handler *AuthHandler) GET(w http.ResponseWriter, r *http.Request) {
@@ -83,10 +72,16 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkValidUserModel(*user)
-	if err != nil {
+	err = validator.Validate(user)
+	if err == ErrBaseApp {
+		fmt.Println(ErrBaseApp.Is(err))
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
+	if err := identityValidatorErr(err); err != nil {
+		err := AppErrorFromError(err)
+		http.Error(w, err.String(), err.Code)
 		return
 	}
 
@@ -135,10 +130,15 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkValidUserModel(*user)
-	if err != nil {
+	err = validator.Validate(user)
+	if err == ErrBaseApp {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
+		return
+	}
+	if err := identityValidatorErr(err); err != nil {
+		err := AppErrorFromError(err)
+		http.Error(w, err.String(), err.Code)
 		return
 	}
 
