@@ -146,7 +146,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}

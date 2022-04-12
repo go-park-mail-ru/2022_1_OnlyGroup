@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"2022_1_OnlyGroup_back/app/usecases"
+	"2022_1_OnlyGroup_back/pkg/csrf"
 	"context"
 	"errors"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ type Middlewares interface {
 
 type MiddlewaresImpl struct {
 	AuthUseCase usecases.AuthUseCases
-	JwtConf     *JwtToken
+	JwtConf     csrf.CsrfGenerator
 }
 
 func (impl MiddlewaresImpl) AccessLogMiddleware(next http.Handler) http.Handler {
@@ -100,26 +101,21 @@ func (imlp MiddlewaresImpl) CSRFMiddleware(next http.Handler) http.Handler {
 			http.Error(w, ErrBadCSRF.String(), ErrBadCSRF.Code)
 			return
 		}
+		ctx := r.Context()
+		cookieId, ok := ctx.Value(userIdContextKey).(int)
+		if !ok {
+			appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+			http.Error(w, appErr.String(), appErr.Code)
+			return
+		}
 		cookie, err := r.Cookie(authCookie)
 		if errors.Is(err, http.ErrNoCookie) {
 			http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code)
 			return
 		}
-		userIdModel, err := imlp.AuthUseCase.UserAuth(cookie.Value)
+		err = imlp.JwtConf.Check(cookie.Value, cookieId, r.URL.String(), csrfToken)
 		if err != nil {
-			appErr := AppErrorFromError(err)
-			http.Error(w, appErr.String(), appErr.Code)
-			return
-		}
-		err = imlp.JwtConf.Check(cookie.Value, userIdModel.ID, r.URL.String(), csrfToken)
-		if errors.Is(ErrBadSession, err) {
-			http.Error(w, ErrBadSession.Wrap(err, "").String(), ErrBadSession.Code)
-			return
-		} else if errors.Is(ErrBadCSRF, err) {
 			http.Error(w, ErrBadCSRF.String(), ErrBadCSRF.Code)
-			return
-		} else if err != nil {
-			http.Error(w, ErrBaseApp.String(), ErrBaseApp.Code)
 			return
 		}
 		next.ServeHTTP(w, r)

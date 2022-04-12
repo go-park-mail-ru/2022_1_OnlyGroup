@@ -6,6 +6,7 @@ import (
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
 	_ "2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
+	impl3 "2022_1_OnlyGroup_back/pkg/csrf/impl"
 	"2022_1_OnlyGroup_back/pkg/dataValidator"
 	impl2 "2022_1_OnlyGroup_back/pkg/fileService/impl"
 
@@ -73,7 +74,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	}
 	//jwtToken
 	randGenerator := sessionGenerator.NewRandomGenerator()
-	jwt, _ := handlers.NewJwtToken(randGenerator.String(16))
+	jwt := impl3.NewJwtTokenGenerator(randGenerator.String(16), conf.CSRFConf.TimeToLife)
 	//useCases
 	photosRepo, err := postgres.NewPostgresPhotoRepository(postgresConnect, conf.PostgresConf.PhotosDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.AvatarDbTableName)
 	if err != nil {
@@ -103,7 +104,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		conf:           conf,
 		authHandler:    handlers.CreateAuthHandler(authUseCase),
 		profileHandler: handlers.CreateProfileHandler(profileUseCase),
-		jwtHandler:     handlers.CreateCSRFHandler(*jwt, conf.JwtConf.TimeToLife),
+		jwtHandler:     handlers.CreateCSRFHandler(jwt),
 		photosHandler:  handlers.CreatePhotosHandler(photosUseCase, photosService),
 		likesHandler:   handlers.CreateLikesHandler(likeUseCase),
 		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
@@ -128,55 +129,53 @@ func (serv *APIServer) Run() error {
 	UrlLikes := serv.conf.ApiPathPrefix + UrlLikesPostfix
 	//main multiplexor
 	multiplexor := mux.NewRouter()
-	//multiplexor.Use()
+	//log middleware
 	multiplexor.Use(serv.middlewares.AccessLogMiddleware)
+	//panic middleware
 	multiplexor.Use(serv.middlewares.PanicMiddleware)
+	//cors middlewares
 	multiplexor.Use(serv.middlewares.CorsMiddleware)
+	//cors
 	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
-
+	//auth
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
-
-	//profile multiplexor
+	//multiplexor with auth
 	multiplexorWithAuth := multiplexor.PathPrefix("").Subrouter()
-
+	//auth middleware
 	multiplexorWithAuth.Use(serv.middlewares.CheckAuthMiddleware)
-	//сandidate methods
-
-	multiplexorWithAuth.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//profile methods
-
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
-	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
-
 	//photos
-	multiplexorWithAuth.HandleFunc(UrlPhotos, serv.photosHandler.POST).Methods(http.MethodPost)
 	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.GETPhoto).Methods(http.MethodGet)
-	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.POSTPhoto).Methods(http.MethodPost)
-	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.DELETE).Methods(http.MethodDelete)
-	multiplexorWithAuth.HandleFunc(UrlPhotosIdParams, serv.photosHandler.PUTParams).Methods(http.MethodPut)
 	multiplexorWithAuth.HandleFunc(UrlPhotosIdParams, serv.photosHandler.GETParams).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotos, serv.photosHandler.GETAll).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
-	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
-
-	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
+	//likes
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
-
+	//profile
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
-	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
-
-	multiplexorWithAuth.HandleFunc(UrlCSRF, serv.jwtHandler.GetCSRF).Methods(http.MethodGet)
-
+	multiplexorWithAuth.HandleFunc(UrlCSRF, serv.jwtHandler.PostCSRF).Methods(http.MethodPost)
 	//csrf multiplexor
-	multiplexorCsrf := multiplexorWithAuth.PathPrefix("").Subrouter()
-	multiplexorCsrf.Use(serv.middlewares.CSRFMiddleware)
-	multiplexorCsrf.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
-	multiplexorCsrf.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)
-	multiplexorCsrf.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
+	multiplexorWithCsrf := multiplexorWithAuth.PathPrefix("").Subrouter()
+	//CSRF middleware
+	multiplexorWithCsrf.Use(serv.middlewares.CSRFMiddleware)
+	//likes with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
+	//profile with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)
+	multiplexorWithAuth.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
+	//users with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
+	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
+	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
+	//photos with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlPhotos, serv.photosHandler.POST).Methods(http.MethodPost)
+	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.POSTPhoto).Methods(http.MethodPost)
+	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.DELETE).Methods(http.MethodDelete)
+	multiplexorWithCsrf.HandleFunc(UrlPhotosIdParams, serv.photosHandler.PUTParams).Methods(http.MethodPut)
+	multiplexorWithCsrf.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 
 	serverAddr := serv.conf.ServerAddr + ":" + serv.conf.ServerPort
 	server := http.Server{Addr: serverAddr, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}

@@ -2,28 +2,25 @@ package handlers
 
 import (
 	"2022_1_OnlyGroup_back/app/models"
+	"2022_1_OnlyGroup_back/pkg/csrf"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
 
 type CSRFHandler struct {
-	JwtToken      JwtToken
-	TokenLifeTime int
+	JwtToken csrf.CsrfGenerator
 }
 
-func CreateCSRFHandler(jwt JwtToken, lifeTime int) *CSRFHandler {
-	return &CSRFHandler{jwt, lifeTime}
+func CreateCSRFHandler(jwt csrf.CsrfGenerator) *CSRFHandler {
+	return &CSRFHandler{jwt}
 }
 
-func (impl *CSRFHandler) GetCSRF(w http.ResponseWriter, r *http.Request) {
+func (impl *CSRFHandler) PostCSRF(w http.ResponseWriter, r *http.Request) {
 	msg, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	model := &models.CSRF{}
-
 	err = json.Unmarshal(msg, model)
 	if err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
@@ -41,12 +38,12 @@ func (impl *CSRFHandler) GetCSRF(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	fmt.Println(time.Now().Add(time.Hour * time.Duration(impl.TokenLifeTime)))
-	token, err := impl.JwtToken.Create(cookie.Value, cookieId, model.URL, time.Now().Add(time.Hour*time.Duration(impl.TokenLifeTime)).Unix())
+	token, err := impl.JwtToken.Create(cookie.Value, cookieId, model.URL)
 	if err != nil {
 		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
 	w.Header().Add("X-CSRF-TOKEN", token)
+	w.WriteHeader(http.StatusOK)
 }
