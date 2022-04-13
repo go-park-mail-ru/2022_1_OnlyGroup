@@ -40,7 +40,7 @@ func (impl *CSRFHandler) PostCSRF(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := impl.JwtToken.Create(cookie.Value, cookieId, model.URL)
 	if err != nil {
-		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}

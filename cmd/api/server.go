@@ -73,8 +73,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	//jwtToken
-	randGenerator := sessionGenerator.NewRandomGenerator()
-	jwt := impl3.NewJwtTokenGenerator(randGenerator.String(16), conf.CSRFConf.TimeToLife)
+	jwt := impl3.NewJwtTokenGenerator("поменяй здесь генерацию", conf.CSRFConf.TimeToLife)
 	//useCases
 	photosRepo, err := postgres.NewPostgresPhotoRepository(postgresConnect, conf.PostgresConf.PhotosDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.AvatarDbTableName)
 	if err != nil {

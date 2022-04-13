@@ -115,7 +115,8 @@ func (imlp MiddlewaresImpl) CSRFMiddleware(next http.Handler) http.Handler {
 		}
 		err = imlp.JwtConf.Check(cookie.Value, cookieId, r.URL.String(), csrfToken)
 		if err != nil {
-			http.Error(w, ErrBadCSRF.String(), ErrBadCSRF.Code)
+			appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+			http.Error(w, appErr.String(), appErr.Code)
 			return
 		}
 		next.ServeHTTP(w, r)

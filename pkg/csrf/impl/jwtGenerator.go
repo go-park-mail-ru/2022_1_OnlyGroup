@@ -33,7 +33,11 @@ func (tk *JwtToken) Create(session string, id int, url string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, data)
-	return token.SignedString(tk.Secret)
+	jwtToken, err := token.SignedString(tk.Secret)
+	if err != nil {
+		return "", handlers.ErrBaseApp
+	}
+	return jwtToken, nil
 }
 
 func (tk *JwtToken) ParseSecretGetter(token *jwt.Token) (interface{}, error) {

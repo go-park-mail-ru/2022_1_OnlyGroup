@@ -1,5 +1,7 @@
 package handlers
 
+const statusAuthenticationTimeout = 419
+
 var (
-	ErrBadCSRF = AppError{Msg: "Bad token", Code: 419}
+	ErrBadCSRF = AppError{Msg: "Bad token", Code: statusAuthenticationTimeout}
 )
