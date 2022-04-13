@@ -22,3 +22,12 @@ func (*cryptoRandomGenerator) String(length int) (string, error) {
 
 	return base32.StdEncoding.EncodeToString(randomBytes)[:length], nil
 }
+
+func (*cryptoRandomGenerator) Bytes(length int) ([]byte, error) {
+	randomBytes := make([]byte, length)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return []byte{}, handlers.ErrBaseApp.Wrap(err, "crypto rand failed")
+	}
+	return randomBytes, nil
+}

@@ -19,3 +19,11 @@ func (generator *mathRandomGenerator) String(size int) (string, error) {
 	}
 	return result, nil
 }
+
+func (generator *mathRandomGenerator) Bytes(length int) ([]byte, error) {
+	result := make([]byte, length)
+	for i := 0; i < length; i++ {
+		result[i] = generator.runes[rand.Intn(len(generator.runes))]
+	}
+	return result, nil
+}

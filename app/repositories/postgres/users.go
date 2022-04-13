@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const defaultSaltSize = 16
+const defaultSaltSize = 8
 const defaultArgon2Time = 1
 const defaultArgon2Memory = 64 * 1024
 const defaultArgon2Threads = 4
@@ -26,7 +26,7 @@ type postgresUsersRepository struct {
 }
 
 func NewPostgresUsersRepo(conn *sqlx.DB, tableName string, saltGenerator randomGenerator.RandomGenerator) (*postgresUsersRepository, error) {
-	_, err := conn.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id bigserial primary key, email varchar(128) unique, password varchar(64));")
+	_, err := conn.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id bigserial primary key, email varchar(128) unique, password varchar(128));")
 	if err != nil {
 		return nil, fmt.Errorf("create table failed: %w", err)
 	}
@@ -41,18 +41,14 @@ func (repo *postgresUsersRepository) AddUser(email string, password string) (int
 		return 0, handlers.ErrAuthEmailUsed
 	}
 
-	salt, err := repo.saltGenerator.String(defaultSaltSize)
+	salt, err := repo.saltGenerator.Bytes(defaultSaltSize)
 	if err != nil {
 		return 0, err
 	}
 
-	saltBytes, err := base32.StdEncoding.DecodeString(salt)
-	if err != nil {
-		return 0, handlers.ErrBaseApp.Wrap(err, "decode salt from random generator failed")
-	}
-
-	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(password), saltBytes, defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
-	dbPassword := strings.Join([]string{salt, hashedPassword}, defaultSaltHashSeparator)
+	encodedSalt := base32.StdEncoding.EncodeToString(salt)
+	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(password), salt, defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
+	dbPassword := strings.Join([]string{encodedSalt, hashedPassword}, defaultSaltHashSeparator)
 
 	err = repo.connection.QueryRow("INSERT INTO "+repo.tableName+" (email, password) VALUES ($1, $2) RETURNING id;", email, dbPassword).Scan(&id)
 
@@ -86,16 +82,14 @@ func (repo *postgresUsersRepository) Authorize(email string, password string) (i
 }
 
 func (repo *postgresUsersRepository) ChangePassword(id int, newPassword string) error {
-	salt, err := repo.saltGenerator.String(defaultSaltSize)
+	salt, err := repo.saltGenerator.Bytes(defaultSaltSize)
 	if err != nil {
 		return err
 	}
-	saltBytes, err := base32.StdEncoding.DecodeString(salt)
-	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "decode salt from random generator failed")
-	}
-	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(newPassword), saltBytes, defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
-	dbPassword := strings.Join([]string{salt, hashedPassword}, defaultSaltHashSeparator)
+
+	encodedSalt := base32.StdEncoding.EncodeToString(salt)
+	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(newPassword), salt, defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
+	dbPassword := strings.Join([]string{encodedSalt, hashedPassword}, defaultSaltHashSeparator)
 
 	result, err := repo.connection.Exec("UPDATE "+repo.tableName+" SET password=$1 WHERE id=$2;", dbPassword, id)
 	if err != nil {
