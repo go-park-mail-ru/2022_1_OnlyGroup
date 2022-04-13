@@ -2,7 +2,7 @@ package mock
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
-	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
+	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -12,9 +12,11 @@ const numTest = 6
 const defaultMockUser = 5
 
 func TestGenerateSecret(t *testing.T) {
-	assert := assert.New(t)
+	generator := impl3.NewMathRandomGenerator()
 	for i := 0; i < numTest; i++ {
-		assert.Equal(len(sessionGenerator.NewRandomGenerator().String(i)), i)
+		s, err := generator.String(i)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, s, i)
 	}
 }
 

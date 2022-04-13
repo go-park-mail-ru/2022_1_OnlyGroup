@@ -2,7 +2,7 @@ package redis
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
-	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
+	"2022_1_OnlyGroup_back/pkg/randomGenerator"
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
@@ -18,10 +18,10 @@ const sessionSplitNumber = 2
 type redisSessionsRepo struct {
 	client          *redis.Client
 	sessionsPrefix  string
-	secretGenerator sessionGenerator.SessionGenerator
+	secretGenerator randomGenerator.RandomGenerator
 }
 
-func NewRedisSessionRepository(client *redis.Client, sessionsPrefix string, generator sessionGenerator.SessionGenerator) *redisSessionsRepo {
+func NewRedisSessionRepository(client *redis.Client, sessionsPrefix string, generator randomGenerator.RandomGenerator) *redisSessionsRepo {
 	return &redisSessionsRepo{client: client, sessionsPrefix: sessionsPrefix, secretGenerator: generator}
 }
 
@@ -41,7 +41,10 @@ func (repo *redisSessionsRepo) addSessionInternal(id int, additionalData string,
 }
 
 func (repo *redisSessionsRepo) Add(id int, additionalData string) (string, error) {
-	generatedSecret := repo.secretGenerator.String(sessionSecretSize)
+	generatedSecret, err := repo.secretGenerator.String(sessionSecretSize)
+	if err != nil {
+		return "", err
+	}
 	return repo.addSessionInternal(id, additionalData, generatedSecret)
 }
 

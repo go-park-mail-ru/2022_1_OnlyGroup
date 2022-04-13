@@ -6,10 +6,10 @@ import (
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
 	_ "2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
-	impl2 "2022_1_OnlyGroup_back/pkg/fileService/impl"
 	"2022_1_OnlyGroup_back/pkg/dataValidator"
+	impl2 "2022_1_OnlyGroup_back/pkg/fileService/impl"
+	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 
-	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
 	"context"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
@@ -61,7 +61,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	//repositories
-	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName)
+	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, impl3.NewCryptoRandomGenerator())
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -69,7 +69,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-  
+
 	photosRepo, err := postgres.NewPostgresPhotoRepository(postgresConnect, conf.PostgresConf.PhotosDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.AvatarDbTableName)
 	if err != nil {
 		return APIServer{}, err
@@ -79,7 +79,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, sessionGenerator.NewRandomGenerator())
+	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, impl3.NewMathRandomGenerator())
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
@@ -155,7 +155,6 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotos, serv.photosHandler.GETAll).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
-
 
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
