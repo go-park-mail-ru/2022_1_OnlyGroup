@@ -26,7 +26,7 @@ type postgresUsersRepository struct {
 }
 
 func NewPostgresUsersRepo(conn *sqlx.DB, tableName string, saltGenerator randomGenerator.RandomGenerator) (*postgresUsersRepository, error) {
-	_, err := conn.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id bigserial primary key, email varchar(128) unique, password varchar(256));")
+	_, err := conn.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id bigserial primary key, email varchar(128) unique, password varchar(64));")
 	if err != nil {
 		return nil, fmt.Errorf("create table failed: %w", err)
 	}
@@ -46,8 +46,13 @@ func (repo *postgresUsersRepository) AddUser(email string, password string) (int
 		return 0, err
 	}
 
-	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(password), []byte(salt), defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
-	dbPassword := strings.Join([]string{salt, string(hashedPassword)}, defaultSaltHashSeparator)
+	saltBytes, err := base32.StdEncoding.DecodeString(salt)
+	if err != nil {
+		return 0, handlers.ErrBaseApp.Wrap(err, "decode salt from random generator failed")
+	}
+
+	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(password), saltBytes, defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
+	dbPassword := strings.Join([]string{salt, hashedPassword}, defaultSaltHashSeparator)
 
 	err = repo.connection.QueryRow("INSERT INTO "+repo.tableName+" (email, password) VALUES ($1, $2) RETURNING id;", email, dbPassword).Scan(&id)
 
@@ -85,7 +90,11 @@ func (repo *postgresUsersRepository) ChangePassword(id int, newPassword string) 
 	if err != nil {
 		return err
 	}
-	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(newPassword), []byte(salt), defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
+	saltBytes, err := base32.StdEncoding.DecodeString(salt)
+	if err != nil {
+		return handlers.ErrBaseApp.Wrap(err, "decode salt from random generator failed")
+	}
+	hashedPassword := base32.StdEncoding.EncodeToString(argon2.IDKey([]byte(newPassword), saltBytes, defaultArgon2Time, defaultArgon2Memory, defaultArgon2Threads, defaultArgon2KeyLen))
 	dbPassword := strings.Join([]string{salt, hashedPassword}, defaultSaltHashSeparator)
 
 	result, err := repo.connection.Exec("UPDATE "+repo.tableName+" SET password=$1 WHERE id=$2;", dbPassword, id)
