@@ -48,7 +48,7 @@ func (repo *LikesPostgres) SetAction(profileId int, likes models.Likes) (err err
 }
 
 func (repo *LikesPostgres) GetMatched(profileId int) (likesVector models.LikesMatched, err error) {
-	err = repo.dataBase.Select(&likesVector.VectorId, "select l1.lastid from "+repo.tableNameLikes+" as l1 join likes as l2 on l1.lastid = l2.firstid and l1.action=1 where l1.firstid=l2.lastid and l2.action=1 and l1.firstid=$1", profileId)
+	err = repo.dataBase.Select(&likesVector.VectorId, "select l1.lastid from "+repo.tableNameLikes+" as l1 join "+repo.tableNameLikes+" as l2 on l1.lastid = l2.firstid and l1.action=1 where l1.firstid=l2.lastid and l2.action=1 and l1.firstid=$1", profileId)
 	if err != nil {
 		return likesVector, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}

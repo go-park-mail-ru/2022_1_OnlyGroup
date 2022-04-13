@@ -4,7 +4,6 @@ import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/pkg/randomGenerator"
 	"context"
-	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"strconv"
@@ -30,12 +29,9 @@ func (repo *redisSessionsRepo) addSessionInternal(id int, additionalData string,
 	secret := strings.Join([]string{idInString, generatedSecret}, sessionIdAndSecretSep)
 
 	key := strings.Join([]string{repo.sessionsPrefix, idInString}, sessionIdAndSecretSep)
-	success, err := repo.client.HSet(context.Background(), key, secret, additionalData).Result()
-	if err != nil || success != 1 {
-		if err != nil {
-			return "", handlers.ErrBaseApp.Wrap(err, "redis session add failed")
-		}
-		return "", handlers.ErrBaseApp.Wrap(fmt.Errorf("hset returned not 1 sucsess result"), "redis session add failed")
+	_, err := repo.client.HSet(context.Background(), key, secret, additionalData).Result()
+	if err != nil {
+		return "", handlers.ErrBaseApp.Wrap(err, "redis session add failed")
 	}
 	return secret, nil
 }
