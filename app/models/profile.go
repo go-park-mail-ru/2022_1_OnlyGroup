@@ -1,8 +1,8 @@
 package models
 
-const BirthdaySize = 10
+const BirthdayTopLimit = "0099-00-00"
+const BirthdayBottomLimit = "0018-00-00"
 const InterestSize = 32
-const BirthdayRexexp = "d{2}.d{2}.d{4}"
 
 type Profile struct {
 	FirstName string   `validate:"min=0,max=40,regexp=^[a-zA-Z]*$"`
