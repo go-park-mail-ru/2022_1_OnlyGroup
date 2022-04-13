@@ -94,9 +94,9 @@ func (tables *ProfileMock) AddProfile(profile models.Profile) (err error) {
 }
 
 func (tables *ProfileMock) AddEmptyProfile(profileId int) (err error) {
-	profile := models.Profile{FirstName: "", LastName: "",
-		Birthday: "", City: "", Interests: []string{}, AboutUser: "", UserId: profileId,
-		Gender: ""}
+	profile := models.Profile{FirstName: faker.FirstName(), LastName: faker.LastName(),
+		Birthday: faker.Date(), City: "Moscow", Interests: []string{}, AboutUser: faker.Sentence(), UserId: profileId,
+		Gender: faker.Gender()}
 	tables.profileRepo = append(tables.profileRepo, profile)
 	return nil
 }
