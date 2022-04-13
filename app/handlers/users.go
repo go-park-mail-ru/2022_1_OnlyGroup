@@ -92,7 +92,7 @@ func (handler *AuthHandler) PUT(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7)}
+	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7), SameSite: http.SameSiteNoneMode, Secure: true}
 	http.SetCookie(w, &cookie)
 
 	response, _ := json.Marshal(realUser)
@@ -112,7 +112,7 @@ func (handler *AuthHandler) DELETE(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	cookie := http.Cookie{Name: authCookie, Value: cook.Value, Expires: time.Now().Add(time.Hour * (-1))}
+	cookie := http.Cookie{Name: authCookie, Value: cook.Value, Expires: time.Now().Add(time.Hour * (-1)), SameSite: http.SameSiteNoneMode, Secure: true}
 	http.SetCookie(w, &cookie)
 }
 
@@ -149,7 +149,7 @@ func (handler *AuthHandler) POST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7)}
+	cookie := http.Cookie{Name: authCookie, Value: cook, Expires: time.Now().Add(time.Hour * 24 * 7), SameSite: http.SameSiteNoneMode, Secure: true}
 	http.SetCookie(w, &cookie)
 
 	response, _ := json.Marshal(realUser)
