@@ -35,7 +35,7 @@ func (tk *JwtToken) Create(session string, id int, url string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, data)
 	jwtToken, err := token.SignedString(tk.Secret)
 	if err != nil {
-		return "", handlers.ErrBaseApp
+		return "", handlers.ErrBaseApp.Wrap(err, "generate failed")
 	}
 	return jwtToken, nil
 }
