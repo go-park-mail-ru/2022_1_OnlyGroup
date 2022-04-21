@@ -1,7 +1,7 @@
 package handlers
 
-const statusAuthenticationTimeout = 419
+import "net/http"
 
 var (
-	ErrBadCSRF = AppError{Msg: "Bad token", Code: statusAuthenticationTimeout}
+	ErrBadCSRF = AppError{Msg: "Bad token", Code: http.StatusUnauthorized}
 )

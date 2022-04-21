@@ -10,13 +10,6 @@ import (
 	"net/http"
 )
 
-func checkLikesData(likes *models.Likes) bool {
-	if likes.Action > 2 || likes.Action < 1 {
-		return false
-	}
-	return true
-}
-
 type LikesHandler struct {
 	likesUseCase usecases.LikesUseCases
 }
