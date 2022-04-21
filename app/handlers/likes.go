@@ -4,6 +4,7 @@ import (
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/usecases"
 	"encoding/json"
+
 	"gopkg.in/validator.v2"
 	"io"
 	"net/http"
@@ -34,6 +35,7 @@ func (handler *LikesHandler) Set(w http.ResponseWriter, r *http.Request) {
 	}
 	model := &models.Likes{}
 	err = json.Unmarshal(msg, model)
+
 	if err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return

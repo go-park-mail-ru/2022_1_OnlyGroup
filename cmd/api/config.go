@@ -32,7 +32,13 @@ type RedisConnectConf struct {
 	SessionsPrefix string
 }
 
+type JwtConf struct {
+	Enable     bool
+	TimeToLife int64
+}
+
 type APIServerConf struct {
+	CSRFConf               JwtConf
 	RedisConf              RedisConnectConf
 	PostgresConf           PostgresConnectConf
 	ServerPort             string
@@ -67,6 +73,10 @@ var ApiServerDefaultConf = APIServerConf{
 		PhotosDbTableName:    "os_photos",
 		AvatarDbTableName:    "os_avatars",
 		LikesDbTableName:     "os_likes",
+	},
+	CSRFConf: JwtConf{
+		Enable:     false,
+		TimeToLife: 86400,
 	},
 }
 

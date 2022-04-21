@@ -127,6 +127,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	model := models.Profile{}
 
 	err = json.Unmarshal(msg, model)
+
 	if err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 		return
@@ -145,7 +146,7 @@ func (handler *ProfileHandler) ChangeProfileHandler(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	cookieId, ok := ctx.Value(userIdContextKey).(int)
 	if !ok {
-		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+		appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
