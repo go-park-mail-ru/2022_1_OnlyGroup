@@ -1,7 +1,7 @@
 package models
 
-const BirthdayTopLimit = "0099-00-00"
-const BirthdayBottomLimit = "0018-00-00"
+const BirthdayTopLimit = "0099-01-01"
+const BirthdayBottomLimit = "0018-01-01"
 const InterestSize = 32
 
 type Profile struct {

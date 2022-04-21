@@ -45,17 +45,28 @@ func SetValidators() {
 			return validator.ErrInvalid
 		}
 
-		topLimit, err := time.Parse("2006-01-02", models.BirthdayTopLimit)
+		//topLimit, err := time.Parse("2006-01-02", models.BirthdayTopLimit)
 		if err != nil {
 			return validator.ErrInvalid
 		}
 
-		topLimit, err := time.Parse("2006-01-02", models.BirthdayBottomLimit)
+		//bottomLimit, err := time.Parse("2006-01-02", models.BirthdayBottomLimit)
 		if err != nil {
 			return validator.ErrInvalid
 		}
-
-		if time.timeValidate
+		today := time.Now().In(timeValidate.Location())
+		ty, tm, td := today.Date()
+		today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
+		by, bm, bd := timeValidate.Date()
+		timeValidate = time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
+		if today.Before(timeValidate) {
+			return validator.ErrInvalid
+		}
+		age := ty - by
+		anniversary := today.AddDate(age, 0, 0)
+		if anniversary.After(today) {
+			age--
+		}
 
 		return nil
 	})
