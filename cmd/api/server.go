@@ -6,10 +6,10 @@ import (
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
 	_ "2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
+	impl4 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
+	impl3 "2022_1_OnlyGroup_back/pkg/csrf/impl"
 	"2022_1_OnlyGroup_back/pkg/dataValidator"
 	impl2 "2022_1_OnlyGroup_back/pkg/fileService/impl"
-	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
-
 	"context"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
@@ -24,6 +24,7 @@ const UrlUsersPostfix = "/users"
 const UrlProfileIdPostfix = "/profiles/{id:[0-9]+}"
 const UrlProfileIdShortPostfix = "/profiles/{id:[0-9]+}/shorts"
 const UrlProfileCandidatesPostfix = "/profiles/candidates"
+const UrlCSRFPostfix = "/csrf"
 const UrlPhotosPostfix = "/photos"
 const UrlPhotosIdPostfix = "/photos/{id:[0-9]+}"
 const UrlPhotosIdParamsPostfix = "/photos/{id:[0-9]+}/params"
@@ -39,6 +40,7 @@ type APIServer struct {
 	photosHandler  *handlers.PhotosHandler
 	likesHandler   *handlers.LikesHandler
 	middlewares    handlers.Middlewares
+	jwtHandler     *handlers.CSRFHandler
 }
 
 func NewServer(conf APIServerConf) (APIServer, error) {
@@ -61,7 +63,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	//repositories
-	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, impl3.NewCryptoRandomGenerator())
+	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, impl4.NewCryptoRandomGenerator())
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -69,7 +71,9 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-
+	//jwtToken
+	jwt := impl3.NewJwtTokenGenerator("поменяй здесь генерацию", conf.CSRFConf.TimeToLife)
+	//useCases
 	photosRepo, err := postgres.NewPostgresPhotoRepository(postgresConnect, conf.PostgresConf.PhotosDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.AvatarDbTableName)
 	if err != nil {
 		return APIServer{}, err
@@ -79,7 +83,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, impl3.NewMathRandomGenerator())
+	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, impl4.NewMathRandomGenerator())
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
@@ -98,6 +102,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		conf:           conf,
 		authHandler:    handlers.CreateAuthHandler(authUseCase),
 		profileHandler: handlers.CreateProfileHandler(profileUseCase),
+		jwtHandler:     handlers.CreateCSRFHandler(jwt),
 		photosHandler:  handlers.CreatePhotosHandler(photosUseCase, photosService),
 		likesHandler:   handlers.CreateLikesHandler(likeUseCase),
 		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
@@ -113,55 +118,66 @@ func (serv *APIServer) Run() error {
 	UrlProfileId := serv.conf.ApiPathPrefix + UrlProfileIdPostfix
 	UrlProfileIdShort := serv.conf.ApiPathPrefix + UrlProfileIdShortPostfix
 	UrlProfileCandidates := serv.conf.ApiPathPrefix + UrlProfileCandidatesPostfix
+	UrlCSRF := serv.conf.ApiPathPrefix + UrlCSRFPostfix
 	UrlPhotos := serv.conf.ApiPathPrefix + UrlPhotosPostfix
 	UrlPhotosId := serv.conf.ApiPathPrefix + UrlPhotosIdPostfix
 	UrlPhotosIdParams := serv.conf.ApiPathPrefix + UrlPhotosIdParamsPostfix
 	UrlProfilePhotos := serv.conf.ApiPathPrefix + UrlProfilePhotosPostfix
 	UrlProfilePhotosAvatar := serv.conf.ApiPathPrefix + UrlProfilePhotosAvatarPostfix
 	UrlLikes := serv.conf.ApiPathPrefix + UrlLikesPostfix
-
 	//main multiplexor
 	multiplexor := mux.NewRouter()
-
+	//log middleware
 	multiplexor.Use(serv.middlewares.AccessLogMiddleware)
+	//panic middleware
 	multiplexor.Use(serv.middlewares.PanicMiddleware)
+	//cors middlewares
 	multiplexor.Use(serv.middlewares.CorsMiddleware)
+	//cors
 	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
-
+	//auth
 	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
-
-	//profile multiplexor
+	//multiplexor with auth
 	multiplexorWithAuth := multiplexor.PathPrefix("").Subrouter()
-
+	//auth middleware
 	multiplexorWithAuth.Use(serv.middlewares.CheckAuthMiddleware)
-	//сandidate methods
-	multiplexorWithAuth.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//profile methods
-
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
-	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
-
 	//photos
-	multiplexorWithAuth.HandleFunc(UrlPhotos, serv.photosHandler.POST).Methods(http.MethodPost)
 	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.GETPhoto).Methods(http.MethodGet)
-	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.POSTPhoto).Methods(http.MethodPost)
-	multiplexorWithAuth.HandleFunc(UrlPhotosId, serv.photosHandler.DELETE).Methods(http.MethodDelete)
-	multiplexorWithAuth.HandleFunc(UrlPhotosIdParams, serv.photosHandler.PUTParams).Methods(http.MethodPut)
 	multiplexorWithAuth.HandleFunc(UrlPhotosIdParams, serv.photosHandler.GETParams).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotos, serv.photosHandler.GETAll).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
+
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
+	//likes
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
-
+	//profile
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
-	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)        //свой профиль
+	multiplexorWithAuth.HandleFunc(UrlCSRF, serv.jwtHandler.PostCSRF).Methods(http.MethodPost)
+	//csrf multiplexor
+	multiplexorWithCsrf := multiplexorWithAuth.PathPrefix("").Subrouter()
+	//CSRF middleware
+	multiplexorWithCsrf.Use(serv.middlewares.CSRFMiddleware)
+	//likes with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
+	//profile with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)
+	multiplexorWithAuth.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
+	//users with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
+	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
+	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
+	//photos with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlPhotos, serv.photosHandler.POST).Methods(http.MethodPost)
+	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.POSTPhoto).Methods(http.MethodPost)
+	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.DELETE).Methods(http.MethodDelete)
+	multiplexorWithCsrf.HandleFunc(UrlPhotosIdParams, serv.photosHandler.PUTParams).Methods(http.MethodPut)
+	multiplexorWithCsrf.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 
 	serverAddr := serv.conf.ServerAddr + ":" + serv.conf.ServerPort
 	server := http.Server{Addr: serverAddr, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}
