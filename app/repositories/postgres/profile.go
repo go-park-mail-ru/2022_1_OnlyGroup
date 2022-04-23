@@ -37,7 +37,6 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
 	}
-
 	return &ProfilePostgres{dataBase, tableNameProfile, tableNameUsers, tableNameInterests}, nil
 }
 func (repo *ProfilePostgres) Get(profileId int) (profile models.Profile, err error) {
@@ -64,11 +63,11 @@ func (repo *ProfilePostgres) GetShort(profileId int) (shortProfile models.ShortP
 }
 
 func (repo *ProfilePostgres) Change(profileId int, profile models.Profile) (err error) {
-	_, err = repo.dataBase.NamedExec("UPDATE "+repo.tableNameProfiles+" SET firstname=:firstname, lastname=:lastname, birthday=:birthday, city=:city, aboutuser=:aboutuser, gender=:gender, height=:height WHERE userid = :userid", profile)
+	_, err = repo.dataBase.NamedExec("UPDATE "+repo.tableNameProfiles+" SET firstname=:firstname, lastname=:lastname, birthday=:birthday, city=:city, aboutuser=:aboutuser, gender=:gender, height=:height WHERE userid=:userid", profile)
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "change profile failed")
 	}
-	_, err = repo.dataBase.NamedExec("DELETE FROM "+repo.tableNameInterests+" WHERE userid = :userid", profile)
+	_, err = repo.dataBase.NamedExec("DELETE FROM "+repo.tableNameInterests+" WHERE userid=:userid", profile)
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "delete interests failed")
 	}
@@ -95,22 +94,8 @@ func (repo *ProfilePostgres) Delete(profileId int) (err error) {
 	return
 }
 
-func (repo *ProfilePostgres) Add(profile models.Profile) (err error) {
-	_, err = repo.dataBase.NamedExec("INSERT INTO "+repo.tableNameProfiles+" (firstname, lastname, birthday, city, aboutuser, userid, gender, height) VALUES (:firstname, :lastname, :birthday, :city, :aboutuser, :userid, :gender, :height)", profile)
-	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "insert profile failed")
-	}
-	for _, val := range profile.Interests {
-		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameInterests+" (userid, interests) VALUES ($1, $2)", profile.UserId, val)
-		if err != nil {
-			return handlers.ErrBaseApp.Wrap(err, "insert interests failed")
-		}
-	}
-	return
-}
-
 func (repo *ProfilePostgres) AddEmpty(profileId int) (err error) {
-	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameProfiles+"(userid) VALUES ($1)", profileId)
+	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameProfiles+" (userid) VALUES ($1)", profileId)
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "insert empty profile failed")
 	}

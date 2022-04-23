@@ -67,7 +67,6 @@ func SetValidators() {
 		if anniversary.After(today) {
 			age--
 		}
-
 		return nil
 	})
 	validator.SetValidationFunc("password", func(val interface{}, _ string) error {

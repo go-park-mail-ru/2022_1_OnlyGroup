@@ -9,7 +9,6 @@ type ProfileRepository interface {
 	GetShort(profileId int) (shortProfile models.ShortProfile, err error)
 	Change(profileId int, profile models.Profile) (err error)
 	Delete(profileId int) (err error)
-	Add(profile models.Profile) (err error)
 	CheckFiled(profileId int) (err error)
 	AddEmpty(profileId int) (err error)
 
