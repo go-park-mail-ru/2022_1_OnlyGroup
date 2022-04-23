@@ -20,7 +20,7 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 		"UserId     bigserial unique references " + tableNameUsers + "(id),\n" +
 		"FirstName   varchar(32) default '',\n" +
 		"LastName   text default '',\n" +
-		"Birthday   varchar(32) default '',\n" +
+		"Birthday   timestamp,\n" +
 		"City       varchar(32) default '',\n" +
 		"AboutUser  text default '',\n" +
 		"Height     numeric default 0,\n" +
