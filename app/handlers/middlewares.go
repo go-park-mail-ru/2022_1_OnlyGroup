@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"2022_1_OnlyGroup_back/app/usecases"
+	"2022_1_OnlyGroup_back/pkg/csrf"
 	"context"
 	"errors"
 	"github.com/google/uuid"
@@ -18,10 +19,12 @@ type Middlewares interface {
 	PanicMiddleware(next http.Handler) http.Handler
 	CheckAuthMiddleware(next http.Handler) http.Handler
 	CorsMiddleware(next http.Handler) http.Handler
+	CSRFMiddleware(next http.Handler) http.Handler
 }
 
 type MiddlewaresImpl struct {
 	AuthUseCase usecases.AuthUseCases
+	JwtConf     csrf.CsrfGenerator
 }
 
 func (impl MiddlewaresImpl) AccessLogMiddleware(next http.Handler) http.Handler {
@@ -87,6 +90,35 @@ func (imlp MiddlewaresImpl) CorsMiddleware(next http.Handler) http.Handler {
 		w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		w.Header().Add("Access-Control-Allow-Credentials", "true")
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (imlp MiddlewaresImpl) CSRFMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		csrfToken := r.Header.Get("X-CSRF-TOKEN")
+		if len(csrfToken) == 0 {
+			http.Error(w, ErrBadCSRF.String(), ErrBadCSRF.Code)
+			return
+		}
+		ctx := r.Context()
+		cookieId, ok := ctx.Value(userIdContextKey).(int)
+		if !ok {
+			appErr := ErrBaseApp.LogServerError(r.Context().Value(requestIdContextKey))
+			http.Error(w, appErr.String(), appErr.Code)
+			return
+		}
+		cookie, err := r.Cookie(authCookie)
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Error(w, ErrAuthRequired.String(), ErrAuthRequired.Code)
+			return
+		}
+		err = imlp.JwtConf.Check(cookie.Value, cookieId, r.URL.String(), csrfToken)
+		if err != nil {
+			appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
+			http.Error(w, appErr.String(), appErr.Code)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

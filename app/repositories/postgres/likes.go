@@ -23,7 +23,6 @@ func NewLikesPostgres(dataBase *sqlx.DB, tableNameLikes string, tableNameUsers s
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}
-
 	return &LikesPostgres{dataBase: dataBase, tableNameLikes: tableNameLikes, tableNameUsers: tableNameUsers}, nil
 }
 
