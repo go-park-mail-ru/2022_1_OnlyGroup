@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
+	randomGenerator "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 	"database/sql"
 	"github.com/jackc/pgx/v4"
 	"github.com/jmoiron/sqlx"
@@ -33,16 +34,16 @@ func (suite *creatingRepoTestSuite) AfterTest() {
 }
 
 func (suite *creatingRepoTestSuite) TestOk() {
-	suite.dbMock.ExpectExec("CREATE TABLE IF NOT EXISTS test_name(id bigserial primary key, email varchar(128) unique, password varchar(32));").WillReturnResult(sqlmock.NewResult(0, 0))
-	_, err := NewPostgresUsersRepo(suite.db, "test_name")
+	suite.dbMock.ExpectExec("CREATE TABLE IF NOT EXISTS test_name(id bigserial primary key, email varchar(128) unique, password varchar(128));").WillReturnResult(sqlmock.NewResult(0, 0))
+	_, err := NewPostgresUsersRepo(suite.db, "test_name", randomGenerator.NewCryptoRandomGenerator())
 	if !errors.Is(err, nil) {
 		suite.T().Errorf("Wrapped error mismatched, expected: '%v', got '%v'", nil, err)
 	}
 }
 
 func (suite *creatingRepoTestSuite) TestDBError() {
-	suite.dbMock.ExpectExec("CREATE TABLE IF NOT EXISTS test_name(id bigserial primary key, email varchar(128) unique, password varchar(32));").WillReturnResult(sqlmock.NewResult(0, 0)).WillReturnError(postgresError)
-	_, err := NewPostgresUsersRepo(suite.db, "test_name")
+	suite.dbMock.ExpectExec("CREATE TABLE IF NOT EXISTS test_name(id bigserial primary key, email varchar(128) unique, password varchar(128));").WillReturnResult(sqlmock.NewResult(0, 0)).WillReturnError(postgresError)
+	_, err := NewPostgresUsersRepo(suite.db, "test_name", randomGenerator.NewCryptoRandomGenerator())
 	if !errors.Is(err, postgresError) {
 		suite.T().Errorf("Wrapped error mismatched, expected: '%v', got '%v'", postgresError, err)
 	}
@@ -104,7 +105,7 @@ func TestAddUserTableDriven(t *testing.T) {
 			if err != nil {
 				panic("creating mock failed")
 			}
-			testingRepo := postgresUsersRepository{db, test.testUserTable}
+			testingRepo := postgresUsersRepository{db, randomGenerator.NewCryptoRandomGenerator(), test.testUserTable}
 			test.mockPrepare(&dbMock)
 			userIdReturned, err := testingRepo.AddUser(test.testEmail, test.testPass)
 
@@ -180,7 +181,7 @@ func TestAuthTableDriven(t *testing.T) {
 			if err != nil {
 				panic("creating mock failed")
 			}
-			testingRepo := postgresUsersRepository{db, test.testUserTable}
+			testingRepo := postgresUsersRepository{db, randomGenerator.NewCryptoRandomGenerator(), test.testUserTable}
 			test.mockPrepare(&dbMock)
 			userIdReturned, err := testingRepo.Authorize(test.testEmail, test.testPass)
 
@@ -241,7 +242,7 @@ func TestChangePswdTableDriven(t *testing.T) {
 			if err != nil {
 				panic("creating mock failed")
 			}
-			testingRepo := postgresUsersRepository{db, test.testUserTable}
+			testingRepo := postgresUsersRepository{db, randomGenerator.NewCryptoRandomGenerator(), test.testUserTable}
 			test.mockPrepare(&dbMock)
 			err = testingRepo.ChangePassword(test.testUserId, test.testNewPass)
 

@@ -2,7 +2,8 @@ package mock
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
-	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
+	"2022_1_OnlyGroup_back/pkg/randomGenerator"
+	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 )
 
 type sessionData struct {
@@ -12,15 +13,18 @@ type sessionData struct {
 
 type SessionsMock struct {
 	sessionTable    map[string]sessionData
-	secretGenerator sessionGenerator.SessionGenerator
+	secretGenerator randomGenerator.RandomGenerator
 }
 
 func NewSessionsMock() *SessionsMock {
-	return &SessionsMock{sessionTable: map[string]sessionData{}, secretGenerator: sessionGenerator.NewRandomGenerator()}
+	return &SessionsMock{sessionTable: map[string]sessionData{}, secretGenerator: impl3.NewMathRandomGenerator()}
 }
 
 func (tables *SessionsMock) Add(id int, additionalData string) (string, error) {
-	secret := tables.secretGenerator.String(hashSize)
+	secret, err := tables.secretGenerator.String(hashSize)
+	if err != nil {
+		return "", err
+	}
 
 	tables.sessionTable[secret] = sessionData{userID: id, additionalData: additionalData}
 	return secret, nil

@@ -2,7 +2,7 @@ package redis
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
-	"2022_1_OnlyGroup_back/pkg/sessionGenerator"
+	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 	"errors"
 	"github.com/go-redis/redis/v8"
 	"github.com/go-redis/redismock/v8"
@@ -56,7 +56,7 @@ func TestAddSessionTableDriven(t *testing.T) {
 		t.Run(test.testName, func(t *testing.T) {
 			client, mock := redismock.NewClientMock()
 			test.mockPrepare(mock)
-			testingRepo := NewRedisSessionRepository(client, "test", sessionGenerator.NewRandomGenerator())
+			testingRepo := NewRedisSessionRepository(client, "test", impl3.NewMathRandomGenerator())
 			_, err := testingRepo.addSessionInternal(test.id, test.additionalData, test.generatedSecret)
 			err1 := mock.ExpectationsWereMet()
 			if !errors.Is(err, test.expectedError) {
@@ -127,7 +127,7 @@ func TestGetSessionTableDriven(t *testing.T) {
 		t.Run(test.testName, func(t *testing.T) {
 			client, mock := redismock.NewClientMock()
 			test.mockPrepare(mock)
-			testingRepo := NewRedisSessionRepository(client, "test", sessionGenerator.NewRandomGenerator())
+			testingRepo := NewRedisSessionRepository(client, "test", impl3.NewMathRandomGenerator())
 			id, data, err := testingRepo.Get(test.secret)
 			err1 := mock.ExpectationsWereMet()
 			if !errors.Is(err, test.expectedError) {
@@ -182,7 +182,7 @@ func TestRemoveSessionTableDriven(t *testing.T) {
 		t.Run(test.testName, func(t *testing.T) {
 			client, mock := redismock.NewClientMock()
 			test.mockPrepare(mock)
-			testingRepo := NewRedisSessionRepository(client, "test", sessionGenerator.NewRandomGenerator())
+			testingRepo := NewRedisSessionRepository(client, "test", impl3.NewMathRandomGenerator())
 			err := testingRepo.Remove(test.secret)
 			err1 := mock.ExpectationsWereMet()
 			if !errors.Is(err, test.expectedError) {
