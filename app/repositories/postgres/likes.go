@@ -23,6 +23,7 @@ func NewLikesPostgres(dataBase *sqlx.DB, tableNameLikes string, tableNameUsers s
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}
+
 	return &LikesPostgres{dataBase: dataBase, tableNameLikes: tableNameLikes, tableNameUsers: tableNameUsers}, nil
 }
 
@@ -38,16 +39,18 @@ func (repo *LikesPostgres) SetAction(profileId int, likes models.Likes) (err err
 			switch pgErr.Code {
 			case pgerrcode.ForeignKeyViolation:
 				return handlers.ErrBadRequest
-			case pgerrcode.NoData:
+			default:
 				return handlers.ErrBaseApp
 			}
+		} else {
+			return handlers.ErrBaseApp
 		}
 	}
 	return
 }
 
 func (repo *LikesPostgres) GetMatched(profileId int) (likesVector models.LikesMatched, err error) {
-	err = repo.dataBase.Select(&likesVector.VectorId, "select l1.whom from "+repo.tableNameLikes+" as l1 join "+repo.tableNameLikes+" as l2 on l1.whom = l2.who and l1.action=1 where l1.who=l2.whom and l2.action=1 and l1.who=$1", profileId)
+	err = repo.dataBase.Select(&likesVector.VectorId, "select l1.whom from "+repo.tableNameLikes+" as l1 join likes as l2 on l1.whom = l2.who and l1.action=1 where l1.who=l2.whom and l2.action=1 and l1.who=$1", profileId)
 	if err != nil {
 		return likesVector, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}
