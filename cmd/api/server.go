@@ -6,10 +6,10 @@ import (
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
 	_ "2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
-	impl4 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
-	impl3 "2022_1_OnlyGroup_back/pkg/csrf/impl"
+	csrf "2022_1_OnlyGroup_back/pkg/csrf/impl"
 	"2022_1_OnlyGroup_back/pkg/dataValidator"
-	impl2 "2022_1_OnlyGroup_back/pkg/fileService/impl"
+	fileService "2022_1_OnlyGroup_back/pkg/fileService/impl"
+	randomGenerator "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 	"context"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
@@ -63,7 +63,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	//repositories
-	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, impl4.NewCryptoRandomGenerator())
+	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, randomGenerator.NewCryptoRandomGenerator())
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -72,7 +72,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	//jwtToken
-	jwt := impl3.NewJwtTokenGenerator("поменяй здесь генерацию", conf.CSRFConf.TimeToLife)
+	jwt := csrf.NewJwtTokenGenerator("поменяй здесь генерацию", conf.CSRFConf.TimeToLife)
 	//useCases
 	photosRepo, err := postgres.NewPostgresPhotoRepository(postgresConnect, conf.PostgresConf.PhotosDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.AvatarDbTableName)
 	if err != nil {
@@ -83,7 +83,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, impl4.NewMathRandomGenerator())
+	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, randomGenerator.NewMathRandomGenerator())
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
@@ -92,7 +92,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	photosUseCase := impl.NewPhotosUseCase(photosRepo)
 
 	//fileService
-	photosService, err := impl2.NewFileServicePhotos(conf.PhotosStorageDirectory)
+	photosService, err := fileService.NewFileServicePhotos(conf.PhotosStorageDirectory)
 	if err != nil {
 		return APIServer{}, err
 	}
