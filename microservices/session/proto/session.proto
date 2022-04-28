@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+// protoc --go_out=. --go-grpc_opt=require_unimplemented_servers=false --go-grpc_out=. *.proto
+
+package session;
+
+option go_package = "/;proto";
+
+message UserID {
+  int64 id = 1;
+}
+
+message UserAuthInfo {
+  string email = 1;
+  string password = 2;
+}
+
+message UserChangePsd {
+  int64 id       = 1;
+  string NewPassword = 2;
+}
+
+message SessionSecret {
+  string cookie = 1;
+}
+
+message UserIdWithAdditionalData {
+  int64 id = 1;
+  string additionalData = 2;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+service Auth {
+  rpc Add (UserIdWithAdditionalData) returns (SessionSecret);
+  rpc Get (SessionSecret) returns (UserIdWithAdditionalData);
+  rpc Remove(SessionSecret) returns (Nothing);
+  rpc AddUser (UserAuthInfo) returns (UserID);
+  rpc Authorize (UserAuthInfo) returns (UserID);
+  rpc ChangePassword (UserChangePsd) returns (Nothing);
+}
