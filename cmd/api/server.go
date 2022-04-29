@@ -27,8 +27,8 @@ const UrlProfileCandidatesPostfix = "/profiles/candidates"
 const UrlPhotosPostfix = "/photos"
 const UrlPhotosIdPostfix = "/photos/{id:[0-9]+}"
 const UrlPhotosIdParamsPostfix = "/photos/{id:[0-9]+}/params"
-const UrlProfilePhotosPostfix = "/profile/{id:[0-9]+}/photos"
-const UrlProfilePhotosAvatarPostfix = "/profile/{id:[0-9]+}/photos/avatar"
+const UrlProfilePhotosPostfix = "/profiles/{id:[0-9]+}/photos"
+const UrlProfilePhotosAvatarPostfix = "/profiles/{id:[0-9]+}/photos/avatar"
 
 const UrlLikesPostfix = "/likes"
 
