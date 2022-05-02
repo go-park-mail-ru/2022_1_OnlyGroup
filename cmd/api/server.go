@@ -133,14 +133,22 @@ func (serv *APIServer) Run() error {
 	multiplexor.Use(serv.middlewares.PanicMiddleware)
 	//cors middlewares
 	multiplexor.Use(serv.middlewares.CorsMiddleware)
-	//cors
-	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
-	//auth
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
 	//multiplexor with auth
 	multiplexorWithAuth := multiplexor.PathPrefix("").Subrouter()
 	//auth middleware
 	multiplexorWithAuth.Use(serv.middlewares.CheckAuthMiddleware)
+	//csrf multiplexor
+	multiplexorWithCsrf := multiplexorWithAuth.PathPrefix("").Subrouter()
+	//CSRF middleware
+	if serv.conf.CSRFConf.Enable {
+		multiplexorWithCsrf.Use(serv.middlewares.CSRFMiddleware)
+	}
+	//cors
+	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
+	//auth
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
 	//profile methods
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
@@ -150,28 +158,22 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotos, serv.photosHandler.GETAll).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
 
-	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
-
-	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
 	//likes
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
 	//profile
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexorWithAuth.HandleFunc(UrlCSRF, serv.jwtHandler.PostCSRF).Methods(http.MethodPost)
-	//csrf multiplexor
-	multiplexorWithCsrf := multiplexorWithAuth.PathPrefix("").Subrouter()
-	//CSRF middleware
-	multiplexorWithCsrf.Use(serv.middlewares.CSRFMiddleware)
+
+	//photos with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 	//likes with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
 	//profile with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)
-	multiplexorWithAuth.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
+	multiplexorWithCsrf.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//users with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
-	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
-	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
 	//photos with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlPhotos, serv.photosHandler.POST).Methods(http.MethodPost)
 	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.POSTPhoto).Methods(http.MethodPost)

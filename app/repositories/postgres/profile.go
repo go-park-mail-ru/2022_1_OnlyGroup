@@ -18,9 +18,9 @@ const sizeVectorCandidates = 3
 func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string, tableNameInterests string) (*ProfilePostgres, error) {
 	_, err := dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameProfile + "(" +
 		"UserId     bigserial unique references " + tableNameUsers + "(id),\n" +
-		"FirstName   varchar(32) default '',\n" +
+		"FirstName  varchar(32) default '',\n" +
 		"LastName   text default '',\n" +
-		"Birthday   timestamp,\n" +
+		"Birthday   timestamp default now(),\n" +
 		"City       varchar(32) default '',\n" +
 		"AboutUser  text default '',\n" +
 		"Height     numeric default 0,\n" +
@@ -146,7 +146,7 @@ func (repo *ProfilePostgres) CheckFiled(profileId int) (err error) {
 		profile.City == "" ||
 		profile.LastName == "" ||
 		profile.AboutUser == "" ||
-		profile.Birthday == "" ||
+		//profile.Birthday == "" ||
 		len(profile.Interests) == 0 ||
 		profile.FirstName == "" {
 		return handlers.ErrProfileNotFiled

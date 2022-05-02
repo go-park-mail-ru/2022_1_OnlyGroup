@@ -21,7 +21,6 @@ func sanitizeProfileModel(profile *models.Profile) {
 	for idx, value := range profile.Interests {
 		profile.Interests[idx] = sanitizer.Sanitize(value)
 	}
-	profile.Birthday = sanitizer.Sanitize(profile.Birthday)
 	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
 	profile.AboutUser = sanitizer.Sanitize(profile.AboutUser)
 	profile.LastName = sanitizer.Sanitize(profile.LastName)
