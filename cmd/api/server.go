@@ -28,8 +28,8 @@ const UrlCSRFPostfix = "/csrf"
 const UrlPhotosPostfix = "/photos"
 const UrlPhotosIdPostfix = "/photos/{id:[0-9]+}"
 const UrlPhotosIdParamsPostfix = "/photos/{id:[0-9]+}/params"
-const UrlProfilePhotosPostfix = "/profile/{id:[0-9]+}/photos"
-const UrlProfilePhotosAvatarPostfix = "/profile/{id:[0-9]+}/photos/avatar"
+const UrlProfilePhotosPostfix = "/profiles/{id:[0-9]+}/photos"
+const UrlProfilePhotosAvatarPostfix = "/profiles/{id:[0-9]+}/photos/avatar"
 
 const UrlLikesPostfix = "/likes"
 const UrlInterestsPostfix = "/interests"
@@ -67,6 +67,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	}
 	//repositories
 	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, randomGenerator.NewCryptoRandomGenerator())
+
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -91,6 +92,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, randomGenerator.NewMathRandomGenerator())
+
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
@@ -172,6 +174,7 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlInterests, serv.interestsHandler.Get).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlInterestsStrParamsPostfix, serv.interestsHandler.GetDynamic).Methods(http.MethodGet)
 	//likes
+	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
 	//profile
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
