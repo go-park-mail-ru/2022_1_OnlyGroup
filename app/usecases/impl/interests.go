@@ -22,6 +22,14 @@ func (useCase *interestsUseCaseImpl) Get() ([]models.Interest, error) {
 	return interests, nil
 }
 
+func (useCase *interestsUseCaseImpl) GetDynamic(interest string) ([]models.Interest, error) {
+	findInterests, err := useCase.interestsRepo.GetDynamicInterest(interest)
+	if err != nil {
+		return nil, err
+	}
+	return findInterests, nil
+}
+
 func (useCase *interestsUseCaseImpl) Check([]models.Interest) error {
 
 	return nil

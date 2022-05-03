@@ -33,6 +33,7 @@ const UrlProfilePhotosAvatarPostfix = "/profile/{id:[0-9]+}/photos/avatar"
 
 const UrlLikesPostfix = "/likes"
 const UrlInterestsPostfix = "/interests"
+const UrlInterestsStrParamsPostfix = "/interests/{str}"
 
 type APIServer struct {
 	conf             APIServerConf
@@ -94,7 +95,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	dataValidator.SetValidators()
 	//useCases
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
-	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo)
+	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo, interestsRepo)
 	photosUseCase := impl.NewPhotosUseCase(photosRepo)
 	interestsUseCase := impl.NewInterestsUseCaseImpl(interestsRepo)
 
@@ -169,7 +170,7 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
 	//interests
 	multiplexorWithAuth.HandleFunc(UrlInterests, serv.interestsHandler.Get).Methods(http.MethodGet)
-
+	multiplexorWithAuth.HandleFunc(UrlInterestsStrParamsPostfix, serv.interestsHandler.GetDynamic).Methods(http.MethodGet)
 	//likes
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
 	//profile

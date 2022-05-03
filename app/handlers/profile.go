@@ -34,7 +34,6 @@ func sanitizeShortProfileModel(profile *models.ShortProfile) {
 }
 
 func getIdFromUrl(r *http.Request) (int, error) {
-
 	idFromUrl := mux.Vars(r)["id"]
 	checkIdFromUrl, _ := regexp.MatchString(patternInt, idFromUrl)
 	if !checkIdFromUrl {

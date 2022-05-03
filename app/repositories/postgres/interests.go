@@ -31,14 +31,23 @@ func (repo *InterestsPostgres) GetInterests() ([]models.Interest, error) {
 	return interests, nil
 }
 
+func (repo *InterestsPostgres) GetDynamicInterest(interest string) ([]models.Interest, error) {
+	var interests []models.Interest
+	err := repo.dataBase.Select(&interests, "select * from "+repo.staticInterests+" where title ILIKE $1;", "%"+interest+"%")
+	if err != nil {
+		return nil, handlers.ErrBaseApp.Wrap(err, "get interests failed")
+	}
+	return interests, nil
+}
+
 func (repo *InterestsPostgres) CheckInterests(interests []models.Interest) error {
-	var findStatus bool
+	var findStatus []bool
 	for _, val := range interests {
 		err := repo.dataBase.Select(&findStatus, "select exists(select * from "+repo.staticInterests+" where id = $1);", val.Id)
 		if err != nil {
 			return handlers.ErrBaseApp.Wrap(err, "failed check interests")
 		}
-		if !findStatus {
+		if !findStatus[0] {
 			return handlers.ErrBadRequest
 		}
 	}
