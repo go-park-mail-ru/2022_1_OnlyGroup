@@ -10,11 +10,12 @@ import (
 )
 
 type profileUseCaseImpl struct {
-	profileRepo repositories.ProfileRepository
+	profileRepo   repositories.ProfileRepository
+	interestsRepo repositories.InterestsRepository
 }
 
-func NewProfileUseCaseImpl(profileRepo repositories.ProfileRepository) *profileUseCaseImpl {
-	return &profileUseCaseImpl{profileRepo: profileRepo}
+func NewProfileUseCaseImpl(profileRepo repositories.ProfileRepository, interestsRepo repositories.InterestsRepository) *profileUseCaseImpl {
+	return &profileUseCaseImpl{profileRepo: profileRepo, interestsRepo: interestsRepo}
 }
 
 func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (profile models.Profile, err error) {
@@ -42,6 +43,10 @@ func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (prof
 func (useCase *profileUseCaseImpl) Change(profileId int, profile models.Profile) (err error) {
 	if profileId != profile.UserId {
 		return handlers.ErrProfileForbiddenChange
+	}
+	err = useCase.interestsRepo.CheckInterests(profile.Interests)
+	if err != nil {
+		return err
 	}
 	err = useCase.profileRepo.Change(profileId, profile)
 	return

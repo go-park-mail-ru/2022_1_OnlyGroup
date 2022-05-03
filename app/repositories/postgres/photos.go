@@ -20,7 +20,7 @@ func NewPostgresPhotoRepository(conn *sqlx.DB, photosTableName string, usersTabl
 	if err != nil {
 		return nil, fmt.Errorf("create table failed: %w", err)
 	}
-	_, err = conn.Exec("CREATE TABLE IF NOT EXISTS " + avatarTableName + "(user_id bigserial unique references " + usersTableName + "(id), photo_id bigserial unique references " + photosTableName + "(id), left_top_x smallint, left_top_t smallint, right_bottom_x smallint, right_bottom_y smallint);")
+	_, err = conn.Exec("CREATE TABLE IF NOT EXISTS " + avatarTableName + "(user_id bigserial unique references " + usersTableName + "(id), photo_id bigserial unique references " + photosTableName + "(id), left_top_x smallint, left_top_y smallint, right_bottom_x smallint, right_bottom_y smallint);")
 	if err != nil {
 		return nil, fmt.Errorf("create table failed: %w", err)
 	}

@@ -28,19 +28,22 @@ const UrlCSRFPostfix = "/csrf"
 const UrlPhotosPostfix = "/photos"
 const UrlPhotosIdPostfix = "/photos/{id:[0-9]+}"
 const UrlPhotosIdParamsPostfix = "/photos/{id:[0-9]+}/params"
-const UrlProfilePhotosPostfix = "/profile/{id:[0-9]+}/photos"
-const UrlProfilePhotosAvatarPostfix = "/profile/{id:[0-9]+}/photos/avatar"
+const UrlProfilePhotosPostfix = "/profiles/{id:[0-9]+}/photos"
+const UrlProfilePhotosAvatarPostfix = "/profiles/{id:[0-9]+}/photos/avatar"
 
 const UrlLikesPostfix = "/likes"
+const UrlInterestsPostfix = "/interests"
+const UrlInterestsStrParamsPostfix = "/interests/{str}"
 
 type APIServer struct {
-	conf           APIServerConf
-	authHandler    *handlers.AuthHandler
-	profileHandler *handlers.ProfileHandler
-	photosHandler  *handlers.PhotosHandler
-	likesHandler   *handlers.LikesHandler
-	middlewares    handlers.Middlewares
-	jwtHandler     *handlers.CSRFHandler
+	conf             APIServerConf
+	authHandler      *handlers.AuthHandler
+	profileHandler   *handlers.ProfileHandler
+	photosHandler    *handlers.PhotosHandler
+	likesHandler     *handlers.LikesHandler
+	interestsHandler *handlers.InterestsHandler
+	middlewares      handlers.Middlewares
+	jwtHandler       *handlers.CSRFHandler
 }
 
 func NewServer(conf APIServerConf) (APIServer, error) {
@@ -64,10 +67,15 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	}
 	//repositories
 	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, randomGenerator.NewCryptoRandomGenerator())
+
 	if err != nil {
 		return APIServer{}, err
 	}
-	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName)
+	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName)
+	if err != nil {
+		return APIServer{}, err
+	}
+	interestsRepo, err := postgres.NewInterestsPostgres(postgresConnect, conf.PostgresConf.StaticInterestsDbTableName)
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -84,12 +92,14 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, randomGenerator.NewMathRandomGenerator())
+
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
-	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo)
+	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo, interestsRepo)
 	photosUseCase := impl.NewPhotosUseCase(photosRepo)
+	interestsUseCase := impl.NewInterestsUseCaseImpl(interestsRepo)
 
 	//fileService
 	photosService, err := fileService.NewFileServicePhotos(conf.PhotosStorageDirectory)
@@ -99,13 +109,14 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	likeUseCase := impl.NewLikesUseCaseImpl(likesRepo)
 
 	return APIServer{
-		conf:           conf,
-		authHandler:    handlers.CreateAuthHandler(authUseCase),
-		profileHandler: handlers.CreateProfileHandler(profileUseCase),
-		jwtHandler:     handlers.CreateCSRFHandler(jwt),
-		photosHandler:  handlers.CreatePhotosHandler(photosUseCase, photosService),
-		likesHandler:   handlers.CreateLikesHandler(likeUseCase),
-		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
+		conf:             conf,
+		authHandler:      handlers.CreateAuthHandler(authUseCase),
+		profileHandler:   handlers.CreateProfileHandler(profileUseCase),
+		jwtHandler:       handlers.CreateCSRFHandler(jwt),
+		photosHandler:    handlers.CreatePhotosHandler(photosUseCase, photosService),
+		likesHandler:     handlers.CreateLikesHandler(likeUseCase),
+		interestsHandler: handlers.CreateInterestsHandler(interestsUseCase),
+		middlewares:      handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
 	}, nil
 }
 
@@ -125,6 +136,8 @@ func (serv *APIServer) Run() error {
 	UrlProfilePhotos := serv.conf.ApiPathPrefix + UrlProfilePhotosPostfix
 	UrlProfilePhotosAvatar := serv.conf.ApiPathPrefix + UrlProfilePhotosAvatarPostfix
 	UrlLikes := serv.conf.ApiPathPrefix + UrlLikesPostfix
+	UrlInterests := serv.conf.ApiPathPrefix + UrlInterestsPostfix
+
 	//main multiplexor
 	multiplexor := mux.NewRouter()
 	//log middleware
@@ -157,8 +170,11 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlPhotosIdParams, serv.photosHandler.GETParams).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotos, serv.photosHandler.GETAll).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
-
+	//interests
+	multiplexorWithAuth.HandleFunc(UrlInterests, serv.interestsHandler.Get).Methods(http.MethodGet)
+	multiplexorWithAuth.HandleFunc(UrlInterestsStrParamsPostfix, serv.interestsHandler.GetDynamic).Methods(http.MethodGet)
 	//likes
+	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
 	//profile
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)

@@ -9,18 +9,19 @@ import (
 const defaultWriteFilePerm = 0644
 
 type PostgresConnectConf struct {
-	Username             string
-	Password             string
-	Address              string
-	Port                 string
-	DbName               string
-	Params               string
-	UsersDbTableName     string
-	ProfilesDbTableName  string
-	InterestsDbTableName string
-	PhotosDbTableName    string
-	AvatarDbTableName    string
-	LikesDbTableName     string
+	Username                   string
+	Password                   string
+	Address                    string
+	Port                       string
+	DbName                     string
+	Params                     string
+	UsersDbTableName           string
+	ProfilesDbTableName        string
+	InterestsDbTableName       string
+	StaticInterestsDbTableName string
+	PhotosDbTableName          string
+	AvatarDbTableName          string
+	LikesDbTableName           string
 }
 
 type RedisConnectConf struct {
@@ -61,18 +62,19 @@ var ApiServerDefaultConf = APIServerConf{
 		SessionsPrefix: "os_sessions",
 	},
 	PostgresConf: PostgresConnectConf{
-		Username:             "postgres",
-		Password:             "postgres",
-		Address:              "localhost",
-		Port:                 "5432",
-		DbName:               "postgres",
-		Params:               "",
-		UsersDbTableName:     "os_users",
-		ProfilesDbTableName:  "os_profiles",
-		InterestsDbTableName: "os_interests",
-		PhotosDbTableName:    "os_photos",
-		AvatarDbTableName:    "os_avatars",
-		LikesDbTableName:     "os_likes",
+		Username:                   "postgres",
+		Password:                   "postgres",
+		Address:                    "localhost",
+		Port:                       "5432",
+		DbName:                     "postgres",
+		Params:                     "",
+		UsersDbTableName:           "os_users",
+		ProfilesDbTableName:        "os_profiles",
+		InterestsDbTableName:       "os_interests",
+		StaticInterestsDbTableName: "os_staticInterests",
+		PhotosDbTableName:          "os_photos",
+		AvatarDbTableName:          "os_avatars",
+		LikesDbTableName:           "os_likes",
 	},
 	CSRFConf: JwtConf{
 		Enable:     false,
