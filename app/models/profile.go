@@ -13,7 +13,7 @@ type Profile struct {
 	LastName  string     `json:",omitempty" validate:"min=0,max=40,regexp=^[a-zA-Z]*$"`
 	Birthday  *time.Time `json:",omitempty" validate:"birthday"`
 	City      string     `json:",omitempty" validate:"min=0,max=32,regexp=^[a-zA-Z]*$"`
-	Interests []string   `json:",omitempty" validate:"interests"`
+	Interests []Interest `json:",omitempty"` //validate:"interests"
 	AboutUser string     `json:",omitempty" validate:"min=0,max=256"`
 	UserId    int        `validate:"min=0"`
 	Gender    int        `validate:"min=0, max=1"`
@@ -29,4 +29,9 @@ type ShortProfile struct {
 
 type VectorCandidate struct {
 	Candidates []int
+}
+
+type Interest struct {
+	Id    int    `json:",omitempty"`
+	Title string `json:",omitempty"`
 }

@@ -19,7 +19,7 @@ const patternInt = "^[0-9]+$"
 func sanitizeProfileModel(profile *models.Profile) {
 	sanitizer := bluemonday.UGCPolicy()
 	for idx, value := range profile.Interests {
-		profile.Interests[idx] = sanitizer.Sanitize(value)
+		profile.Interests[idx].Title = sanitizer.Sanitize(value.Title)
 	}
 	profile.FirstName = sanitizer.Sanitize(profile.FirstName)
 	profile.AboutUser = sanitizer.Sanitize(profile.AboutUser)
