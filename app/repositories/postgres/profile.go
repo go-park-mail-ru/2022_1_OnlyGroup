@@ -18,7 +18,7 @@ const sizeVectorCandidates = 3
 
 func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string, tableNameInterests string, tableStaticInterests string, tableFilters string) (*ProfilePostgres, error) {
 	_, err := dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameProfile + "(" +
-		"UserId     bigserial unique references " + tableNameUsers + "(id),\n" +
+		"UserId     bigserial unique primary key references " + tableNameUsers + "(id),\n" +
 		"FirstName  varchar(32) default '',\n" +
 		"LastName   text default '',\n" +
 		"Birthday   timestamp default now(),\n" +
@@ -31,26 +31,26 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 	}
 
 	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableStaticInterests + "(" +
-		"id bigserial,\n" +
+		"id bigserial unique primary key,\n" +
 		"title varchar(32));")
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
 	}
 
 	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameInterests + "(" +
-		"UserId bigserial unique references " + tableNameProfile + "(UserId),\n" +
-		"UserId bigserial references " + tableStaticInterests + "(UserId));")
+		"UserId bigserial references " + tableNameUsers + "(id),\n" +
+		"Id bigserial references " + tableStaticInterests + "(id));")
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
 	}
 
 	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableFilters + "(" +
 		"UserId bigserial unique references " + tableNameProfile + "(UserId),\n" +
-		"BottomHeightFilter	numeric,\n" +
-		"TopHeightFilter	numeric,\n" +
-		"GenderFilter   numeric,\n" +
-		"BottomAgeFilter	numeric,\n" +
-		"TopAgeFilter numeric);")
+		"BottomHeightFilter	numeric default 0,\n" +
+		"TopHeightFilter	numeric default 0,\n" +
+		"GenderFilter   numeric default 0,\n" +
+		"BottomAgeFilter	numeric default 0,\n" +
+		"TopAgeFilter numeric default 0);")
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
 	}
