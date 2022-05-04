@@ -13,7 +13,7 @@ type Profile struct {
 	LastName  string     `json:",omitempty" validate:"min=0,max=40,regexp=^[a-zA-Z]*$"`
 	Birthday  *time.Time `json:",omitempty" validate:"birthday"`
 	City      string     `json:",omitempty" validate:"min=0,max=32,regexp=^[a-zA-Z]*$"`
-	Interests []Interest `json:",omitempty"` //validate:"interests"
+	Interests []Interest `json:",omitempty"`
 	AboutUser string     `json:",omitempty" validate:"min=0,max=256"`
 	UserId    int        `validate:"min=0"`
 	Gender    int        `validate:"min=0, max=1"`

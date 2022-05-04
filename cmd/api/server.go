@@ -35,6 +35,8 @@ const UrlLikesPostfix = "/likes"
 const UrlInterestsPostfix = "/interests"
 const UrlInterestsStrParamsPostfix = "/interests/{str}"
 
+const UrlFiltersPostfix = "/filters"
+
 type APIServer struct {
 	conf             APIServerConf
 	authHandler      *handlers.AuthHandler
@@ -44,6 +46,7 @@ type APIServer struct {
 	interestsHandler *handlers.InterestsHandler
 	middlewares      handlers.Middlewares
 	jwtHandler       *handlers.CSRFHandler
+	filtersHandler   *handlers.FiltersHandler
 }
 
 func NewServer(conf APIServerConf) (APIServer, error) {
@@ -71,11 +74,10 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName)
+	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName)
 	if err != nil {
 		return APIServer{}, err
 	}
-	interestsRepo, err := postgres.NewInterestsPostgres(postgresConnect, conf.PostgresConf.StaticInterestsDbTableName)
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -97,9 +99,8 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	dataValidator.SetValidators()
 	//useCases
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
-	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo, interestsRepo)
+	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo)
 	photosUseCase := impl.NewPhotosUseCase(photosRepo)
-	interestsUseCase := impl.NewInterestsUseCaseImpl(interestsRepo)
 
 	//fileService
 	photosService, err := fileService.NewFileServicePhotos(conf.PhotosStorageDirectory)
@@ -115,8 +116,9 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		jwtHandler:       handlers.CreateCSRFHandler(jwt),
 		photosHandler:    handlers.CreatePhotosHandler(photosUseCase, photosService),
 		likesHandler:     handlers.CreateLikesHandler(likeUseCase),
-		interestsHandler: handlers.CreateInterestsHandler(interestsUseCase),
+		interestsHandler: handlers.CreateInterestsHandler(profileUseCase),
 		middlewares:      handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
+		filtersHandler:   handlers.CreateFiltersHandler(profileUseCase),
 	}, nil
 }
 
@@ -137,6 +139,7 @@ func (serv *APIServer) Run() error {
 	UrlProfilePhotosAvatar := serv.conf.ApiPathPrefix + UrlProfilePhotosAvatarPostfix
 	UrlLikes := serv.conf.ApiPathPrefix + UrlLikesPostfix
 	UrlInterests := serv.conf.ApiPathPrefix + UrlInterestsPostfix
+	UrlFilters := serv.conf.ApiPathPrefix + UrlFiltersPostfix
 
 	//main multiplexor
 	multiplexor := mux.NewRouter()
@@ -180,6 +183,7 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexorWithAuth.HandleFunc(UrlCSRF, serv.jwtHandler.PostCSRF).Methods(http.MethodPost)
+	multiplexorWithCsrf.HandleFunc(UrlFilters, serv.filtersHandler.Get).Methods(http.MethodGet)
 
 	//photos with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
@@ -196,6 +200,8 @@ func (serv *APIServer) Run() error {
 	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.DELETE).Methods(http.MethodDelete)
 	multiplexorWithCsrf.HandleFunc(UrlPhotosIdParams, serv.photosHandler.PUTParams).Methods(http.MethodPut)
 	multiplexorWithCsrf.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
+	//filters with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlFilters, serv.filtersHandler.Put).Methods(http.MethodPut)
 
 	serverAddr := serv.conf.ServerAddr + ":" + serv.conf.ServerPort
 	server := http.Server{Addr: serverAddr, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}

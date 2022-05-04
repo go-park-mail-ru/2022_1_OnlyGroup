@@ -22,6 +22,7 @@ type PostgresConnectConf struct {
 	PhotosDbTableName          string
 	AvatarDbTableName          string
 	LikesDbTableName           string
+	FiltersDbTableName         string
 }
 
 type RedisConnectConf struct {
@@ -75,6 +76,7 @@ var ApiServerDefaultConf = APIServerConf{
 		PhotosDbTableName:          "os_photos",
 		AvatarDbTableName:          "os_avatars",
 		LikesDbTableName:           "os_likes",
+		FiltersDbTableName:         "os_filters",
 	},
 	CSRFConf: JwtConf{
 		Enable:     false,

@@ -22,16 +22,16 @@ func getStringFromUrl(r *http.Request) (string, error) {
 }
 
 type InterestsHandler struct {
-	InterestsUseCase usecases.InterestsUseCase
+	InterestsUseCase usecases.ProfileUseCases
 }
 
-func CreateInterestsHandler(useCase usecases.InterestsUseCase) *InterestsHandler {
+func CreateInterestsHandler(useCase usecases.ProfileUseCases) *InterestsHandler {
 	return &InterestsHandler{useCase}
 }
 
 func (handler *InterestsHandler) Get(w http.ResponseWriter, r *http.Request) {
 	var interests []models.Interest
-	interests, err := handler.InterestsUseCase.Get()
+	interests, err := handler.InterestsUseCase.GetInterest()
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
@@ -50,7 +50,7 @@ func (handler *InterestsHandler) Get(w http.ResponseWriter, r *http.Request) {
 func (handler *InterestsHandler) GetDynamic(w http.ResponseWriter, r *http.Request) {
 	var interests []models.Interest
 	str, err := getStringFromUrl(r)
-	interests, err = handler.InterestsUseCase.GetDynamic(str)
+	interests, err = handler.InterestsUseCase.GetDynamicInterests(str)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)

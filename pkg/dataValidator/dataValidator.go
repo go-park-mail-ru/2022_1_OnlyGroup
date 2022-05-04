@@ -11,22 +11,6 @@ import (
 )
 
 func SetValidators() {
-	validator.SetValidationFunc("interests", func(val interface{}, _ string) error {
-		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.Slice {
-			return validator.ErrUnsupported
-		}
-		if v.IsNil() {
-			return nil
-		}
-		nVal := val.([]string)
-		for _, value := range nVal {
-			if len(value) > models.InterestSize {
-				return validator.ErrLen
-			}
-		}
-		return nil
-	})
 	validator.SetValidationFunc("birthday", func(val interface{}, _ string) error {
 		v := reflect.ValueOf(val)
 		if v.Kind() != reflect.Struct {
