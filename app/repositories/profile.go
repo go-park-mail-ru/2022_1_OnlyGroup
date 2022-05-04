@@ -21,4 +21,7 @@ type ProfileRepository interface {
 	GetInterests() ([]models.Interest, error)
 	GetDynamicInterest(string) ([]models.Interest, error)
 	CheckInterests([]models.Interest) error
+
+	SetAction(profileId int, likes models.Likes) (err error)
+	GetMatched(profileId int) (likesVector models.LikesMatched, err error)
 }

@@ -105,3 +105,22 @@ func (useCase *profileUseCaseImpl) ChangeFilters(userId int, filters models.Filt
 	err := useCase.profileRepo.ChangeFilters(userId, filters)
 	return err
 }
+
+func (useCase *profileUseCaseImpl) SetAction(userid int, likes models.Likes) (err error) {
+	if userid == likes.Id {
+		return handlers.ErrBadRequest
+	}
+	err = useCase.profileRepo.SetAction(userid, likes)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (useCase *profileUseCaseImpl) GetMatched(userId int) (likesVector models.LikesMatched, err error) {
+	likesVector, err = useCase.profileRepo.GetMatched(userId)
+	if err != nil {
+		return
+	}
+	return
+}

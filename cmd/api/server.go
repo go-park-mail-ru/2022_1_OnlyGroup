@@ -74,7 +74,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName)
+	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -89,10 +89,6 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 
-	likesRepo, err := postgres.NewLikesPostgres(postgresConnect, conf.PostgresConf.LikesDbTableName, conf.PostgresConf.UsersDbTableName)
-	if err != nil {
-		return APIServer{}, err
-	}
 	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, randomGenerator.NewMathRandomGenerator())
 
 	//set validators
@@ -107,7 +103,6 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-	likeUseCase := impl.NewLikesUseCaseImpl(likesRepo)
 
 	return APIServer{
 		conf:             conf,
@@ -115,7 +110,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		profileHandler:   handlers.CreateProfileHandler(profileUseCase),
 		jwtHandler:       handlers.CreateCSRFHandler(jwt),
 		photosHandler:    handlers.CreatePhotosHandler(photosUseCase, photosService),
-		likesHandler:     handlers.CreateLikesHandler(likeUseCase),
+		likesHandler:     handlers.CreateLikesHandler(profileUseCase),
 		interestsHandler: handlers.CreateInterestsHandler(profileUseCase),
 		middlewares:      handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
 		filtersHandler:   handlers.CreateFiltersHandler(profileUseCase),

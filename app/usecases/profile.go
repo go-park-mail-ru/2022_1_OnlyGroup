@@ -16,4 +16,7 @@ type ProfileUseCases interface {
 
 	GetFilters(userId int) (models.Filters, error)
 	ChangeFilters(userId int, filters models.Filters) error
+
+	SetAction(userid int, likes models.Likes) (err error)
+	GetMatched(userId int) (likesVector models.LikesMatched, err error)
 }

@@ -65,4 +65,40 @@ func SetValidators() {
 
 		return nil
 	})
+	validator.SetValidationFunc("ageFilter", func(val interface{}, _ string) error {
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.Array {
+			return validator.ErrUnsupported
+		}
+		if v.IsZero() {
+			return nil
+		}
+		nVal := val.([2]int)
+
+		if len(nVal) > 2 || len(nVal) < 2 {
+			return validator.ErrLen
+		}
+		if nVal[0] < 18 || nVal[1] > 100 {
+			return validator.ErrRegexp
+		}
+		return nil
+	})
+	validator.SetValidationFunc("heightFilter", func(val interface{}, _ string) error {
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.Array {
+			return validator.ErrUnsupported
+		}
+		if v.IsZero() {
+			return nil
+		}
+		nVal := val.([2]int)
+
+		if len(nVal) > 2 || len(nVal) < 2 {
+			return validator.ErrLen
+		}
+		if nVal[0] < 50 || nVal[1] > 220 {
+			return validator.ErrRegexp
+		}
+		return nil
+	})
 }
