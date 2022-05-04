@@ -11,11 +11,11 @@ import (
 )
 
 type LikesHandler struct {
-	likesUseCase usecases.LikesUseCases
+	profileUseCase usecases.ProfileUseCases
 }
 
-func CreateLikesHandler(likesUseCase usecases.LikesUseCases) *LikesHandler {
-	return &LikesHandler{likesUseCase: likesUseCase}
+func CreateLikesHandler(likesUseCase usecases.ProfileUseCases) *LikesHandler {
+	return &LikesHandler{profileUseCase: likesUseCase}
 }
 
 func (handler *LikesHandler) Set(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,7 @@ func (handler *LikesHandler) Set(w http.ResponseWriter, r *http.Request) {
 	if err = validator.Validate(model); err != nil {
 		http.Error(w, ErrBadRequest.String(), ErrBadRequest.Code)
 	}
-	err = handler.likesUseCase.SetAction(cookieId, *model)
+	err = handler.profileUseCase.SetAction(cookieId, *model)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
@@ -59,7 +59,7 @@ func (handler *LikesHandler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, appErr.String(), appErr.Code)
 		return
 	}
-	model, err := handler.likesUseCase.GetMatched(cookieId)
+	model, err := handler.profileUseCase.GetMatched(cookieId)
 	if err != nil {
 		appErr := AppErrorFromError(err).LogServerError(r.Context().Value(requestIdContextKey))
 		http.Error(w, appErr.String(), appErr.Code)
