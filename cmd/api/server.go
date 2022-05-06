@@ -28,19 +28,25 @@ const UrlCSRFPostfix = "/csrf"
 const UrlPhotosPostfix = "/photos"
 const UrlPhotosIdPostfix = "/photos/{id:[0-9]+}"
 const UrlPhotosIdParamsPostfix = "/photos/{id:[0-9]+}/params"
-const UrlProfilePhotosPostfix = "/profile/{id:[0-9]+}/photos"
-const UrlProfilePhotosAvatarPostfix = "/profile/{id:[0-9]+}/photos/avatar"
+const UrlProfilePhotosPostfix = "/profiles/{id:[0-9]+}/photos"
+const UrlProfilePhotosAvatarPostfix = "/profiles/{id:[0-9]+}/photos/avatar"
 
 const UrlLikesPostfix = "/likes"
+const UrlInterestsPostfix = "/interests"
+const UrlInterestsStrParamsPostfix = "/interests/{str}"
+
+const UrlFiltersPostfix = "/filters"
 
 type APIServer struct {
-	conf           APIServerConf
-	authHandler    *handlers.AuthHandler
-	profileHandler *handlers.ProfileHandler
-	photosHandler  *handlers.PhotosHandler
-	likesHandler   *handlers.LikesHandler
-	middlewares    handlers.Middlewares
-	jwtHandler     *handlers.CSRFHandler
+	conf             APIServerConf
+	authHandler      *handlers.AuthHandler
+	profileHandler   *handlers.ProfileHandler
+	photosHandler    *handlers.PhotosHandler
+	likesHandler     *handlers.LikesHandler
+	interestsHandler *handlers.InterestsHandler
+	middlewares      handlers.Middlewares
+	jwtHandler       *handlers.CSRFHandler
+	filtersHandler   *handlers.FiltersHandler
 }
 
 func NewServer(conf APIServerConf) (APIServer, error) {
@@ -64,10 +70,14 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	}
 	//repositories
 	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, randomGenerator.NewCryptoRandomGenerator())
+
 	if err != nil {
 		return APIServer{}, err
 	}
-	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName)
+	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
+	if err != nil {
+		return APIServer{}, err
+	}
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -79,11 +89,8 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 		return APIServer{}, err
 	}
 
-	likesRepo, err := postgres.NewLikesPostgres(postgresConnect, conf.PostgresConf.LikesDbTableName, conf.PostgresConf.UsersDbTableName)
-	if err != nil {
-		return APIServer{}, err
-	}
 	sessionsRepo := redis_repo.NewRedisSessionRepository(redisConnect, conf.RedisConf.SessionsPrefix, randomGenerator.NewMathRandomGenerator())
+
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
@@ -96,16 +103,17 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
-	likeUseCase := impl.NewLikesUseCaseImpl(likesRepo)
 
 	return APIServer{
-		conf:           conf,
-		authHandler:    handlers.CreateAuthHandler(authUseCase),
-		profileHandler: handlers.CreateProfileHandler(profileUseCase),
-		jwtHandler:     handlers.CreateCSRFHandler(jwt),
-		photosHandler:  handlers.CreatePhotosHandler(photosUseCase, photosService),
-		likesHandler:   handlers.CreateLikesHandler(likeUseCase),
-		middlewares:    handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
+		conf:             conf,
+		authHandler:      handlers.CreateAuthHandler(authUseCase),
+		profileHandler:   handlers.CreateProfileHandler(profileUseCase),
+		jwtHandler:       handlers.CreateCSRFHandler(jwt),
+		photosHandler:    handlers.CreatePhotosHandler(photosUseCase, photosService),
+		likesHandler:     handlers.CreateLikesHandler(profileUseCase),
+		interestsHandler: handlers.CreateInterestsHandler(profileUseCase),
+		middlewares:      handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
+		filtersHandler:   handlers.CreateFiltersHandler(profileUseCase),
 	}, nil
 }
 
@@ -125,6 +133,9 @@ func (serv *APIServer) Run() error {
 	UrlProfilePhotos := serv.conf.ApiPathPrefix + UrlProfilePhotosPostfix
 	UrlProfilePhotosAvatar := serv.conf.ApiPathPrefix + UrlProfilePhotosAvatarPostfix
 	UrlLikes := serv.conf.ApiPathPrefix + UrlLikesPostfix
+	UrlInterests := serv.conf.ApiPathPrefix + UrlInterestsPostfix
+	UrlFilters := serv.conf.ApiPathPrefix + UrlFiltersPostfix
+
 	//main multiplexor
 	multiplexor := mux.NewRouter()
 	//log middleware
@@ -133,14 +144,22 @@ func (serv *APIServer) Run() error {
 	multiplexor.Use(serv.middlewares.PanicMiddleware)
 	//cors middlewares
 	multiplexor.Use(serv.middlewares.CorsMiddleware)
-	//cors
-	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
-	//auth
-	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
 	//multiplexor with auth
 	multiplexorWithAuth := multiplexor.PathPrefix("").Subrouter()
 	//auth middleware
 	multiplexorWithAuth.Use(serv.middlewares.CheckAuthMiddleware)
+	//csrf multiplexor
+	multiplexorWithCsrf := multiplexorWithAuth.PathPrefix("").Subrouter()
+	//CSRF middleware
+	if serv.conf.CSRFConf.Enable {
+		multiplexorWithCsrf.Use(serv.middlewares.CSRFMiddleware)
+	}
+	//cors
+	multiplexor.Methods(http.MethodOptions).HandlerFunc(Cors)
+	//auth
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.GET).Methods(http.MethodGet)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
+	multiplexor.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
 	//profile methods
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
@@ -149,35 +168,35 @@ func (serv *APIServer) Run() error {
 	multiplexorWithAuth.HandleFunc(UrlPhotosIdParams, serv.photosHandler.GETParams).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotos, serv.photosHandler.GETAll).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.GETAvatar).Methods(http.MethodGet)
-
-	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
-
-	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
+	//interests
+	multiplexorWithAuth.HandleFunc(UrlInterests, serv.interestsHandler.Get).Methods(http.MethodGet)
+	multiplexorWithAuth.HandleFunc(UrlInterestsStrParamsPostfix, serv.interestsHandler.GetDynamic).Methods(http.MethodGet)
 	//likes
+	multiplexorWithAuth.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 	multiplexorWithAuth.HandleFunc(UrlLikes, serv.likesHandler.Get).Methods(http.MethodGet)
 	//profile
 	multiplexorWithAuth.HandleFunc(UrlProfileId, serv.profileHandler.GetProfileHandler).Methods(http.MethodGet)
 	multiplexorWithAuth.HandleFunc(UrlProfileIdShort, serv.profileHandler.GetShortProfileHandler).Methods(http.MethodGet) ///дописать
 	multiplexorWithAuth.HandleFunc(UrlCSRF, serv.jwtHandler.PostCSRF).Methods(http.MethodPost)
-	//csrf multiplexor
-	multiplexorWithCsrf := multiplexorWithAuth.PathPrefix("").Subrouter()
-	//CSRF middleware
-	multiplexorWithCsrf.Use(serv.middlewares.CSRFMiddleware)
+	multiplexorWithCsrf.HandleFunc(UrlFilters, serv.filtersHandler.Get).Methods(http.MethodGet)
+
+	//photos with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
 	//likes with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlLikes, serv.likesHandler.Set).Methods(http.MethodPost)
 	//profile with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlProfileId, serv.profileHandler.ChangeProfileHandler).Methods(http.MethodPut)
-	multiplexorWithAuth.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
+	multiplexorWithCsrf.HandleFunc(UrlProfileCandidates, serv.profileHandler.GetCandidateHandler).Methods(http.MethodPost)
 	//users with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.DELETE).Methods(http.MethodDelete)
-	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.PUT).Methods(http.MethodPut)
-	multiplexorWithCsrf.HandleFunc(UrlUsers, serv.authHandler.POST).Methods(http.MethodPost)
 	//photos with CSRF
 	multiplexorWithCsrf.HandleFunc(UrlPhotos, serv.photosHandler.POST).Methods(http.MethodPost)
 	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.POSTPhoto).Methods(http.MethodPost)
 	multiplexorWithCsrf.HandleFunc(UrlPhotosId, serv.photosHandler.DELETE).Methods(http.MethodDelete)
 	multiplexorWithCsrf.HandleFunc(UrlPhotosIdParams, serv.photosHandler.PUTParams).Methods(http.MethodPut)
 	multiplexorWithCsrf.HandleFunc(UrlProfilePhotosAvatar, serv.photosHandler.PUTAvatar).Methods(http.MethodPut)
+	//filters with CSRF
+	multiplexorWithCsrf.HandleFunc(UrlFilters, serv.filtersHandler.Put).Methods(http.MethodPut)
 
 	serverAddr := serv.conf.ServerAddr + ":" + serv.conf.ServerPort
 	server := http.Server{Addr: serverAddr, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, Handler: multiplexor}

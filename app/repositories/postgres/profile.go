@@ -3,42 +3,70 @@ package postgres
 import (
 	"2022_1_OnlyGroup_back/app/handlers"
 	"2022_1_OnlyGroup_back/app/models"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 type ProfilePostgres struct {
-	dataBase           *sqlx.DB
-	tableNameProfiles  string
-	tableNameUsers     string
-	tableNameInterests string
+	dataBase             *sqlx.DB
+	tableNameProfiles    string
+	tableUserInterests   string
+	tableStaticInterests string
+	tableNameFilters     string
+	tableNameLikes       string
 }
 
 const sizeVectorCandidates = 3
 
-func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string, tableNameInterests string) (*ProfilePostgres, error) {
+func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string, tableNameInterests string, tableStaticInterests string, tableFilters string, tableLikes string) (*ProfilePostgres, error) {
 	_, err := dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameProfile + "(" +
-		"UserId     bigserial unique references " + tableNameUsers + "(id),\n" +
-		"FirstName   varchar(32) default '',\n" +
+		"UserId     bigserial unique,\n" +
+		"FirstName  varchar(32) default '',\n" +
 		"LastName   text default '',\n" +
-		"Birthday   timestamp,\n" +
+		"Birthday   timestamp default now(),\n" +
 		"City       varchar(32) default '',\n" +
 		"AboutUser  text default '',\n" +
 		"Height     numeric default 0,\n" +
 		"Gender     numeric default -1 );")
+	if err != nil {
+		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
+	}
 
+	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableStaticInterests + "(" +
+		"id bigserial unique primary key,\n" +
+		"title varchar(32));")
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
 	}
 
 	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameInterests + "(" +
-		"UserId bigserial references " + tableNameUsers + "(id)," +
-		"Interests varchar(32) default '');")
-
+		"UserId bigserial references " + tableNameProfile + "(UserId)  ON DELETE CASCADE,\n" +
+		"Id bigserial references " + tableStaticInterests + "(id) ON DELETE CASCADE);")
 	if err != nil {
 		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
 	}
 
-	return &ProfilePostgres{dataBase, tableNameProfile, tableNameUsers, tableNameInterests}, nil
+	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableFilters + "(" +
+		"UserId bigserial unique references " + tableNameProfile + "(UserId) ON DELETE CASCADE,\n" +
+		"BottomHeightFilter	numeric default 0,\n" +
+		"TopHeightFilter	numeric default 0,\n" +
+		"GenderFilter   numeric default 0,\n" +
+		"BottomAgeFilter	numeric default 0,\n" +
+		"TopAgeFilter numeric default 0);")
+	if err != nil {
+		return nil, handlers.ErrBaseApp.Wrap(err, "create table failed")
+	}
+	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableLikes + "(" +
+		"who     bigserial references " + tableNameProfile + "(UserId)  ON DELETE CASCADE,\n" +
+		"whom     bigserial references " + tableNameProfile + "(UserId)  ON DELETE CASCADE,\n" +
+		"action     numeric default -1);")
+	if err != nil {
+		return nil, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
+	}
+
+	return &ProfilePostgres{dataBase, tableNameProfile, tableNameInterests, tableStaticInterests, tableFilters, tableLikes}, nil
 }
 func (repo *ProfilePostgres) Get(profileId int) (profile models.Profile, err error) {
 	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, height,gender FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&profile)
@@ -46,8 +74,8 @@ func (repo *ProfilePostgres) Get(profileId int) (profile models.Profile, err err
 		return profile, handlers.ErrBaseApp.Wrap(err, "get profile failed")
 	}
 
-	var interests []string
-	err = repo.dataBase.Select(&interests, "SELECT interests FROM "+repo.tableNameInterests+" WHERE userid=$1", profileId)
+	var interests []models.Interest
+	err = repo.dataBase.Select(&interests, "select l2.id, l2.title from "+repo.tableUserInterests+" as l1 join "+repo.tableStaticInterests+" as l2 on l1.interestid = l2.id where userid = $1;", profileId)
 	if err != nil {
 		return profile, handlers.ErrBaseApp.Wrap(err, "get interests failed")
 	}
@@ -68,13 +96,13 @@ func (repo *ProfilePostgres) Change(profileId int, profile models.Profile) (err 
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "change profile failed")
 	}
-	_, err = repo.dataBase.NamedExec("DELETE FROM "+repo.tableNameInterests+" WHERE userid = :userid", profile)
+	_, err = repo.dataBase.NamedExec("DELETE FROM "+repo.tableUserInterests+" WHERE userid = :userid", profile)
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "delete interests failed")
 	}
 
 	for _, val := range profile.Interests {
-		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameInterests+" (userid, interests) VALUES ($1, $2)", profile.UserId, val)
+		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableUserInterests+" (UserId, InterestId) VALUES ($1, $2)", profile.UserId, val.Id)
 		if err != nil {
 			return handlers.ErrBaseApp.Wrap(err, "change interests failed")
 		}
@@ -87,11 +115,6 @@ func (repo *ProfilePostgres) Delete(profileId int) (err error) {
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "delete profile failed")
 	}
-
-	_, err = repo.dataBase.Exec("DELETE FROM "+repo.tableNameInterests+" WHERE userid = $1", profileId)
-	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "delete interests failed")
-	}
 	return
 }
 
@@ -101,7 +124,7 @@ func (repo *ProfilePostgres) Add(profile models.Profile) (err error) {
 		return handlers.ErrBaseApp.Wrap(err, "insert profile failed")
 	}
 	for _, val := range profile.Interests {
-		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameInterests+" (userid, interests) VALUES ($1, $2)", profile.UserId, val)
+		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableUserInterests+" (UserId, Id) VALUES ($1, $2)", profile.UserId, val.Id)
 		if err != nil {
 			return handlers.ErrBaseApp.Wrap(err, "insert interests failed")
 		}
@@ -113,6 +136,10 @@ func (repo *ProfilePostgres) AddEmpty(profileId int) (err error) {
 	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameProfiles+"(userid) VALUES ($1)", profileId)
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "insert empty profile failed")
+	}
+	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameFilters+"(userid) VALUES ($1)", profileId)
+	if err != nil {
+		return handlers.ErrBaseApp.Wrap(err, "insert empty filters failed")
 	}
 	return
 }
@@ -136,8 +163,8 @@ func (repo *ProfilePostgres) CheckFiled(profileId int) (err error) {
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "get profile failed")
 	}
-	var interests []string
-	err = repo.dataBase.Select(&interests, "SELECT interests FROM "+repo.tableNameInterests+" WHERE userid=$1", profileId)
+	var interests []models.Interest
+	err = repo.dataBase.Select(&interests, "SELECT interests FROM "+repo.tableUserInterests+" WHERE userid=$1", profileId)
 	if err != nil {
 		return handlers.ErrBaseApp.Wrap(err, "get interests failed")
 	}
@@ -146,10 +173,89 @@ func (repo *ProfilePostgres) CheckFiled(profileId int) (err error) {
 		profile.City == "" ||
 		profile.LastName == "" ||
 		profile.AboutUser == "" ||
-		profile.Birthday == "" ||
+		//profile.Birthday == "" ||
 		len(profile.Interests) == 0 ||
 		profile.FirstName == "" {
 		return handlers.ErrProfileNotFiled
+	}
+	return
+}
+
+func (repo *ProfilePostgres) GetFilters(userId int) (models.Filters, error) {
+	var filters models.Filters
+	err := repo.dataBase.QueryRow("SELECT BottomHeightFilter, TopHeightFilter, GenderFilter, BottomAgeFilter, TopAgeFilter from "+repo.tableNameFilters+" where userid=$1", userId).Scan(&filters.HeightFilter[0], &filters.HeightFilter[1], &filters.GenderFilter, &filters.AgeFilter[0], &filters.AgeFilter[1])
+
+	if err != nil {
+		return models.Filters{}, handlers.ErrBaseApp.Wrap(err, "failed get filters")
+	}
+	return filters, nil
+}
+
+func (repo *ProfilePostgres) ChangeFilters(userId int, filters models.Filters) error {
+	_, err := repo.dataBase.Exec("UPDATE "+repo.tableNameFilters+" SET BottomHeightFilter=$1, TopHeightFilter=$2, GenderFilter=$3, BottomAgeFilter=$4, TopAgeFilter=$5 WHERE userid=$6", filters.HeightFilter[0], filters.HeightFilter[1], filters.GenderFilter, filters.AgeFilter[0], filters.AgeFilter[1], userId)
+	if err != nil {
+		return handlers.ErrBaseApp.Wrap(err, "change profile failed")
+	}
+	return nil
+}
+
+func (repo *ProfilePostgres) GetInterests() ([]models.Interest, error) {
+	var interests []models.Interest
+	err := repo.dataBase.Select(&interests, "SELECT id, title FROM "+repo.tableStaticInterests)
+	if err != nil {
+		return nil, handlers.ErrBaseApp.Wrap(err, "get interests failed")
+	}
+
+	return interests, nil
+}
+
+func (repo *ProfilePostgres) GetDynamicInterest(interest string) ([]models.Interest, error) {
+	var interests []models.Interest
+	err := repo.dataBase.Select(&interests, "select * from "+repo.tableStaticInterests+" where title ILIKE $1;", "%"+interest+"%")
+	if err != nil {
+		return nil, handlers.ErrBaseApp.Wrap(err, "get interests failed")
+	}
+	return interests, nil
+}
+
+func (repo *ProfilePostgres) CheckInterests(interests []models.Interest) error {
+	var findStatus []bool
+	for _, val := range interests {
+		err := repo.dataBase.Select(&findStatus, "select exists(select * from "+repo.tableStaticInterests+" where id = $1);", val.Id)
+		if err != nil {
+			return handlers.ErrBaseApp.Wrap(err, "failed check interests")
+		}
+		if !findStatus[0] {
+			return handlers.ErrBadRequest
+		}
+	}
+	return nil
+}
+
+func (repo *ProfilePostgres) SetAction(profileId int, likes models.Likes) (err error) {
+	_, err = repo.dataBase.Exec("DELETE FROM "+repo.tableNameLikes+" WHERE (who=$1 and whom=$2)", profileId, likes.Id)
+	if err != nil {
+		return handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
+	}
+	_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableNameLikes+" (who, whom, action) VALUES ($1, $2, $3)", profileId, likes.Id, likes.Action)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case pgerrcode.ForeignKeyViolation:
+				return handlers.ErrBadRequest
+			case pgerrcode.NoData:
+				return handlers.ErrBaseApp
+			}
+		}
+	}
+	return
+}
+
+func (repo *ProfilePostgres) GetMatched(profileId int) (likesVector models.LikesMatched, err error) {
+	err = repo.dataBase.Select(&likesVector.VectorId, "select l1.whom from "+repo.tableNameLikes+" as l1 join "+repo.tableNameLikes+" as l2 on l1.whom = l2.who and l1.action=1 where l1.who=l2.whom and l2.action=1 and l1.who=$1", profileId)
+	if err != nil {
+		return likesVector, handlers.ErrBaseApp.Wrap(err, "get shortProfile failed")
 	}
 	return
 }

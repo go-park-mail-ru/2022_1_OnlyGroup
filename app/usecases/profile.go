@@ -9,4 +9,14 @@ type ProfileUseCases interface {
 	Delete(profileId int) (err error)
 
 	GetCandidates(profileId int) (candidateProfiles models.VectorCandidate, err error)
+
+	GetInterest() ([]models.Interest, error)
+	GetDynamicInterests(string) ([]models.Interest, error)
+	CheckInterests([]models.Interest) error
+
+	GetFilters(userId int) (models.Filters, error)
+	ChangeFilters(userId int, filters models.Filters) error
+
+	SetAction(userid int, likes models.Likes) (err error)
+	GetMatched(userId int) (likesVector models.LikesMatched, err error)
 }
