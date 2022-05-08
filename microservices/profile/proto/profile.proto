@@ -7,7 +7,6 @@ package profile;
 option go_package = "/;proto";
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
 
 message UserID {
   int64 id = 1;
@@ -68,27 +67,27 @@ message StrInterest {
 }
 
 message Nothing {
-  bool dummy = 1;
 }
 
 service ProfileRepository {
     rpc Get(UserID) returns (profile);
 
     rpc GetShort(UserID) returns (ShortProfile);
-    rpc Change(profile) returns (google.protobuf.Empty);
-    rpc Delete(UserID) returns (google.protobuf.Empty);
-    rpc Add(profile) returns (google.protobuf.Empty);
-    rpc CheckFiled(UserID) returns (google.protobuf.Empty);
-    rpc AddEmpty(UserID) returns (google.protobuf.Empty);
+    rpc Change(profile) returns (Nothing);
+    rpc Delete(UserID) returns (Nothing);
+    rpc Add(profile) returns (Nothing);
+    rpc CheckFiled(UserID) returns (Nothing);
+    rpc AddEmpty(UserID) returns (Nothing);
 
     rpc FindCandidate(UserID) returns (VectorCandidate);
 
     rpc GetFilters(UserID) returns (Filters);
-    rpc ChangeFilters(Filters) returns (google.protobuf.Empty);
+    rpc ChangeFilters(Filters) returns (Nothing);
 
-    rpc GetInterests(google.protobuf.Empty) returns (Interests);
+    rpc GetInterests(Nothing) returns (Interests);
     rpc GetDynamicInterest(StrInterest) returns (Interests);
+    rpc CheckInterests(Interests) returns (Nothing);
 
-    rpc SetAction(Likes) returns (google.protobuf.Empty);
+    rpc SetAction(Likes) returns (Nothing);
     rpc GetMatched(UserID) returns (LikesMatched);
 }

@@ -19,6 +19,7 @@ type ProfilePostgres struct {
 }
 
 const sizeVectorCandidates = 3
+const defaultInterest = "golang programming"
 
 func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string, tableNameInterests string, tableStaticInterests string, tableFilters string, tableLikes string) (*ProfilePostgres, error) {
 	_, err := dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameProfile + "(" +
@@ -46,6 +47,10 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUse
 		"Id bigserial references " + tableStaticInterests + "(id) ON DELETE CASCADE);")
 	if err != nil {
 		return nil, http.ErrBaseApp.Wrap(err, "create table failed")
+	}
+	_, err = dataBase.Exec("INSERT INTO "+tableStaticInterests+"(title) VALUES ($1)", defaultInterest)
+	if err != nil {
+		return nil, http.ErrBaseApp.Wrap(err, "insert empty profile failed")
 	}
 
 	_, err = dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableFilters + "(" +
@@ -102,7 +107,7 @@ func (repo *ProfilePostgres) Change(profileId int, profile models.Profile) (err 
 	}
 
 	for _, val := range profile.Interests {
-		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableUserInterests+" (UserId, InterestId) VALUES ($1, $2)", profile.UserId, val.Id)
+		_, err = repo.dataBase.Exec("INSERT INTO "+repo.tableUserInterests+" (UserId, id) VALUES ($1, $2)", profile.UserId, val.Id)
 		if err != nil {
 			return http.ErrBaseApp.Wrap(err, "change interests failed")
 		}

@@ -122,3 +122,11 @@ func GRPCToModelInterests(grpcModel *proto.Interests) []Interest {
 	}
 	return interests
 }
+
+func ModelUserIdToGRPC(userId int) *proto.UserID {
+	return &proto.UserID{Id: int64(userId)}
+}
+
+func ModelStrToGRPC(str string) *proto.StrInterest {
+	return &proto.StrInterest{StrInterest: str}
+}

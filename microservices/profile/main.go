@@ -23,7 +23,7 @@ func main() {
 		"@" + conf.PostgresConf.Address + ":" + conf.PostgresConf.Port + "/" + conf.PostgresConf.DbName + "?" + conf.PostgresConf.Params
 	postgresConnect, err := sqlx.Open("pgx", postgresSourceString)
 	if err != nil {
-		return
+		log.Fatalf("failed connect dataBase, %v", err)
 	}
 	listener, err := net.Listen("tcp", "127.0.0.1:9111")
 	if err != nil {
@@ -31,7 +31,7 @@ func main() {
 	}
 	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
 	if err != nil {
-		return
+		log.Fatalf("failed connect dataBase, %v", err)
 	}
 	profileUseCase := implGrpc.NewProfileUseCaseGRPCDelivery(profilesRepo)
 	grpcServer := grpc.NewServer()

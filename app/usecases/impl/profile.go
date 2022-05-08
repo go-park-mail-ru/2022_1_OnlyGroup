@@ -89,7 +89,6 @@ func (useCase *profileUseCaseImpl) GetDynamicInterests(interest string) ([]model
 }
 
 func (useCase *profileUseCaseImpl) CheckInterests([]models.Interest) error {
-
 	return nil
 }
 

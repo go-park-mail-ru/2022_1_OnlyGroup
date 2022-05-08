@@ -1,7 +1,6 @@
 package implGrpc
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/repositories"
 )
@@ -20,9 +19,6 @@ func (useCase *profileUseCaseGRPCDelivery) Get(cookieProfileId int, profileId in
 }
 
 func (useCase *profileUseCaseGRPCDelivery) Change(profileId int, profile models.Profile) (err error) {
-	if profileId != profile.UserId {
-		return http.ErrProfileForbiddenChange
-	}
 	err = useCase.profileRepo.CheckInterests(profile.Interests)
 	if err != nil {
 		return err
@@ -46,7 +42,6 @@ func (useCase *profileUseCaseGRPCDelivery) GetShort(cookieId int, profileId int)
 }
 
 func (useCase *profileUseCaseGRPCDelivery) GetCandidates(profileId int) (candidateProfiles models.VectorCandidate, err error) {
-
 	candidateProfiles, err = useCase.profileRepo.FindCandidate(profileId)
 	return
 }
@@ -68,9 +63,9 @@ func (useCase *profileUseCaseGRPCDelivery) GetDynamicInterests(interest string) 
 	return findInterests, nil
 }
 
-func (useCase *profileUseCaseGRPCDelivery) CheckInterests([]models.Interest) error {
-
-	return nil
+func (useCase *profileUseCaseGRPCDelivery) CheckInterests(interests []models.Interest) error {
+	err := useCase.profileRepo.CheckInterests(interests)
+	return err
 }
 
 func (useCase *profileUseCaseGRPCDelivery) GetFilters(userId int) (models.Filters, error) {
@@ -87,9 +82,6 @@ func (useCase *profileUseCaseGRPCDelivery) ChangeFilters(userId int, filters mod
 }
 
 func (useCase *profileUseCaseGRPCDelivery) SetAction(userid int, likes models.Likes) (err error) {
-	if userid == likes.Id {
-		return http.ErrBadRequest
-	}
 	err = useCase.profileRepo.SetAction(userid, likes)
 	if err != nil {
 		return err

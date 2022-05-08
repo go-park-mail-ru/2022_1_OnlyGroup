@@ -83,10 +83,10 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 
 	profileGrpcRepo := grpcDelivery.NewProfileGrpc(client)
 
-	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
-	if err != nil {
-		return APIServer{}, err
-	}
+	//profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
+	//if err != nil {
+	//	return APIServer{}, err
+	//}
 	if err != nil {
 		return APIServer{}, err
 	}
@@ -103,7 +103,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
-	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
+	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profileGrpcRepo)
 	profileUseCase := impl.NewProfileUseCaseImpl(profileGrpcRepo) //profilesRepo
 	photosUseCase := impl.NewPhotosUseCase(photosRepo)
 

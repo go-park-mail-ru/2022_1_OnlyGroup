@@ -1,6 +1,7 @@
 package grpcDelivery
 
 import (
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/microservices/profile/proto"
@@ -36,17 +37,17 @@ func (handler *ProfileHandler) Change(ctx context.Context, model *proto.Profile)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "method Change not implemented")
 	}
-	return nil, nil
+	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) Delete(ctx context.Context, model *proto.UserID) (*proto.Nothing, error) {
 	err := handler.useCase.Delete(int(model.Id))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "method Change not implemented")
 	}
-	return nil, nil
+	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) Add(context.Context, *proto.Profile) (*proto.Nothing, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
+	return &proto.Nothing{}, status.Errorf(codes.Unimplemented, "method Add not implemented")
 }
 func (handler *ProfileHandler) CheckFiled(context.Context, *proto.UserID) (*proto.Nothing, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckFiled not implemented")
@@ -56,7 +57,7 @@ func (handler *ProfileHandler) AddEmpty(ctx context.Context, model *proto.UserID
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "method Change not implemented")
 	}
-	return nil, nil
+	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) FindCandidate(ctx context.Context, model *proto.UserID) (*proto.VectorCandidate, error) {
 	modelCandidates, err := handler.useCase.GetCandidates(int(model.Id))
@@ -70,14 +71,14 @@ func (handler *ProfileHandler) GetFilters(ctx context.Context, model *proto.User
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "method Change not implemented")
 	}
-	return models.ModelFiltersToGRPC(&modelFilters), nil
+	return models.ModelFiltersToGRPC(int(model.Id), &modelFilters), nil
 }
 func (handler *ProfileHandler) ChangeFilters(ctx context.Context, model *proto.Filters) (*proto.Nothing, error) {
 	err := handler.useCase.ChangeFilters(int(model.Id), models.GRPCToModelFilters(model))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "method Change not implemented")
 	}
-	return nil, nil
+	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) GetInterests(ctx context.Context, model *proto.Nothing) (*proto.Interests, error) {
 	modelInterest, err := handler.useCase.GetInterest()
@@ -98,7 +99,7 @@ func (handler *ProfileHandler) SetAction(ctx context.Context, model *proto.Likes
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "method Change not implemented")
 	}
-	return nil, nil
+	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) GetMatched(ctx context.Context, model *proto.UserID) (*proto.LikesMatched, error) {
 	likesVector, err := handler.useCase.GetMatched(int(model.Id))
@@ -106,4 +107,16 @@ func (handler *ProfileHandler) GetMatched(ctx context.Context, model *proto.User
 		return nil, status.Errorf(codes.Internal, "method Change not implemented")
 	}
 	return models.ModelLikesMatchedToGRPC(likesVector), nil
+}
+
+func (handler *ProfileHandler) CheckInterests(ctx context.Context, model *proto.Interests) (*proto.Nothing, error) {
+	err := handler.useCase.CheckInterests(models.GRPCToModelInterests(model))
+	if err == http.ErrBadRequest {
+		return nil, status.Errorf(codes.InvalidArgument, "Bad request")
+	}
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "method CheckInterests not implemented")
+	}
+
+	return &proto.Nothing{}, nil
 }
