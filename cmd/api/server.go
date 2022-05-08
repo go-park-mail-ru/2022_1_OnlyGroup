@@ -1,11 +1,13 @@
 package main
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	http2 "2022_1_OnlyGroup_back/app/handlers/http"
+	"2022_1_OnlyGroup_back/app/repositories/grpcDelivery"
 	"2022_1_OnlyGroup_back/app/repositories/postgres"
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
 	_ "2022_1_OnlyGroup_back/app/usecases"
 	"2022_1_OnlyGroup_back/app/usecases/impl"
+	"2022_1_OnlyGroup_back/microservices/profile/proto"
 	csrf "2022_1_OnlyGroup_back/pkg/csrf/impl"
 	"2022_1_OnlyGroup_back/pkg/dataValidator"
 	fileService "2022_1_OnlyGroup_back/pkg/fileService/impl"
@@ -15,6 +17,7 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/jackc/pgx"
 	"github.com/jmoiron/sqlx"
+	"google.golang.org/grpc"
 	"net/http"
 	"time"
 )
@@ -39,14 +42,14 @@ const UrlFiltersPostfix = "/filters"
 
 type APIServer struct {
 	conf             APIServerConf
-	authHandler      *handlers.AuthHandler
-	profileHandler   *handlers.ProfileHandler
-	photosHandler    *handlers.PhotosHandler
-	likesHandler     *handlers.LikesHandler
-	interestsHandler *handlers.InterestsHandler
-	middlewares      handlers.Middlewares
-	jwtHandler       *handlers.CSRFHandler
-	filtersHandler   *handlers.FiltersHandler
+	authHandler      *http2.AuthHandler
+	profileHandler   *http2.ProfileHandler
+	photosHandler    *http2.PhotosHandler
+	likesHandler     *http2.LikesHandler
+	interestsHandler *http2.InterestsHandler
+	middlewares      http2.Middlewares
+	jwtHandler       *http2.CSRFHandler
+	filtersHandler   *http2.FiltersHandler
 }
 
 func NewServer(conf APIServerConf) (APIServer, error) {
@@ -74,6 +77,12 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	if err != nil {
 		return APIServer{}, err
 	}
+	conn, _ := grpc.Dial("127.0.0.1:9111", grpc.WithInsecure())
+
+	client := proto.NewProfileRepositoryClient(conn)
+
+	profileGrpcRepo := grpcDelivery.NewProfileGrpc(client)
+
 	profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
 	if err != nil {
 		return APIServer{}, err
@@ -95,7 +104,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	dataValidator.SetValidators()
 	//useCases
 	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
-	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo)
+	profileUseCase := impl.NewProfileUseCaseImpl(profileGrpcRepo) //profilesRepo
 	photosUseCase := impl.NewPhotosUseCase(photosRepo)
 
 	//fileService
@@ -106,14 +115,14 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 
 	return APIServer{
 		conf:             conf,
-		authHandler:      handlers.CreateAuthHandler(authUseCase),
-		profileHandler:   handlers.CreateProfileHandler(profileUseCase),
-		jwtHandler:       handlers.CreateCSRFHandler(jwt),
-		photosHandler:    handlers.CreatePhotosHandler(photosUseCase, photosService),
-		likesHandler:     handlers.CreateLikesHandler(profileUseCase),
-		interestsHandler: handlers.CreateInterestsHandler(profileUseCase),
-		middlewares:      handlers.MiddlewaresImpl{AuthUseCase: authUseCase},
-		filtersHandler:   handlers.CreateFiltersHandler(profileUseCase),
+		authHandler:      http2.CreateAuthHandler(authUseCase),
+		profileHandler:   http2.CreateProfileHandler(profileUseCase),
+		jwtHandler:       http2.CreateCSRFHandler(jwt),
+		photosHandler:    http2.CreatePhotosHandler(photosUseCase, photosService),
+		likesHandler:     http2.CreateLikesHandler(profileUseCase),
+		interestsHandler: http2.CreateInterestsHandler(profileUseCase),
+		middlewares:      http2.MiddlewaresImpl{AuthUseCase: authUseCase},
+		filtersHandler:   http2.CreateFiltersHandler(profileUseCase),
 	}, nil
 }
 

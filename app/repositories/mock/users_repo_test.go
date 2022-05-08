@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,7 @@ func TestAuthorizeMock(t *testing.T) {
 	for i := 1; i < numTest; i++ {
 		len, err := TestMock.Authorize(faker.Email(), faker.Password())
 		assert.Equal(len, 0)
-		assert.Equal(err, handlers.ErrAuthUserNotFound)
+		assert.Equal(err, http.ErrAuthUserNotFound)
 	}
 }
 

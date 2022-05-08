@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/tests/mocks"
 	"2022_1_OnlyGroup_back/app/usecases"
@@ -47,10 +47,10 @@ func (suite *testSuite) TestAuthAuthOk() {
 func (suite *testSuite) TestAuthSessionNotFound() {
 	const testingSecret = "ifiewhufhbbjwdbnfnmwe"
 
-	suite.sessionsMock.EXPECT().Get(testingSecret).Return(0, "", handlers.ErrAuthSessionNotFound)
+	suite.sessionsMock.EXPECT().Get(testingSecret).Return(0, "", http.ErrAuthSessionNotFound)
 	_, err := suite.testingUseCase.UserAuth(testingSecret)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthSessionNotFound)
+	assert.Equal(suite.T(), err, http.ErrAuthSessionNotFound)
 }
 
 func (suite *testSuite) TestLoginLoginOk() {
@@ -75,10 +75,10 @@ func (suite *testSuite) TestLoginUserNotFound() {
 	const testingPassword = "SomeSecret21"
 	testUserModel := models.UserAuthInfo{Email: testingEmail, Password: testingPassword}
 
-	suite.usersMock.EXPECT().Authorize(testingEmail, testingPassword).Return(0, handlers.ErrAuthUserNotFound)
+	suite.usersMock.EXPECT().Authorize(testingEmail, testingPassword).Return(0, http.ErrAuthUserNotFound)
 	_, _, err := suite.testingUseCase.UserLogin(testUserModel)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthUserNotFound)
+	assert.Equal(suite.T(), err, http.ErrAuthUserNotFound)
 }
 
 func (suite *testSuite) TestLoginSessionNotAdded() {
@@ -88,10 +88,10 @@ func (suite *testSuite) TestLoginSessionNotAdded() {
 	testUserModel := models.UserAuthInfo{Email: testingEmail, Password: testingPassword}
 
 	suite.usersMock.EXPECT().Authorize(testingEmail, testingPassword).Return(testingID, nil)
-	suite.sessionsMock.EXPECT().Add(testingID, "").Return("", handlers.ErrAuthSessionNotFound)
+	suite.sessionsMock.EXPECT().Add(testingID, "").Return("", http.ErrAuthSessionNotFound)
 	_, _, err := suite.testingUseCase.UserLogin(testUserModel)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthSessionNotFound)
+	assert.Equal(suite.T(), err, http.ErrAuthSessionNotFound)
 }
 
 func (suite *testSuite) TestRegisterRegisterOk() {
@@ -117,10 +117,10 @@ func (suite *testSuite) TestRegisterEmailConflict() {
 	const testingPassword = "SomeSecret21"
 	testUserModel := models.UserAuthInfo{Email: testingEmail, Password: testingPassword}
 
-	suite.usersMock.EXPECT().AddUser(testingEmail, testingPassword).Return(0, handlers.ErrAuthEmailUsed)
+	suite.usersMock.EXPECT().AddUser(testingEmail, testingPassword).Return(0, http.ErrAuthEmailUsed)
 	_, _, err := suite.testingUseCase.UserRegister(testUserModel)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthEmailUsed)
+	assert.Equal(suite.T(), err, http.ErrAuthEmailUsed)
 }
 
 func (suite *testSuite) TestRegisterProfileError() {
@@ -130,10 +130,10 @@ func (suite *testSuite) TestRegisterProfileError() {
 	testUserModel := models.UserAuthInfo{Email: testingEmail, Password: testingPassword}
 
 	suite.usersMock.EXPECT().AddUser(testingEmail, testingPassword).Return(testingID, nil)
-	suite.profileMock.EXPECT().AddEmptyProfile(testingID).Return(handlers.ErrProfileNotFiled)
+	suite.profileMock.EXPECT().AddEmptyProfile(testingID).Return(http.ErrProfileNotFiled)
 	_, _, err := suite.testingUseCase.UserRegister(testUserModel)
 
-	assert.Equal(suite.T(), err, handlers.ErrProfileNotFiled)
+	assert.Equal(suite.T(), err, http.ErrProfileNotFiled)
 }
 
 func (suite *testSuite) TestRegisterSessionError() {
@@ -144,10 +144,10 @@ func (suite *testSuite) TestRegisterSessionError() {
 
 	suite.usersMock.EXPECT().AddUser(testingEmail, testingPassword).Return(testingID, nil)
 	suite.profileMock.EXPECT().AddEmptyProfile(testingID).Return(nil)
-	suite.sessionsMock.EXPECT().Add(testingID, "").Return("", handlers.ErrAuthSessionNotFound)
+	suite.sessionsMock.EXPECT().Add(testingID, "").Return("", http.ErrAuthSessionNotFound)
 	_, _, err := suite.testingUseCase.UserRegister(testUserModel)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthSessionNotFound)
+	assert.Equal(suite.T(), err, http.ErrAuthSessionNotFound)
 }
 
 func (suite *testSuite) TestLogoutLogoutOk() {
@@ -188,7 +188,7 @@ func (suite *testSuite) TestChangePswdWrongSession() {
 	suite.usersMock.EXPECT().Authorize(testingEmail, testingOldPassword).Return(testingID, nil)
 	err := suite.testingUseCase.UserChangePassword(testUserModel, testingSecret)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthWrongPassword)
+	assert.Equal(suite.T(), err, http.ErrAuthWrongPassword)
 }
 
 func (suite *testSuite) TestChangePswdSecretError() {
@@ -199,10 +199,10 @@ func (suite *testSuite) TestChangePswdSecretError() {
 	const testingNewPassword = "SomeSecret82y3"
 	testUserModel := models.UserAuthProfile{Email: testingEmail, OldPassword: testingOldPassword, NewPassword: testingNewPassword}
 
-	suite.sessionsMock.EXPECT().Get(testingSecret).Return(badId, "", handlers.ErrAuthSessionNotFound)
+	suite.sessionsMock.EXPECT().Get(testingSecret).Return(badId, "", http.ErrAuthSessionNotFound)
 	err := suite.testingUseCase.UserChangePassword(testUserModel, testingSecret)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthSessionNotFound)
+	assert.Equal(suite.T(), err, http.ErrAuthSessionNotFound)
 }
 
 func (suite *testSuite) TestChangePswdAuthError() {
@@ -214,10 +214,10 @@ func (suite *testSuite) TestChangePswdAuthError() {
 	testUserModel := models.UserAuthProfile{Email: testingEmail, OldPassword: testingOldPassword, NewPassword: testingNewPassword}
 
 	suite.sessionsMock.EXPECT().Get(testingSecret).Return(testingID, "", nil)
-	suite.usersMock.EXPECT().Authorize(testingEmail, testingOldPassword).Return(testingID, handlers.ErrAuthWrongPassword)
+	suite.usersMock.EXPECT().Authorize(testingEmail, testingOldPassword).Return(testingID, http.ErrAuthWrongPassword)
 	err := suite.testingUseCase.UserChangePassword(testUserModel, testingSecret)
 
-	assert.Equal(suite.T(), err, handlers.ErrAuthWrongPassword)
+	assert.Equal(suite.T(), err, http.ErrAuthWrongPassword)
 }
 
 func TestAll(t *testing.T) {

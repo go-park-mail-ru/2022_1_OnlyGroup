@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/pkg/randomGenerator"
 	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 )
@@ -33,7 +33,7 @@ func (tables *SessionsMock) Add(id int, additionalData string) (string, error) {
 func (tables *SessionsMock) Get(secret string) (int, string, error) {
 	data, has := tables.sessionTable[secret]
 	if !has {
-		return 0, "", handlers.ErrAuthSessionNotFound
+		return 0, "", http.ErrAuthSessionNotFound
 	}
 	return data.userID, data.additionalData, nil
 }
@@ -41,7 +41,7 @@ func (tables *SessionsMock) Get(secret string) (int, string, error) {
 func (tables *SessionsMock) Remove(secret string) (err error) {
 	_, has := tables.sessionTable[secret]
 	if !has {
-		return handlers.ErrAuthSessionNotFound
+		return http.ErrAuthSessionNotFound
 	}
 	delete(tables.sessionTable, secret)
 	return nil

@@ -7,6 +7,7 @@ type ProfileUseCases interface {
 	Change(profileId int, profile models.Profile) (err error)
 	GetShort(cookieId int, profileId int) (profile models.ShortProfile, err error)
 	Delete(profileId int) (err error)
+	AddEmpty(profileId int) (err error)
 
 	GetCandidates(profileId int) (candidateProfiles models.VectorCandidate, err error)
 

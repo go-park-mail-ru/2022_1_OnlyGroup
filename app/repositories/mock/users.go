@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"github.com/bxcodec/faker/v3"
 )
 
@@ -29,7 +29,7 @@ func NewUsersMock() *UsersMock {
 func (tables *UsersMock) AddUser(email string, password string) (id int, err error) {
 	for _, item := range tables.userTable {
 		if item.email == email {
-			return 0, handlers.ErrAuthEmailUsed
+			return 0, http.ErrAuthEmailUsed
 		}
 	}
 	tables.userTable = append(tables.userTable, userData{email: email, password: password})
@@ -42,15 +42,15 @@ func (tables *UsersMock) Authorize(email string, password string) (id int, err e
 			if item.password == password {
 				return index, nil
 			}
-			return 0, handlers.ErrAuthWrongPassword
+			return 0, http.ErrAuthWrongPassword
 		}
 	}
-	return 0, handlers.ErrAuthUserNotFound
+	return 0, http.ErrAuthUserNotFound
 }
 
 func (tables *UsersMock) ChangePassword(id int, newPassword string) (err error) {
 	if id > len(tables.userTable)-1 {
-		return handlers.ErrAuthUserNotFound
+		return http.ErrAuthUserNotFound
 	}
 	tables.userTable[id].password = newPassword
 	return nil

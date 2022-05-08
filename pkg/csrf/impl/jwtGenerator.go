@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )
@@ -35,7 +35,7 @@ func (tk *JwtToken) Create(session string, id int, url string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, data)
 	jwtToken, err := token.SignedString(tk.Secret)
 	if err != nil {
-		return "", handlers.ErrBaseApp.Wrap(err, "generate failed")
+		return "", http.ErrBaseApp.Wrap(err, "generate failed")
 	}
 	return jwtToken, nil
 }
@@ -43,7 +43,7 @@ func (tk *JwtToken) Create(session string, id int, url string) (string, error) {
 func (tk *JwtToken) ParseSecretGetter(token *jwt.Token) (interface{}, error) {
 	method, ok := token.Method.(*jwt.SigningMethodHMAC)
 	if !ok || method.Alg() != "HS256" {
-		return nil, handlers.ErrBadCSRF
+		return nil, http.ErrBadCSRF
 	}
 	return tk.Secret, nil
 }
@@ -52,13 +52,13 @@ func (tk *JwtToken) Check(session string, id int, url string, inputToken string)
 	payload := &JwtCsrfClaims{}
 	_, err := jwt.ParseWithClaims(inputToken, payload, tk.ParseSecretGetter)
 	if err != nil {
-		return handlers.ErrBadCSRF
+		return http.ErrBadCSRF
 	}
 	if payload.Valid() != nil {
-		return handlers.ErrBadCSRF
+		return http.ErrBadCSRF
 	}
 	if payload.Session != session || payload.UserID != id || payload.URL != url {
-		return handlers.ErrBadCSRF
+		return http.ErrBadCSRF
 	}
 	return nil
 }

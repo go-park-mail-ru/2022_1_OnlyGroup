@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/repositories"
 )
@@ -64,7 +64,7 @@ func (useCase *authUseCaseImpl) UserChangePassword(userProfile models.UserAuthPr
 	}
 
 	if realIdAuth != realIdSession {
-		err = handlers.ErrAuthWrongPassword
+		err = http.ErrAuthWrongPassword
 		return
 	}
 

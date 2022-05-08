@@ -1,7 +1,7 @@
 package dataValidator
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"gopkg.in/validator.v2"
 	"math"
@@ -23,7 +23,7 @@ func SetValidators() {
 
 		age := int(math.Floor(time.Now().Sub(nVal).Hours() / 24 / 365))
 		if age < models.BirthdayBottomLimit || age > models.BirthdayTopLimit {
-			return handlers.ErrValidateProfile
+			return http.ErrValidateProfile
 		}
 
 		return nil
@@ -43,21 +43,21 @@ func SetValidators() {
 		}
 		match, err := regexp.MatchString(models.PasswordPatternLowerCase, nVal)
 		if err != nil {
-			return handlers.ErrBaseApp
+			return http.ErrBaseApp
 		}
 		if !match {
 			return validator.ErrRegexp
 		}
 		match, err = regexp.MatchString(models.PasswordPatternUpperCase, nVal)
 		if err != nil {
-			return handlers.ErrBaseApp
+			return http.ErrBaseApp
 		}
 		if !match {
 			return validator.ErrRegexp
 		}
 		match, err = regexp.MatchString(models.PasswordPatternNumber, nVal)
 		if err != nil {
-			return handlers.ErrBaseApp
+			return http.ErrBaseApp
 		}
 		if !match {
 			return validator.ErrRegexp

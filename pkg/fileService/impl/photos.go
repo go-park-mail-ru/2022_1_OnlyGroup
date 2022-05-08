@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"fmt"
 	"io"
 	"os"
@@ -49,11 +49,11 @@ func NewFileServicePhotos(root string) (*fileServicePhotos, error) {
 func (repo *fileServicePhotos) Read(path string) (io.ReadCloser, int64, error) {
 	openedFile, err := os.Open(repo.root + path)
 	if err != nil {
-		return nil, 0, handlers.ErrBaseApp.Wrap(err, "read opening file failed")
+		return nil, 0, http.ErrBaseApp.Wrap(err, "read opening file failed")
 	}
 	stats, err := openedFile.Stat()
 	if err != nil {
-		return nil, 0, handlers.ErrBaseApp.Wrap(err, "get stats file failed")
+		return nil, 0, http.ErrBaseApp.Wrap(err, "get stats file failed")
 	}
 	return openedFile, stats.Size(), nil
 }
@@ -61,7 +61,7 @@ func (repo *fileServicePhotos) Read(path string) (io.ReadCloser, int64, error) {
 func (repo *fileServicePhotos) Write(path string) (io.WriteCloser, error) {
 	openedFile, err := os.Create(repo.root + path)
 	if err != nil {
-		return nil, handlers.ErrBaseApp.Wrap(err, "write creating file failed")
+		return nil, http.ErrBaseApp.Wrap(err, "write creating file failed")
 	}
 	return openedFile, nil
 }
@@ -69,7 +69,7 @@ func (repo *fileServicePhotos) Write(path string) (io.WriteCloser, error) {
 func (repo *fileServicePhotos) Remove(path string) error {
 	err := os.Remove(path)
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "removing file failed")
+		return http.ErrBaseApp.Wrap(err, "removing file failed")
 	}
 	return nil
 }

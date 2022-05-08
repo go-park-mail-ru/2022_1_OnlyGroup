@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	randomGenerator "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 	"database/sql"
 	"github.com/jackc/pgx/v4"
@@ -80,7 +80,7 @@ func TestAddUserTableDriven(t *testing.T) {
 			func(mock *sqlmock.Sqlmock) {
 				(*mock).ExpectQuery("SELECT id FROM test_user_table WHERE email=$1;").WithArgs("test@mail.ru").WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("4"))
 			},
-			handlers.ErrAuthEmailUsed,
+			http.ErrAuthEmailUsed,
 			0,
 			"test@mail.ru",
 			"TestPass3",
@@ -91,7 +91,7 @@ func TestAddUserTableDriven(t *testing.T) {
 			func(mock *sqlmock.Sqlmock) {
 				(*mock).ExpectQuery("SELECT id FROM test_user_table WHERE email=$1;").WithArgs("test@mail.ru").WillReturnError(postgresError)
 			},
-			handlers.ErrBaseApp,
+			http.ErrBaseApp,
 			0,
 			"test@mail.ru",
 			"TestPass3",
@@ -145,7 +145,7 @@ func TestAuthTableDriven(t *testing.T) {
 			func(mock *sqlmock.Sqlmock) {
 				(*mock).ExpectQuery("SELECT id, password FROM test_user_table WHERE email=$1;").WithArgs("test@mail.ru").WillReturnError(sql.ErrNoRows)
 			},
-			handlers.ErrAuthWrongPassword,
+			http.ErrAuthWrongPassword,
 			0,
 			"test@mail.ru",
 			"TestPass3",
@@ -156,7 +156,7 @@ func TestAuthTableDriven(t *testing.T) {
 			func(mock *sqlmock.Sqlmock) {
 				(*mock).ExpectQuery("SELECT id, password FROM test_user_table WHERE email=$1;").WithArgs("test@mail.ru").WillReturnRows(sqlmock.NewRows([]string{"id", "password"}).AddRow("4", "TestPasfwefws3"))
 			},
-			handlers.ErrAuthWrongPassword,
+			http.ErrAuthWrongPassword,
 			0,
 			"test@mail.ru",
 			"TestPass3",
@@ -167,7 +167,7 @@ func TestAuthTableDriven(t *testing.T) {
 			func(mock *sqlmock.Sqlmock) {
 				(*mock).ExpectQuery("SELECT id, password FROM test_user_table WHERE email=$1;").WithArgs("test@mail.ru").WillReturnError(postgresError)
 			},
-			handlers.ErrBaseApp,
+			http.ErrBaseApp,
 			0,
 			"test@mail.ru",
 			"TestPass3",
@@ -219,7 +219,7 @@ func TestChangePswdTableDriven(t *testing.T) {
 			func(mock *sqlmock.Sqlmock) {
 				(*mock).ExpectExec("UPDATE test_user_table SET password=$1 WHERE id=$2;").WithArgs("TestNewPass1", 4).WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			handlers.ErrAuthUserNotFound,
+			http.ErrAuthUserNotFound,
 			4,
 			"TestNewPass1",
 			"test_user_table",
@@ -229,7 +229,7 @@ func TestChangePswdTableDriven(t *testing.T) {
 			func(mock *sqlmock.Sqlmock) {
 				(*mock).ExpectExec("UPDATE test_user_table SET password=$1 WHERE id=$2;").WithArgs("TestNewPass1", 4).WillReturnError(postgresError)
 			},
-			handlers.ErrBaseApp,
+			http.ErrBaseApp,
 			0,
 			"TestNewPass1",
 			"test_user_table",
