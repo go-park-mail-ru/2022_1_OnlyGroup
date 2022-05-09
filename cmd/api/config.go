@@ -39,10 +39,17 @@ type JwtConf struct {
 	TimeToLife int64
 }
 
+type ProfileMicroserviceConf struct {
+	Enable  bool
+	Address string
+	Port    string
+}
+
 type APIServerConf struct {
 	CSRFConf               JwtConf
 	RedisConf              RedisConnectConf
 	PostgresConf           PostgresConnectConf
+	ProfileServiceConf     ProfileMicroserviceConf
 	ServerPort             string
 	ServerAddr             string
 	ApiPathPrefix          string
@@ -81,6 +88,11 @@ var ApiServerDefaultConf = APIServerConf{
 	CSRFConf: JwtConf{
 		Enable:     false,
 		TimeToLife: 86400,
+	},
+	ProfileServiceConf: ProfileMicroserviceConf{
+		Enable:  false,
+		Port:    "9111",
+		Address: "127.0.0.1",
 	},
 }
 

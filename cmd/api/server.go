@@ -2,6 +2,7 @@ package main
 
 import (
 	http2 "2022_1_OnlyGroup_back/app/handlers/http"
+	"2022_1_OnlyGroup_back/app/repositories"
 	"2022_1_OnlyGroup_back/app/repositories/grpcDelivery"
 	"2022_1_OnlyGroup_back/app/repositories/postgres"
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
@@ -73,23 +74,25 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	}
 	//repositories
 	usersRepo, err := postgres.NewPostgresUsersRepo(postgresConnect, conf.PostgresConf.UsersDbTableName, randomGenerator.NewCryptoRandomGenerator())
-
 	if err != nil {
 		return APIServer{}, err
 	}
-	conn, _ := grpc.Dial("127.0.0.1:9111", grpc.WithInsecure())
-
-	client := proto.NewProfileRepositoryClient(conn)
-
-	profileGrpcRepo := grpcDelivery.NewProfileGrpc(client)
-
-	//profilesRepo, err := postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.UsersDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
-	//if err != nil {
-	//	return APIServer{}, err
-	//}
-	if err != nil {
-		return APIServer{}, err
+	//profiles repositories
+	var profilesRepo repositories.ProfileRepository
+	if conf.ProfileServiceConf.Enable {
+		connProfileService, err := grpc.Dial(conf.ProfileServiceConf.Address+":"+conf.ProfileServiceConf.Port, grpc.WithInsecure())
+		if err != nil {
+			return APIServer{}, err
+		}
+		client := proto.NewProfileRepositoryClient(connProfileService)
+		profilesRepo = grpcDelivery.NewProfileGrpc(client)
+	} else {
+		profilesRepo, err = postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
+		if err != nil {
+			return APIServer{}, err
+		}
 	}
+
 	//jwtToken
 	jwt := csrf.NewJwtTokenGenerator("поменяй здесь генерацию", conf.CSRFConf.TimeToLife)
 	//useCases
@@ -103,8 +106,8 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 	//set validators
 	dataValidator.SetValidators()
 	//useCases
-	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profileGrpcRepo)
-	profileUseCase := impl.NewProfileUseCaseImpl(profileGrpcRepo) //profilesRepo
+	authUseCase := impl.NewAuthUseCaseImpl(usersRepo, sessionsRepo, profilesRepo)
+	profileUseCase := impl.NewProfileUseCaseImpl(profilesRepo) //profilesRepo
 	photosUseCase := impl.NewPhotosUseCase(photosRepo)
 
 	//fileService

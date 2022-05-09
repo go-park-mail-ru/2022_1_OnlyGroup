@@ -13,16 +13,12 @@ func NewProfileUseCaseGRPCDelivery(profileRepo repositories.ProfileRepository) *
 	return &profileUseCaseGRPCDelivery{profileRepo: profileRepo}
 }
 
-func (useCase *profileUseCaseGRPCDelivery) Get(cookieProfileId int, profileId int) (profile models.Profile, err error) {
+func (useCase *profileUseCaseGRPCDelivery) Get(profileId int) (profile models.Profile, err error) {
 	profile, err = useCase.profileRepo.Get(profileId)
 	return
 }
 
 func (useCase *profileUseCaseGRPCDelivery) Change(profileId int, profile models.Profile) (err error) {
-	err = useCase.profileRepo.CheckInterests(profile.Interests)
-	if err != nil {
-		return err
-	}
 	err = useCase.profileRepo.Change(profileId, profile)
 	return
 }
@@ -32,11 +28,7 @@ func (useCase *profileUseCaseGRPCDelivery) Delete(profileId int) (err error) {
 	return
 }
 
-func (useCase *profileUseCaseGRPCDelivery) GetShort(cookieId int, profileId int) (profile models.ShortProfile, err error) {
-	if cookieId == profileId {
-		profile, err = useCase.profileRepo.GetShort(cookieId)
-		return
-	}
+func (useCase *profileUseCaseGRPCDelivery) GetShort(profileId int) (profile models.ShortProfile, err error) {
 	profile, err = useCase.profileRepo.GetShort(profileId)
 	return
 }

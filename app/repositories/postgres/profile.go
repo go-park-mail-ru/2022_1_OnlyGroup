@@ -21,7 +21,7 @@ type ProfilePostgres struct {
 const sizeVectorCandidates = 3
 const defaultInterest = "golang programming"
 
-func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameUsers string, tableNameInterests string, tableStaticInterests string, tableFilters string, tableLikes string) (*ProfilePostgres, error) {
+func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameInterests string, tableStaticInterests string, tableFilters string, tableLikes string) (*ProfilePostgres, error) {
 	_, err := dataBase.Exec("CREATE TABLE IF NOT EXISTS " + tableNameProfile + "(" +
 		"UserId     bigserial unique,\n" +
 		"FirstName  varchar(32) default '',\n" +

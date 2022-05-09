@@ -88,10 +88,6 @@ func (useCase *profileUseCaseImpl) GetDynamicInterests(interest string) ([]model
 	return findInterests, nil
 }
 
-func (useCase *profileUseCaseImpl) CheckInterests([]models.Interest) error {
-	return nil
-}
-
 func (useCase *profileUseCaseImpl) GetFilters(userId int) (models.Filters, error) {
 	filters, err := useCase.profileRepo.GetFilters(userId)
 	if err != nil {

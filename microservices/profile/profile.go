@@ -1,11 +1,11 @@
-package usecases
+package profile
 
 import "2022_1_OnlyGroup_back/app/models"
 
-type ProfileUseCases interface {
-	Get(cookieId int, candidateId int) (profile models.Profile, err error)
+type ProfileGRPCUseCases interface {
+	Get(profileId int) (profile models.Profile, err error)
 	Change(profileId int, profile models.Profile) (err error)
-	GetShort(cookieId int, profileId int) (profile models.ShortProfile, err error)
+	GetShort(profileId int) (profile models.ShortProfile, err error)
 	Delete(profileId int) (err error)
 	AddEmpty(profileId int) (err error)
 
@@ -13,6 +13,7 @@ type ProfileUseCases interface {
 
 	GetInterest() ([]models.Interest, error)
 	GetDynamicInterests(string) ([]models.Interest, error)
+	CheckInterests([]models.Interest) error
 
 	GetFilters(userId int) (models.Filters, error)
 	ChangeFilters(userId int, filters models.Filters) error
