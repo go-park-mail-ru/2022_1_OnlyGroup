@@ -75,10 +75,10 @@ func SetValidators() {
 		}
 		nVal := val.([2]int)
 
-		if len(nVal) > 2 || len(nVal) < 2 {
+		if len(nVal) != 2 {
 			return validator.ErrLen
 		}
-		if nVal[0] < 18 || nVal[1] > 100 {
+		if nVal[0] < models.AgeFilterBottomLimit || nVal[1] > models.AgeFilterTopLimit || nVal[1] < nVal[0] {
 			return validator.ErrRegexp
 		}
 		return nil
@@ -96,7 +96,7 @@ func SetValidators() {
 		if len(nVal) > 2 || len(nVal) < 2 {
 			return validator.ErrLen
 		}
-		if nVal[0] < 50 || nVal[1] > 220 {
+		if nVal[0] < models.HeightFilterFilterBottomLimit || nVal[1] > models.HeightFilterFilterTopLimit || nVal[1] < nVal[0] {
 			return validator.ErrRegexp
 		}
 		return nil

@@ -8,7 +8,6 @@ import (
 
 const BirthdayTopLimit = 100
 const BirthdayBottomLimit = 18
-const InterestSize = 32
 
 type Profile struct {
 	FirstName string     `json:",omitempty" validate:"min=0,max=40,regexp=^[a-zA-Z]*$"`

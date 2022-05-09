@@ -2,6 +2,11 @@ package models
 
 import "2022_1_OnlyGroup_back/microservices/profile/proto"
 
+const AgeFilterTopLimit = 100
+const AgeFilterBottomLimit = 18
+const HeightFilterFilterTopLimit = 220
+const HeightFilterFilterBottomLimit = 50
+
 type Filters struct {
 	AgeFilter    [2]int `json:",omitempty" validate:"ageFilter"`
 	GenderFilter int    `json:",omitempty" validate:"min=0, max=1"`

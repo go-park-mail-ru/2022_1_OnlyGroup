@@ -74,21 +74,33 @@ func NewProfilePostgres(dataBase *sqlx.DB, tableNameProfile string, tableNameInt
 	return &ProfilePostgres{dataBase, tableNameProfile, tableNameInterests, tableStaticInterests, tableFilters, tableLikes}, nil
 }
 func (repo *ProfilePostgres) Get(profileId int) (profile models.Profile, err error) {
+	var findStatus []bool
+	err = repo.dataBase.Select(&findStatus, "select exists(select * from "+repo.tableNameProfiles+" where userid = $1);", profileId)
+	if err != nil {
+		return profile, http.ErrBaseApp.Wrap(err, "failed check profile")
+	}
+	if !findStatus[0] {
+		return profile, http.ErrBadRequest
+	}
 	err = repo.dataBase.QueryRowx("SELECT firstname, lastname, birthday, city, aboutuser, userid, height,gender FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&profile)
 	if err != nil {
 		return profile, http.ErrBaseApp.Wrap(err, "get profile failed")
 	}
-
 	var interests []models.Interest
 	err = repo.dataBase.Select(&interests, "select l2.id, l2.title from "+repo.tableUserInterests+" as l1 join "+repo.tableStaticInterests+" as l2 on l1.id = l2.id where userid = $1;", profileId)
-	if err != nil {
-		return profile, http.ErrBaseApp.Wrap(err, "get interests failed")
-	}
 	profile.Interests = interests
 	return
 }
 
 func (repo *ProfilePostgres) GetShort(profileId int) (shortProfile models.ShortProfile, err error) {
+	var findStatus []bool
+	err = repo.dataBase.Select(&findStatus, "select exists(select * from "+repo.tableNameProfiles+" where userid = $1);", profileId)
+	if err != nil {
+		return shortProfile, http.ErrBaseApp.Wrap(err, "failed check profile")
+	}
+	if !findStatus[0] {
+		return shortProfile, http.ErrBadRequest
+	}
 	err = repo.dataBase.QueryRowx("SELECT firstName, lastname, city FROM "+repo.tableNameProfiles+" WHERE userid=$1", profileId).StructScan(&shortProfile)
 	if err != nil {
 		return shortProfile, http.ErrBaseApp.Wrap(err, "get shortProfile failed")
