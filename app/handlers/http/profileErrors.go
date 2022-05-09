@@ -12,5 +12,4 @@ var (
 	ErrProfileForbiddenChange = AppError{"forbidden change profile", http.StatusForbidden, nil, ""}
 	ErrMockIsEmpty            = AppError{"profile not filed", http.StatusNotAcceptable, nil, ""}
 	ErrValidateProfile        = AppError{"profile fields notvalid,", http.StatusPreconditionFailed, nil, ""}
-	ErrServiceUnavailable     = AppError{"profile service Unavailable,", http.StatusServiceUnavailable, nil, ""}
 )

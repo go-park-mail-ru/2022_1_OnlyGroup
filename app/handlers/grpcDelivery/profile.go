@@ -18,38 +18,31 @@ func NewProfileHandler(useCase profile.ProfileGRPCUseCases) *ProfileHandler {
 	return &ProfileHandler{useCase: useCase}
 }
 
-func ErrToGRPCErr(err error, errInf string) error {
-	if err == http.ErrBadRequest {
-		return status.Errorf(codes.InvalidArgument, "Bad request")
-	}
-	return status.Errorf(codes.Internal, errInf)
-}
-
 func (handler *ProfileHandler) Get(ctx context.Context, userId *proto.UserID) (*proto.Profile, error) {
 	profileModel, err := handler.useCase.Get(int(userId.Id))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: Get")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
-	return models.ModelProfileToGRPC(&profileModel), err
+	return models.ModelProfileToGRPC(&profileModel), nil
 }
 func (handler *ProfileHandler) GetShort(ctx context.Context, userId *proto.UserID) (*proto.ShortProfile, error) {
 	shortProfileModel, err := handler.useCase.GetShort(int(userId.Id))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: GetShort")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return models.ModelShortProfileToGRPC(&shortProfileModel), nil
 }
 func (handler *ProfileHandler) Change(ctx context.Context, model *proto.Profile) (*proto.Nothing, error) {
 	err := handler.useCase.Change(int(model.UserId), models.GRPCToModelProfile(model))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: Change")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) Delete(ctx context.Context, model *proto.UserID) (*proto.Nothing, error) {
 	err := handler.useCase.Delete(int(model.Id))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: change")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return &proto.Nothing{}, nil
 }
@@ -62,56 +55,56 @@ func (handler *ProfileHandler) CheckFiled(context.Context, *proto.UserID) (*prot
 func (handler *ProfileHandler) AddEmpty(ctx context.Context, model *proto.UserID) (*proto.Nothing, error) {
 	err := handler.useCase.AddEmpty(int(model.Id))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: AddEmpty")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) FindCandidate(ctx context.Context, model *proto.UserID) (*proto.VectorCandidate, error) {
 	modelCandidates, err := handler.useCase.GetCandidates(int(model.Id))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: FindCandidate")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return models.ModelVectorCandidateToGRPC(&modelCandidates), nil
 }
 func (handler *ProfileHandler) GetFilters(ctx context.Context, model *proto.UserID) (*proto.Filters, error) {
 	modelFilters, err := handler.useCase.GetFilters(int(model.Id))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: GetFilters")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return models.ModelFiltersToGRPC(int(model.Id), &modelFilters), nil
 }
 func (handler *ProfileHandler) ChangeFilters(ctx context.Context, model *proto.Filters) (*proto.Nothing, error) {
 	err := handler.useCase.ChangeFilters(int(model.Id), models.GRPCToModelFilters(model))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: ChangeFilters")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) GetInterests(ctx context.Context, model *proto.Nothing) (*proto.Interests, error) {
 	modelInterest, err := handler.useCase.GetInterest()
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: GetInterests")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return models.ModelInterestsToGRPC(modelInterest), nil
 }
 func (handler *ProfileHandler) GetDynamicInterest(ctx context.Context, model *proto.StrInterest) (*proto.Interests, error) {
 	modelInterest, err := handler.useCase.GetDynamicInterests(model.StrInterest)
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: GetDynamicInterest")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return models.ModelInterestsToGRPC(modelInterest), nil
 }
 func (handler *ProfileHandler) SetAction(ctx context.Context, model *proto.Likes) (*proto.Nothing, error) {
 	err := handler.useCase.SetAction(int(model.WhoId), models.GRPCToModelLikes(model))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: SetAction")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return &proto.Nothing{}, nil
 }
 func (handler *ProfileHandler) GetMatched(ctx context.Context, model *proto.UserID) (*proto.LikesMatched, error) {
 	likesVector, err := handler.useCase.GetMatched(int(model.Id))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: GetMatched")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 	return models.ModelLikesMatchedToGRPC(likesVector), nil
 }
@@ -119,7 +112,7 @@ func (handler *ProfileHandler) GetMatched(ctx context.Context, model *proto.User
 func (handler *ProfileHandler) CheckInterests(ctx context.Context, model *proto.Interests) (*proto.Nothing, error) {
 	err := handler.useCase.CheckInterests(models.GRPCToModelInterests(model))
 	if err != nil {
-		return nil, ErrToGRPCErr(err, "Profile service error: CheckInterest")
+		return nil, http.AppErrorFromError(err).WrapGRPC()
 	}
 
 	return &proto.Nothing{}, nil
