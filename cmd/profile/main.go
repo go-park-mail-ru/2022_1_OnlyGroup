@@ -1,7 +1,7 @@
 package main
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers/grpcDelivery"
+	handler "2022_1_OnlyGroup_back/app/handlers/grpc"
 	"2022_1_OnlyGroup_back/app/repositories/postgres"
 	"2022_1_OnlyGroup_back/microservices/profile/implGrpc"
 	"2022_1_OnlyGroup_back/microservices/profile/proto"
@@ -51,7 +51,7 @@ func main() {
 	//}
 	//profileUseCase := implGrpc.NewProfileUseCaseGRPCDelivery(profilesRepo)
 	//grpcServer := grpc.NewServer()
-	//proto.RegisterProfileRepositoryServer(grpcServer, grpcDelivery.NewProfileHandler(profileUseCase))
+	//proto.RegisterProfileRepositoryServer(grpcServer, grpc.NewProfileHandler(profileUseCase))
 	//if err := grpcServer.Serve(listener); err != nil {
 	//	log.Fatal(err)
 	//}
@@ -78,9 +78,8 @@ func main() {
 	}
 	profileUseCase := implGrpc.NewProfileUseCaseGRPCDelivery(profilesRepo)
 	grpcServer := grpc.NewServer()
-	proto.RegisterProfileRepositoryServer(grpcServer, grpcDelivery.NewProfileHandler(profileUseCase))
+	proto.RegisterProfileRepositoryServer(grpcServer, handler.NewProfileHandler(profileUseCase))
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatal(err)
 	}
 }
-

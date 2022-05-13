@@ -1,4 +1,4 @@
-package grpcDelivery
+package grpc
 
 import (
 	"2022_1_OnlyGroup_back/app/handlers/http"

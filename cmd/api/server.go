@@ -3,7 +3,7 @@ package main
 import (
 	http2 "2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/repositories"
-	"2022_1_OnlyGroup_back/app/repositories/grpcDelivery"
+	profileService "2022_1_OnlyGroup_back/app/repositories/grpc"
 	"2022_1_OnlyGroup_back/app/repositories/postgres"
 	redis_repo "2022_1_OnlyGroup_back/app/repositories/redis"
 	_ "2022_1_OnlyGroup_back/app/usecases"
@@ -85,7 +85,7 @@ func NewServer(conf APIServerConf) (APIServer, error) {
 			return APIServer{}, err
 		}
 		client := proto.NewProfileRepositoryClient(connProfileService)
-		profilesRepo = grpcDelivery.NewProfileGrpc(client)
+		profilesRepo = profileService.NewProfileGrpc(client)
 	} else {
 		profilesRepo, err = postgres.NewProfilePostgres(postgresConnect, conf.PostgresConf.ProfilesDbTableName, conf.PostgresConf.InterestsDbTableName, conf.PostgresConf.StaticInterestsDbTableName, conf.PostgresConf.FiltersDbTableName, conf.PostgresConf.LikesDbTableName)
 		if err != nil {

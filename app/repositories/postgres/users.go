@@ -104,3 +104,11 @@ func (repo *postgresUsersRepository) ChangePassword(id int, newPassword string) 
 	}
 	return nil
 }
+
+func (repo *postgresUsersRepository) DeleteUser(id int) (err error) {
+	_, err = repo.connection.Exec("delete from "+repo.tableName+" where id=$1;", id)
+	if err != nil {
+		return http.ErrBaseApp.Wrap(err, "changePassword failed")
+	}
+	return nil
+}
