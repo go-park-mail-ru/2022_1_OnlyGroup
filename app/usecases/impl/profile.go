@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/repositories"
 	"math"
@@ -32,7 +32,7 @@ func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (prof
 	age := int(math.Floor(time.Now().Sub(*profile.Birthday).Hours() / 24 / 365))
 	profile.Age = strconv.Itoa(age)
 	if err != nil {
-		return profile, handlers.ErrBaseApp.Wrap(err, "failed convert age")
+		return profile, http.ErrBaseApp.Wrap(err, "failed convert age")
 	}
 	profile.Birthday = nil
 
@@ -41,7 +41,7 @@ func (useCase *profileUseCaseImpl) Get(cookieProfileId int, profileId int) (prof
 
 func (useCase *profileUseCaseImpl) Change(profileId int, profile models.Profile) (err error) {
 	if profileId != profile.UserId {
-		return handlers.ErrProfileForbiddenChange
+		return http.ErrProfileForbiddenChange
 	}
 	err = useCase.profileRepo.CheckInterests(profile.Interests)
 	if err != nil {
@@ -88,11 +88,6 @@ func (useCase *profileUseCaseImpl) GetDynamicInterests(interest string) ([]model
 	return findInterests, nil
 }
 
-func (useCase *profileUseCaseImpl) CheckInterests([]models.Interest) error {
-
-	return nil
-}
-
 func (useCase *profileUseCaseImpl) GetFilters(userId int) (models.Filters, error) {
 	filters, err := useCase.profileRepo.GetFilters(userId)
 	if err != nil {
@@ -108,7 +103,7 @@ func (useCase *profileUseCaseImpl) ChangeFilters(userId int, filters models.Filt
 
 func (useCase *profileUseCaseImpl) SetAction(userid int, likes models.Likes) (err error) {
 	if userid == likes.Id {
-		return handlers.ErrBadRequest
+		return http.ErrBadRequest
 	}
 	err = useCase.profileRepo.SetAction(userid, likes)
 	if err != nil {
@@ -123,4 +118,9 @@ func (useCase *profileUseCaseImpl) GetMatched(userId int) (likesVector models.Li
 		return
 	}
 	return
+}
+
+func (useCase *profileUseCaseImpl) AddEmpty(profileId int) (err error) {
+	err = useCase.profileRepo.AddEmpty(profileId)
+	return err
 }

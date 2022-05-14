@@ -1,4 +1,4 @@
-package handlers
+package http
 
 import (
 	"2022_1_OnlyGroup_back/app/models"

@@ -1,8 +1,10 @@
-package handlers
+package http
 
 import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net/http"
 )
 
@@ -15,6 +17,7 @@ type AppError struct {
 
 var ErrBaseApp = AppError{"internal server error", http.StatusInternalServerError, nil, ""}
 var ErrBadRequest = AppError{"bad request", http.StatusBadRequest, nil, ""}
+var ErrServiceUnavailable = AppError{"profile service Unavailable,", http.StatusServiceUnavailable, nil, ""}
 
 func AppErrorFromError(inputError error) AppError {
 	appErr, ok := inputError.(AppError)
@@ -64,4 +67,28 @@ func (err AppError) String() string {
 		panic(er)
 	}
 	return string(errBuffer)
+}
+
+func (err AppError) WrapGRPC() error {
+	switch err.Code {
+	case ErrBaseApp.Code:
+		return status.Errorf(codes.Internal, err.Msg)
+	case ErrBadRequest.Code:
+		return status.Errorf(codes.InvalidArgument, err.Msg)
+	}
+	return nil
+}
+
+func AppErrorFromGRPC(inputError error) AppError {
+	err, ok := status.FromError(inputError)
+	if !ok {
+		return ErrBaseApp.Wrap(inputError, "")
+	}
+	switch err.Code() {
+	case codes.InvalidArgument:
+		return ErrBadRequest.Wrap(inputError, err.Message())
+	case codes.Unavailable:
+		return ErrServiceUnavailable.Wrap(inputError, err.Message())
+	}
+	return ErrBaseApp.Wrap(inputError, err.Message())
 }

@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"github.com/bxcodec/faker/v3"
 )
@@ -25,7 +25,7 @@ func (tables *ProfileMock) Get(profileId int) (profile models.Profile, err error
 			return profile, nil
 		}
 	}
-	return profile, handlers.ErrProfileNotFound
+	return profile, http.ErrProfileNotFound
 }
 
 func (tables *ProfileMock) GetShort(profileId int) (shortProfile models.ShortProfile, err error) {
@@ -37,7 +37,7 @@ func (tables *ProfileMock) GetShort(profileId int) (shortProfile models.ShortPro
 			return shortProfile, nil
 		}
 	}
-	return shortProfile, handlers.ErrProfileNotFound
+	return shortProfile, http.ErrProfileNotFound
 }
 
 var count = 0
@@ -69,15 +69,15 @@ func (tables *ProfileMock) Change(profileId int, profile models.Profile) (err er
 			return nil
 		}
 	}
-	return handlers.ErrProfileNotFound
+	return http.ErrProfileNotFound
 }
 
 func (tables *ProfileMock) Delete(profileId int) (err error) {
 	if len(tables.profileRepo) == 0 {
-		return handlers.ErrMockIsEmpty
+		return http.ErrMockIsEmpty
 	}
 	if len(tables.profileRepo) <= profileId {
-		return handlers.ErrProfileNotFound
+		return http.ErrProfileNotFound
 	}
 	for count, item := range tables.profileRepo {
 		if item.UserId == profileId {
@@ -85,7 +85,7 @@ func (tables *ProfileMock) Delete(profileId int) (err error) {
 			return nil
 		}
 	}
-	return handlers.ErrProfileNotFound
+	return http.ErrProfileNotFound
 }
 
 func (tables *ProfileMock) Add(profile models.Profile) (err error) {
@@ -103,7 +103,7 @@ func (tables *ProfileMock) AddEmpty(profileId int) (err error) {
 
 func (tables *ProfileMock) FindCandidate(profileId int) (candidateProfiles models.VectorCandidate, err error) {
 	if len(tables.profileRepo) == 0 {
-		return candidateProfiles, handlers.ErrProfileNotFound
+		return candidateProfiles, http.ErrProfileNotFound
 	}
 	for i := 0; i < 3; i++ {
 		if count == len(tables.profileRepo) {
@@ -125,11 +125,11 @@ func (tables *ProfileMock) CheckFiled(profileId int) (err error) {
 				item.Birthday == "" ||
 				len(item.Interests) == 0 ||
 				item.FirstName == "" {
-				return handlers.ErrProfileNotFiled
+				return http.ErrProfileNotFiled
 			} else {
 				return nil
 			}
 		}
 	}
-	return handlers.ErrProfileNotFound
+	return http.ErrProfileNotFound
 }

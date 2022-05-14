@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"2022_1_OnlyGroup_back/app/repositories"
 )
@@ -29,14 +29,14 @@ func (useCase *photosUseCase) CanSave(id int, userId int) error {
 		return err
 	}
 	if author != userId {
-		return handlers.ErrPhotoChangeForbidden
+		return http.ErrPhotoChangeForbidden
 	}
 	saved, err := useCase.repo.IsSaved(id)
 	if err != nil {
 		return err
 	}
 	if saved {
-		return handlers.ErrPhotoChangeForbidden
+		return http.ErrPhotoChangeForbidden
 	}
 	return nil
 }
@@ -55,7 +55,7 @@ func (useCase *photosUseCase) SetParams(id int, userId int, params models.PhotoP
 		return err
 	}
 	if author != userId {
-		return handlers.ErrPhotoChangeForbidden
+		return http.ErrPhotoChangeForbidden
 	}
 	return useCase.repo.SetParams(id, params)
 }
@@ -70,7 +70,7 @@ func (useCase *photosUseCase) Delete(id int, userId int) error {
 		return err
 	}
 	if author != userId {
-		return handlers.ErrPhotoChangeForbidden
+		return http.ErrPhotoChangeForbidden
 	}
 	return useCase.repo.Delete(id)
 }
@@ -89,7 +89,7 @@ func (useCase *photosUseCase) GetUserAvatar(userId int) (models.UserAvatar, erro
 
 func (useCase *photosUseCase) SetUserAvatar(avatar models.UserAvatar, userId int, userIdCookie int) error {
 	if userId != userIdCookie {
-		return handlers.ErrPhotoChangeForbidden
+		return http.ErrPhotoChangeForbidden
 	}
 	return useCase.repo.SetAvatar(avatar.Avatar, avatar.Params, userId)
 }

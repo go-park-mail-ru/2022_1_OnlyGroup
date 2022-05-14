@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"database/sql"
 	"errors"
@@ -31,7 +31,7 @@ func (repo *postgresPhotosRepository) Create(userId int) (int, error) {
 	var photoId int
 	err := repo.connection.QueryRow("INSERT INTO "+repo.photosTableName+"(author, path) VALUES($1, NULL) RETURNING id;", userId).Scan(&photoId)
 	if err != nil {
-		return 0, handlers.ErrBaseApp.Wrap(err, "create photo failed")
+		return 0, http.ErrBaseApp.Wrap(err, "create photo failed")
 	}
 	return photoId, err
 }
@@ -39,14 +39,14 @@ func (repo *postgresPhotosRepository) Create(userId int) (int, error) {
 func (repo *postgresPhotosRepository) Save(id int, path string) error {
 	res, err := repo.connection.Exec("UPDATE "+repo.photosTableName+" SET path=$1 WHERE id=$2;", path, id)
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "save photo failed")
+		return http.ErrBaseApp.Wrap(err, "save photo failed")
 	}
 	rowsAffect, err := res.RowsAffected()
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "save photo failed")
+		return http.ErrBaseApp.Wrap(err, "save photo failed")
 	}
 	if rowsAffect != 1 {
-		return handlers.ErrBaseApp.Wrap(nil, "save photo failed: try to save not existed photo")
+		return http.ErrBaseApp.Wrap(nil, "save photo failed: try to save not existed photo")
 	}
 	return nil
 }
@@ -55,10 +55,10 @@ func (repo *postgresPhotosRepository) IsSaved(id int) (bool, error) {
 	var path *string
 	err := repo.connection.QueryRow("SELECT path FROM "+repo.photosTableName+" WHERE id=$1;", id).Scan(&path)
 	if errors.Is(err, sql.ErrNoRows) {
-		return false, handlers.ErrPhotoNotFound
+		return false, http.ErrPhotoNotFound
 	}
 	if err != nil {
-		return false, handlers.ErrBaseApp.Wrap(err, "is saved photo failed")
+		return false, http.ErrBaseApp.Wrap(err, "is saved photo failed")
 	}
 	return path != nil, nil
 }
@@ -67,10 +67,10 @@ func (repo *postgresPhotosRepository) GetAuthor(id int) (int, error) {
 	var authorId int
 	err := repo.connection.QueryRow("SELECT author FROM "+repo.photosTableName+" WHERE id=$1;", id).Scan(&authorId)
 	if errors.Is(err, sql.ErrNoRows) {
-		return 0, handlers.ErrPhotoNotFound
+		return 0, http.ErrPhotoNotFound
 	}
 	if err != nil {
-		return 0, handlers.ErrBaseApp.Wrap(err, "get photo author failed")
+		return 0, http.ErrBaseApp.Wrap(err, "get photo author failed")
 	}
 	return authorId, nil
 }
@@ -78,14 +78,14 @@ func (repo *postgresPhotosRepository) GetAuthor(id int) (int, error) {
 func (repo *postgresPhotosRepository) SetParams(id int, params models.PhotoParams) error {
 	res, err := repo.connection.Exec("UPDATE "+repo.photosTableName+" SET left_top_x=$1,left_top_y=$2,right_bottom_x=$3,right_bottom_y=$4 WHERE id=$5;", params.LeftTop[0], params.LeftTop[1], params.RightBottom[0], params.RightBottom[1], id)
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "set params photo failed")
+		return http.ErrBaseApp.Wrap(err, "set params photo failed")
 	}
 	rowsAffect, err := res.RowsAffected()
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "set params photo failed")
+		return http.ErrBaseApp.Wrap(err, "set params photo failed")
 	}
 	if rowsAffect != 1 {
-		return handlers.ErrPhotoNotFound
+		return http.ErrPhotoNotFound
 	}
 	return nil
 }
@@ -94,13 +94,13 @@ func (repo *postgresPhotosRepository) GetParams(id int) (models.PhotoParams, err
 	var leftTopX, leftTopY, rightBottomX, rightBottomY *int
 	err := repo.connection.QueryRow("SELECT left_top_x, left_top_y, right_bottom_x, right_bottom_y FROM "+repo.photosTableName+" WHERE id=$1;", id).Scan(&leftTopX, &leftTopY, &rightBottomX, &rightBottomY)
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.PhotoParams{}, handlers.ErrPhotoNotFound
+		return models.PhotoParams{}, http.ErrPhotoNotFound
 	}
 	if err != nil {
-		return models.PhotoParams{}, handlers.ErrBaseApp.Wrap(err, "save photo failed")
+		return models.PhotoParams{}, http.ErrBaseApp.Wrap(err, "save photo failed")
 	}
 	if leftTopX == nil || leftTopY == nil || rightBottomX == nil || rightBottomY == nil {
-		return models.PhotoParams{}, handlers.ErrPhotoNotFound
+		return models.PhotoParams{}, http.ErrPhotoNotFound
 	}
 	return models.PhotoParams{LeftTop: [2]int{*leftTopX, *leftTopY}, RightBottom: [2]int{*rightBottomX, *rightBottomY}}, nil
 }
@@ -109,13 +109,13 @@ func (repo *postgresPhotosRepository) GetPathIfFilled(id int) (string, error) {
 	var path *string
 	err := repo.connection.QueryRow("SELECT path FROM "+repo.photosTableName+" WHERE id=$1 AND left_top_x IS NOT NULL AND left_top_y IS NOT NULL AND right_bottom_x IS NOT NULL AND right_bottom_y IS NOT NULL;", id).Scan(&path)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", handlers.ErrPhotoNotFound
+		return "", http.ErrPhotoNotFound
 	}
 	if err != nil {
-		return "", handlers.ErrBaseApp.Wrap(err, "save photo failed")
+		return "", http.ErrBaseApp.Wrap(err, "save photo failed")
 	}
 	if path == nil {
-		return "", handlers.ErrPhotoNotFound
+		return "", http.ErrPhotoNotFound
 	}
 	return *path, nil
 }
@@ -123,14 +123,14 @@ func (repo *postgresPhotosRepository) GetPathIfFilled(id int) (string, error) {
 func (repo *postgresPhotosRepository) Delete(id int) error {
 	res, err := repo.connection.Exec("DELETE FROM "+repo.photosTableName+" WHERE id=$1;", id)
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "delete photo failed")
+		return http.ErrBaseApp.Wrap(err, "delete photo failed")
 	}
 	rowsAffect, err := res.RowsAffected()
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "delete photo failed")
+		return http.ErrBaseApp.Wrap(err, "delete photo failed")
 	}
 	if rowsAffect != 1 {
-		return handlers.ErrPhotoNotFound
+		return http.ErrPhotoNotFound
 	}
 	return nil
 }
@@ -140,10 +140,10 @@ func (repo *postgresPhotosRepository) GetAvatar(userId int) (int, models.PhotoPa
 	var photoId int
 	err := repo.connection.QueryRow("SELECT photo_id, left_top_x, left_top_y, right_bottom_x, right_bottom_y FROM "+repo.avatarTableName+" WHERE user_id=$1;", userId).Scan(&photoId, &model.LeftTop[0], &model.LeftTop[1], &model.RightBottom[0], &model.RightBottom[1])
 	if errors.Is(err, sql.ErrNoRows) {
-		return 0, models.PhotoParams{}, handlers.ErrPhotoNotFound
+		return 0, models.PhotoParams{}, http.ErrPhotoNotFound
 	}
 	if err != nil {
-		return 0, models.PhotoParams{}, handlers.ErrBaseApp.Wrap(err, "get avatar failed")
+		return 0, models.PhotoParams{}, http.ErrBaseApp.Wrap(err, "get avatar failed")
 	}
 	return photoId, model, nil
 }
@@ -154,27 +154,27 @@ func (repo *postgresPhotosRepository) SetAvatar(id int, params models.PhotoParam
 	if errors.Is(err, sql.ErrNoRows) {
 		res, err := repo.connection.Exec("INSERT INTO "+repo.avatarTableName+"(user_id, photo_id, left_top_x, left_top_y, right_bottom_x, right_bottom_y) VALUES ($1, $2, $3, $4, $5, $6", userId, id, params.LeftTop[0], params.LeftTop[1], params.RightBottom[0], params.RightBottom[1])
 		if err != nil {
-			return handlers.ErrBaseApp.Wrap(err, "set avatar insert failed")
+			return http.ErrBaseApp.Wrap(err, "set avatar insert failed")
 		}
 		affected, err := res.RowsAffected()
 		if err != nil {
-			return handlers.ErrBaseApp.Wrap(err, "set avatar insert failed")
+			return http.ErrBaseApp.Wrap(err, "set avatar insert failed")
 		}
 		if affected == 0 {
-			return handlers.ErrBaseApp.Wrap(nil, "set avatar insert rows affected = 0")
+			return http.ErrBaseApp.Wrap(nil, "set avatar insert rows affected = 0")
 		}
 		return nil
 	}
 	res, err := repo.connection.Exec("UPDATE "+repo.avatarTableName+" SET photo_id=$1, left_top_x=$2, left_top_y=$3, right_bottom_x=$4, right_bottom_x=$5 WHERE user_id=$6", id, params.LeftTop[0], params.LeftTop[1], params.RightBottom[0], params.RightBottom[1], userId)
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "set avatar update failed")
+		return http.ErrBaseApp.Wrap(err, "set avatar update failed")
 	}
 	affected, err := res.RowsAffected()
 	if err != nil {
-		return handlers.ErrBaseApp.Wrap(err, "set avatar update failed")
+		return http.ErrBaseApp.Wrap(err, "set avatar update failed")
 	}
 	if affected == 0 {
-		return handlers.ErrBaseApp.Wrap(nil, "set avatar update rows affected = 0")
+		return http.ErrBaseApp.Wrap(nil, "set avatar update rows affected = 0")
 	}
 	return nil
 }
@@ -183,7 +183,7 @@ func (repo *postgresPhotosRepository) GetUserPhotos(userId int) (models.UserPhot
 	var model models.UserPhotos
 	err := repo.connection.Select(&model.Photos, "SELECT id FROM "+repo.photosTableName+" WHERE author=$1", userId)
 	if err != nil {
-		return models.UserPhotos{}, handlers.ErrBaseApp.Wrap(err, "get all user photos failed")
+		return models.UserPhotos{}, http.ErrBaseApp.Wrap(err, "get all user photos failed")
 	}
 	if model.Photos == nil {
 		model.Photos = []int{}

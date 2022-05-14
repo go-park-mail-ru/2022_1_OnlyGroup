@@ -1,7 +1,7 @@
 package dataValidator
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	"2022_1_OnlyGroup_back/app/models"
 	"gopkg.in/validator.v2"
 	"math"
@@ -23,7 +23,7 @@ func SetValidators() {
 
 		age := int(math.Floor(time.Now().Sub(nVal).Hours() / 24 / 365))
 		if age < models.BirthdayBottomLimit || age > models.BirthdayTopLimit {
-			return handlers.ErrValidateProfile
+			return http.ErrValidateProfile
 		}
 
 		return nil
@@ -43,21 +43,21 @@ func SetValidators() {
 		}
 		match, err := regexp.MatchString(models.PasswordPatternLowerCase, nVal)
 		if err != nil {
-			return handlers.ErrBaseApp
+			return http.ErrBaseApp
 		}
 		if !match {
 			return validator.ErrRegexp
 		}
 		match, err = regexp.MatchString(models.PasswordPatternUpperCase, nVal)
 		if err != nil {
-			return handlers.ErrBaseApp
+			return http.ErrBaseApp
 		}
 		if !match {
 			return validator.ErrRegexp
 		}
 		match, err = regexp.MatchString(models.PasswordPatternNumber, nVal)
 		if err != nil {
-			return handlers.ErrBaseApp
+			return http.ErrBaseApp
 		}
 		if !match {
 			return validator.ErrRegexp
@@ -75,10 +75,10 @@ func SetValidators() {
 		}
 		nVal := val.([2]int)
 
-		if len(nVal) > 2 || len(nVal) < 2 {
+		if len(nVal) != 2 {
 			return validator.ErrLen
 		}
-		if nVal[0] < 18 || nVal[1] > 100 {
+		if nVal[0] < models.AgeFilterBottomLimit || nVal[1] > models.AgeFilterTopLimit || nVal[1] < nVal[0] {
 			return validator.ErrRegexp
 		}
 		return nil
@@ -96,7 +96,7 @@ func SetValidators() {
 		if len(nVal) > 2 || len(nVal) < 2 {
 			return validator.ErrLen
 		}
-		if nVal[0] < 50 || nVal[1] > 220 {
+		if nVal[0] < models.HeightFilterFilterBottomLimit || nVal[1] > models.HeightFilterFilterTopLimit || nVal[1] < nVal[0] {
 			return validator.ErrRegexp
 		}
 		return nil

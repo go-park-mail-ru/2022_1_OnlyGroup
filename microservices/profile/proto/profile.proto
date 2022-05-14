@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+// protoc --go_out=. --go-grpc_opt=require_unimplemented_servers=false --go-grpc_out=. *.proto
+
+package profile;
+
+option go_package = "/;proto";
+
+import "google/protobuf/timestamp.proto";
+
+message UserID {
+  int64 id = 1;
+}
+
+message profile {
+  string Firstname = 1;
+  string LastName = 2;
+  google.protobuf.Timestamp Birthday = 3;
+  string City = 4;
+  repeated Interest Interests = 5;
+  string AboutUser = 6;
+  int64  UserId = 7;
+  int64 Gender = 8;
+  int64 Height = 9;
+  string Age = 10;
+}
+
+message ShortProfile {
+  int64 Id = 1;
+  string FirstName = 2;
+  string LastName = 3;
+  string City = 4;
+}
+
+message VectorCandidate {
+  repeated int64 Candidates = 1;
+}
+
+message Interest {
+  int64 Id = 1;
+  string Title = 2;
+}
+
+message Interests {
+  repeated Interest Interest = 1;
+}
+
+message Filters {
+  int64 Id = 1;
+  repeated int64 AgeFilter = 2;
+  int64 GenderFilter = 3;
+  repeated int64 HeightFilter = 4;
+}
+
+message Likes {
+  int64 WhoId = 1;
+  int64 WhomId = 2;
+  int64 Action = 3;
+}
+
+message LikesMatched {
+  repeated int64 VectorId = 2;
+}
+
+message StrInterest {
+  string strInterest = 1;
+}
+
+message Nothing {
+}
+
+service ProfileRepository {
+    rpc Get(UserID) returns (profile);
+
+    rpc GetShort(UserID) returns (ShortProfile);
+    rpc Change(profile) returns (Nothing);
+    rpc Delete(UserID) returns (Nothing);
+    rpc Add(profile) returns (Nothing);
+    rpc CheckFiled(UserID) returns (Nothing);
+    rpc AddEmpty(UserID) returns (Nothing);
+
+    rpc FindCandidate(UserID) returns (VectorCandidate);
+
+    rpc GetFilters(UserID) returns (Filters);
+    rpc ChangeFilters(Filters) returns (Nothing);
+
+    rpc GetInterests(Nothing) returns (Interests);
+    rpc GetDynamicInterest(StrInterest) returns (Interests);
+    rpc CheckInterests(Interests) returns (Nothing);
+
+    rpc SetAction(Likes) returns (Nothing);
+    rpc GetMatched(UserID) returns (LikesMatched);
+}

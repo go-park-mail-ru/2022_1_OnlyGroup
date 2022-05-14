@@ -18,3 +18,5 @@
 *.conf
 *.conf.new
 photos
+
+*pb.go

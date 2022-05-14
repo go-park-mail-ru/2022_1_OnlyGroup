@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"2022_1_OnlyGroup_back/app/handlers"
+	"2022_1_OnlyGroup_back/app/handlers/http"
 	impl3 "2022_1_OnlyGroup_back/pkg/randomGenerator/impl"
 	"errors"
 	"github.com/go-redis/redis/v8"
@@ -39,7 +39,7 @@ func TestAddSessionTableDriven(t *testing.T) {
 			5,
 			"fiiewifjwiefjwe",
 			"daw",
-			handlers.ErrBaseApp,
+			http.ErrBaseApp,
 		},
 		{
 			"Redis adding error",
@@ -49,7 +49,7 @@ func TestAddSessionTableDriven(t *testing.T) {
 			5,
 			"fiiewifjwiefjwe",
 			"daw",
-			handlers.ErrBaseApp,
+			http.ErrBaseApp,
 		},
 	}
 	for _, test := range tests {
@@ -92,7 +92,7 @@ func TestGetSessionTableDriven(t *testing.T) {
 				mock.ExpectHGet("test_5", "5_fiiewifjwiefjwe").SetErr(redis.Nil)
 			},
 			"5_fiiewifjwiefjwe",
-			handlers.ErrAuthSessionNotFound,
+			http.ErrAuthSessionNotFound,
 			"",
 			0,
 		},
@@ -102,7 +102,7 @@ func TestGetSessionTableDriven(t *testing.T) {
 				mock.ExpectHGet("test_5", "5_fiiewifjwiefjwe").SetErr(redisError)
 			},
 			"5_fiiewifjwiefjwe",
-			handlers.ErrBaseApp,
+			http.ErrBaseApp,
 			"",
 			0,
 		},
@@ -110,7 +110,7 @@ func TestGetSessionTableDriven(t *testing.T) {
 			"Bad session",
 			func(mock redismock.ClientMock) {},
 			"fiiewifjwiefjwe",
-			handlers.ErrAuthSessionNotFound,
+			http.ErrAuthSessionNotFound,
 			"",
 			0,
 		},
@@ -118,7 +118,7 @@ func TestGetSessionTableDriven(t *testing.T) {
 			"Bad session",
 			func(mock redismock.ClientMock) {},
 			"afadfs_fiiewifjwiefjwe",
-			handlers.ErrAuthSessionNotFound,
+			http.ErrAuthSessionNotFound,
 			"",
 			0,
 		},
@@ -161,13 +161,13 @@ func TestRemoveSessionTableDriven(t *testing.T) {
 				mock.ExpectHDel("test_5", "5_fiiewifjwiefjwe").SetVal(0)
 			},
 			"5_fiiewifjwiefjwe",
-			handlers.ErrAuthSessionNotFound,
+			http.ErrAuthSessionNotFound,
 		},
 		{
 			"Bad session",
 			func(mock redismock.ClientMock) {},
 			"fiiewifjwiefjwe",
-			handlers.ErrAuthSessionNotFound,
+			http.ErrAuthSessionNotFound,
 		},
 		{
 			"Redis internal error",
@@ -175,7 +175,7 @@ func TestRemoveSessionTableDriven(t *testing.T) {
 				mock.ExpectHDel("test_5", "5_fiiewifjwiefjwe").SetErr(redisError)
 			},
 			"5_fiiewifjwiefjwe",
-			handlers.ErrBaseApp,
+			http.ErrBaseApp,
 		},
 	}
 	for _, test := range tests {
